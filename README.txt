@@ -49,6 +49,9 @@ brartacho.github.io/ (Raiz do Projeto)
 
 5. 📜 LOG DE VERSÕES (CHANGELOG)
 ------------------------------------------------------------------------
+- v1.0.3: Ajuste de Microcopy e UX.
+          * Redução da descrição para evitar truncamento em dispositivos móveis.
+          * Otimização de palavras-chave para SEO.
 - v1.0.2: Otimização de preview social (WhatsApp/LinkedIn).
           * Ajuste de proporção da imagem para 1200x630 (aspect ratio 1.91:1).
           * Correção de metadados Open Graph (MIME type e dimensões).
