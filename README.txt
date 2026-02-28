@@ -49,6 +49,7 @@ brartacho.github.io/ (Raiz do Projeto)
 
 5. 📜 LOG DE VERSÕES (CHANGELOG)
 ------------------------------------------------------------------------
+- v1.0.2: Otimização de resolução do preview social e ajustes finos de SEO.
 - v1.0.1: Implementação de Meta Tags Open Graph e imagem de preview profissional.
 - v1.0.0: Lançamento oficial, arquitetura base e deploy via GitHub Pages.
 
