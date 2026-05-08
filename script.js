@@ -6,7 +6,7 @@ function init() {
     initScrollAnimations();
     initNavScrollState();
     initNavActiveLink();
-    initCustomCursor();
+
     initTicker();
 }
 
@@ -334,60 +334,5 @@ function initNavActiveLink() {
     sections.forEach((section) => observer.observe(section));
 }
 
-function initCustomCursor() {
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const dot = document.querySelector(".cursor-dot");
-    const ring = document.querySelector(".cursor-ring");
-    if (!dot || !ring) return;
-
-    let mouseX = -100;
-    let mouseY = -100;
-    let ringX = -100;
-    let ringY = -100;
-    let rafId = null;
-
-    document.body.classList.add("cursor-ready");
-
-    document.addEventListener("mousemove", (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-    }, { passive: true });
-
-    document.addEventListener("mouseleave", () => {
-        dot.style.opacity = "0";
-        ring.style.opacity = "0";
-    });
-
-    document.addEventListener("mouseenter", () => {
-        dot.style.opacity = "";
-        ring.style.opacity = "";
-    });
-
-    const interactiveSelectors = "a, button, [role='button'], input, textarea, select, label";
-
-    document.addEventListener("mouseover", (e) => {
-        if (e.target.closest(interactiveSelectors)) {
-            document.body.classList.add("cursor-hover");
-        }
-    });
-
-    document.addEventListener("mouseout", (e) => {
-        if (e.target.closest(interactiveSelectors)) {
-            document.body.classList.remove("cursor-hover");
-        }
-    });
-
-    function animateRing() {
-        ringX += (mouseX - ringX) * 0.12;
-        ringY += (mouseY - ringY) * 0.12;
-        ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
-        rafId = requestAnimationFrame(animateRing);
-    }
-
-    rafId = requestAnimationFrame(animateRing);
-}
 
 init();
