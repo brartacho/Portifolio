@@ -4,23 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bruno Artacho | QA</title>
+    <title>Bruno Artacho | QA, Playwright & Automação</title>
 
     <meta name="description"
-        content="Portfólio profissional de Bruno Artacho. Analista de QA com foco em APIs, integrações, SQL/PostgreSQL, sistemas críticos e contexto HealthTech.">
+        content="Portfólio profissional de Bruno Artacho. Analista de QA com foco em testes manuais, automação com Playwright (E2E), APIs com Postman, SQL e sistemas críticos HealthTech (LIS, ERP, WMS, PDV).">
     <meta name="keywords"
-        content="Bruno Artacho, QA, QA Analyst, APIs, Integrações, PostgreSQL, SQL, HealthTech, LIS, Regressão, Testes Funcionais, Testes de API, SoapUI, Thunder Client, Eclipse, IntelliJ, Git, GitHub, Maringá">
+        content="Bruno Artacho, QA, Playwright, Automação de Testes, Testes E2E, Postman, Insomnia, Thunder Client, API Testing, SQL, PostgreSQL, HealthTech, LIS, ERP, WMS, PDV, Git, GitHub, Scrum, Kanban, Maringá">
     <meta name="author" content="Bruno Artacho">
     <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#020617">
+    <meta name="theme-color" content="#0a0a0f">
     <link rel="canonical" href="https://bruno-artacho.vercel.app">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="ARTACHO.dev">
     <meta property="og:url" content="https://bruno-artacho.vercel.app">
-    <meta property="og:title" content="Bruno Artacho | QA, APIs e Integrações">
+    <meta property="og:title" content="Bruno Artacho | QA, Playwright & Automação de Testes">
     <meta property="og:description"
-        content="Portfólio profissional com foco em QA, APIs, integrações, SQL/PostgreSQL e atuação em sistemas críticos.">
+        content="Portfólio profissional com foco em QA, testes manuais, automação com Playwright, APIs (Postman), SQL e sistemas críticos HealthTech.">
     <meta property="og:image:url"
         content="https://bruno-artacho.vercel.app/imagens/capa-portfolio-ok.jpg">
     <meta property="og:image:secure_url"
@@ -35,9 +35,9 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://bruno-artacho.vercel.app">
-    <meta name="twitter:title" content="Bruno Artacho | QA, APIs e Integrações">
+    <meta name="twitter:title" content="Bruno Artacho | QA, Playwright & Automação de Testes">
     <meta name="twitter:description"
-        content="Portfólio profissional com foco em QA, APIs, integrações, SQL/PostgreSQL e atuação em sistemas críticos.">
+        content="Portfólio profissional com foco em QA, automação com Playwright, APIs (Postman), SQL e sistemas críticos HealthTech.">
     <meta name="twitter:image"
         content="https://bruno-artacho.vercel.app/imagens/capa-portfolio-ok.jpg">
     <meta name="twitter:image:alt" content="Capa do portfólio profissional de Bruno Artacho">
@@ -46,8 +46,11 @@
     <link rel="alternate icon" type="image/png" href="imagens/logo_artacho.dev_001.png">
     <link rel="apple-touch-icon" href="imagens/logo_artacho.dev_001.png">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" type="text/css"
@@ -55,9 +58,10 @@
 </head>
 
 <body>
+    <a href="#home" class="skip-link">Pular para o conteúdo principal</a>
     <div class="menu-overlay" id="menuOverlay"></div>
 
-    <nav class="main-nav">
+    <nav class="main-nav" id="mainNav">
         <div class="container nav-flex">
             <a href="#home" class="logo">ARTACHO<span>.</span>dev</a>
 
@@ -70,12 +74,20 @@
                 <li><a href="#home">Home</a></li>
                 <li><a href="#sobre">Sobre</a></li>
                 <li><a href="#skills">Stack</a></li>
+                <li><a href="#formacao">Formação</a></li>
                 <li><a href="#projetos">Projetos</a></li>
                 <li><a href="#contato">Contato</a></li>
                 <li>
+                    <a href="/cv"
+                        class="nav-cv-link" title="Baixar Currículo PDF">
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                        <span>Currículo</span>
+                    </a>
+                </li>
+                <li>
                     <a href="https://github.com/brartacho" target="_blank" class="nav-github-header"
                         title="Acessar meu GitHub" rel="noreferrer">
-                        <i class="fa-brands fa-github"></i>
+                        <i class="fa-brands fa-github" aria-hidden="true"></i>
                     </a>
                 </li>
             </ul>
@@ -83,429 +95,603 @@
     </nav>
 
     <div id="content-wrapper">
+
+        <!-- ============================================================
+             HERO
+        ============================================================ -->
         <header id="home">
-            <div class="container hero-grid">
-                <div class="hero-copy">
-                    <span class="hero-eyebrow">Portfólio profissional</span>
+            <div class="container hero-layout">
 
-                    <div id="profile-img-container">
-                        <img src="https://github.com/brartacho.png" class="profile-img" alt="Bruno Artacho">
-                    </div>
+                <div class="hero-content">
+                    <span class="hero-eyebrow" aria-label="Status: disponível para oportunidades">
+                        <span class="hero-available-dot" aria-hidden="true"></span>
+                        Disponível para oportunidades
+                    </span>
 
-                    <h1 id="name-header" data-text="Bruno Artacho">Bruno Artacho</h1>
-                    <p class="bio">Analista de QA com foco em APIs, integrações e sistemas críticos.</p>
-                    <p class="hero-summary">
-                        Atuação voltada a validação funcional, investigação técnica,
-                        consistência de dados e apoio à qualidade de software em contexto HealthTech e sistemas críticos.
+                    <h1 class="hero-headline">
+                        Bruno<br>
+                        <em>Artacho</em>
+                    </h1>
+
+                    <p class="hero-role">QA Analyst · Playwright · HealthTech</p>
+
+                    <p class="hero-body">
+                        6 anos em HealthTech — QA, implantação e supervisão
+                        em sistemas LIS e interfaceamento laboratorial.
+                        Automação com Playwright e testes de API com Postman.
                     </p>
 
                     <div class="hero-actions">
-                        <a href="#projetos" class="btn-git">Ver projetos <i class="fa-solid fa-arrow-right"></i></a>
-                        <a href="#contato" class="hero-link">Entrar em contato</a>
-                    </div>
-
-                    <div class="hero-chips">
-                        <span class="hero-chip">QA funcional</span>
-                        <span class="hero-chip hero-chip-wide">APIs & integrações</span>
-                        <span class="hero-chip">SQL / PostgreSQL</span>
-                        <span class="hero-chip">Backend Java</span>
+                        <a href="#projetos" class="btn-primary">
+                            Ver projetos
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                        <a href="#contato" class="btn-ghost">Entrar em contato</a>
                     </div>
                 </div>
 
-                <aside class="hero-panel" aria-label="Resumo profissional">
-                    <div class="hero-panel-top">
-                        <p class="hero-panel-label">Resumo</p>
-                        <p class="hero-panel-text">
-                            Experiência com homologação, leitura de logs, análise de regras e
-                            validação de integrações em sistemas críticos.
-                        </p>
+                <div class="hero-visual">
+                    <div class="hero-photo-frame">
+                        <img src="https://github.com/brartacho.png"
+                             alt="Bruno Artacho"
+                             class="hero-photo"
+                             loading="eager"
+                             fetchpriority="high">
+
+                        <div class="hero-stat-card hero-stat-years" aria-hidden="true">
+                            <span class="hsc-number">6+</span>
+                            <span class="hsc-label">anos em HealthTech</span>
+                        </div>
+
+                        <div class="hero-stat-card hero-stat-tool" aria-hidden="true">
+                            <i class="devicon-playwright-plain" aria-hidden="true"></i>
+                            <span class="hsc-label">Playwright E2E</span>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="hero-panel-divider"></div>
-
-                    <ul class="hero-point-list">
-                        <li>
-                            <span class="hero-point-label">Atuação</span>
-                            <strong>6 anos de experiência</strong>
-                        </li>
-                        <li>
-                            <span class="hero-point-label">Base técnica</span>
-                            <strong>QA funcional, logs e banco</strong>
-                        </li>
-                        <li>
-                            <span class="hero-point-label">Direção atual</span>
-                            <strong>QA backend, APIs e integrações</strong>
-                        </li>
-                        <li>
-                            <span class="hero-point-label">Localização</span>
-                            <strong>Maringá, PR</strong>
-                        </li>
-                    </ul>
-                </aside>
             </div>
         </header>
 
-        <div class="stats-bar">
-            <div class="container stats-flex">
-                <div class="stat-item stat-item-experience">
-                    <i class="fa-solid fa-briefcase"></i>
-                    <span class="stat-copy"><strong>6 anos de atuação</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span class="stat-copy"><strong>Homologação</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="fa-solid fa-file-circle-check"></i>
-                    <span class="stat-copy"><strong>Logs & banco</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="fa-solid fa-laptop-code"></i>
-                    <span class="stat-copy"><strong>Regra de negócio</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="fa-solid fa-microscope"></i>
-                    <span class="stat-copy"><strong>HealthTech</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span class="stat-copy"><strong>LGPD</strong></span>
-                </div>
-            </div>
-        </div>
+        <main>
 
-        <main class="container">
+            <!-- ============================================================
+                 SOBRE
+            ============================================================ -->
             <section id="sobre">
-                <div class="section-title">
-                    <h2>Sobre minha atuação</h2>
-                    <div class="line"></div>
-                </div>
+                <div class="container">
+                    <span class="section-label" data-animate>Sobre</span>
 
-                <div class="about-layout">
-                    <div class="about-lead">
-                        <p class="about-kicker">Visão de trabalho</p>
-                        <p class="about-highlight">
-                            Atuo com QA em sistemas críticos, com experiência em validação funcional,
-                            análise de requisitos, homologação e apoio à qualidade de software em
-                            contexto <strong>HealthTech</strong>.
-                        </p>
-                    </div>
+                    <blockquote class="about-impact-quote" data-animate>
+                        Banco Padrão de Exames:
+                        <mark>tempo de implantação reduzido de 3 meses para 1 mês.</mark>
+                    </blockquote>
 
-                    <div class="about-content">
-                        <p>
-                            Tenho vivência em testes voltados à estabilidade de sistemas, investigação
-                            de falhas, gestão de bugs e conferência de dados em
-                            <strong>SQL / PostgreSQL</strong>. Também acompanho integrações com
-                            laboratórios de apoio, equipamentos laboratoriais e fluxos ligados a faturamento,
-                            estoque e resultados online.
-                        </p>
-
-                        <p>
-                            Minha atuação combina visão de negócio, proximidade com o cliente e
-                            interface com times de produto e desenvolvimento. No lado técnico, trabalho com testes
-                            de API, análise de logs e apoio à validação de sistemas com backend
-                            Java, utilizando <strong>SoapUI</strong>, <strong>Thunder Client</strong>,
-                            <strong>Eclipse</strong>, <strong>IntelliJ IDEA</strong> e <strong>VS Code</strong>.
-                        </p>
-                    </div>
-
-                    <aside class="about-aside">
-                        <div class="about-aside-card">
-                            <span class="about-aside-label">Foco atual</span>
-                            <p>Hoje, direciono minha evolução para <strong>QA backend</strong>,
-                                integrações, APIs e automação de testes.</p>
+                    <div class="about-grid">
+                        <div class="about-body" data-animate>
+                            <h2>Qualidade como sistema,<br>não como etapa.</h2>
+                            <p>
+                                Experiência de 6 anos em software para HealthTech, com atuação em
+                                implantação de sistemas críticos <strong>LIS</strong> e interfaceamento
+                                laboratorial, incluindo supervisão de operações em implantação, suporte
+                                e Customer Success.
+                            </p>
+                            <p>
+                                Atuação em QA por aproximadamente 3 anos, com foco em testes manuais,
+                                análise de requisitos, homologação e validação de dados via
+                                <strong>SQL e PostgreSQL</strong>, além de experiência em sistemas
+                                <strong>ERP, WMS e PDV</strong>.
+                            </p>
+                            <p>
+                                Em evolução para automação de testes com <strong>Playwright</strong> (E2E)
+                                e uso de <strong>Cursor + MCP</strong> como aceleradores de execução.
+                                Formação em Biomedicina reforça a compreensão do contexto clínico e da
+                                criticidade dos dados laboratoriais.
+                            </p>
                         </div>
-                        <div class="about-aside-card">
-                            <span class="about-aside-label">Rotina técnica</span>
-                            <p>Leitura de logs, validação de integrações, conferência de dados
-                                e suporte à consistência funcional dos fluxos.</p>
-                        </div>
-                    </aside>
+
+                        <aside class="about-sidebar" data-animate>
+                            <div class="about-card">
+                                <span class="about-card-label">Em evolução</span>
+                                <p>Playwright E2E, automação de fluxos críticos e testes de API com <strong>Postman</strong>. Full Stack em formação: Java + React + Spring Boot.</p>
+                            </div>
+                            <div class="about-card about-card--highlight">
+                                <span class="about-card-label">Diferencial</span>
+                                <p>Background em <strong>Biomedicina</strong> aplicado ao QA em HealthTech: visão sistêmica do fluxo clínico-laboratorial.</p>
+                            </div>
+                        </aside>
+                    </div>
                 </div>
             </section>
 
+            <!-- ============================================================
+                 SKILLS
+            ============================================================ -->
             <section id="skills">
-                <div class="section-title">
-                    <h2>Stack & ferramentas</h2>
-                    <div class="line"></div>
-                </div>
+                <div class="container">
+                    <header class="section-header" data-animate>
+                        <span class="section-label">Stack</span>
+                        <h2>O que uso para<br>garantir qualidade.</h2>
+                    </header>
 
-                <div class="skills-grid">
-                    <article class="skill-category">
-                        <div class="skill-head">
-                            <i class="fa-solid fa-vial-circle-check icon-main"></i>
-                            <div>
-                                <h4 class="skill-title">QA & validação</h4>
-                                <p class="skill-subtitle">Base da minha atuação em qualidade de software</p>
+                    <!-- Ticker -->
+                    <div class="skills-ticker" aria-hidden="true">
+                        <div class="ticker-track ticker-left">
+                            <div class="ticker-inner">
+                                <span class="ticker-item"><i class="devicon-playwright-plain"></i> Playwright</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-postman-plain"></i> Postman</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-database"></i> PostgreSQL</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-git-plain"></i> Git</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-javascript-plain"></i> JavaScript</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-dbeaver-plain"></i> DBeaver</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-clipboard-list"></i> Redmine</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-intellij-plain"></i> IntelliJ</span>
+                                <span class="ticker-sep">·</span>
+                            </div>
+                            <div class="ticker-inner" aria-hidden="true">
+                                <span class="ticker-item"><i class="devicon-playwright-plain"></i> Playwright</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-postman-plain"></i> Postman</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-database"></i> PostgreSQL</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-git-plain"></i> Git</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-javascript-plain"></i> JavaScript</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-dbeaver-plain"></i> DBeaver</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-clipboard-list"></i> Redmine</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-intellij-plain"></i> IntelliJ</span>
+                                <span class="ticker-sep">·</span>
                             </div>
                         </div>
-
-                        <div class="skill-pill-grid skill-pill-grid-single">
-                            <span class="skill-pill"><i class="fa-solid fa-check"></i><span class="skill-pill-label">Testes funcionais</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-rotate"></i><span class="skill-pill-label">Regressão</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-list-check"></i><span class="skill-pill-label">Requisitos</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-circle-check"></i><span class="skill-pill-label">Homologação</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-bug"></i><span class="skill-pill-label">Bugs & evidências</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-scale-balanced"></i><span class="skill-pill-label">Regra de negócio</span></span>
-                        </div>
-
-                        <div class="skill-note">
-                            <p><strong class="skill-note-label">Atuação prática:</strong> <span>Testes funcionais, análise de comportamento, homologação e leitura de regras em sistemas com operação crítica.</span></p>
-                        </div>
-                    </article>
-
-                    <article class="skill-category">
-                        <div class="skill-head">
-                            <i class="fa-solid fa-plug-circle-check icon-main"></i>
-                            <div>
-                                <h4 class="skill-title">APIs & integrações</h4>
-                                <p class="skill-subtitle">Validação de retorno, integração e comportamento entre sistemas</p>
+                        <div class="ticker-track ticker-right">
+                            <div class="ticker-inner">
+                                <span class="ticker-item"><i class="fa-solid fa-bolt"></i> Thunder Client</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-moon"></i> Insomnia</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-flask"></i> SoapUI</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-python-plain"></i> Python</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-vscode-plain"></i> VS Code</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-wand-magic-sparkles"></i> Cursor + MCP</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-table"></i> pgAdmin</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-java-plain"></i> Java</span>
+                                <span class="ticker-sep">·</span>
+                            </div>
+                            <div class="ticker-inner" aria-hidden="true">
+                                <span class="ticker-item"><i class="fa-solid fa-bolt"></i> Thunder Client</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-moon"></i> Insomnia</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-flask"></i> SoapUI</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-python-plain"></i> Python</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-vscode-plain"></i> VS Code</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-wand-magic-sparkles"></i> Cursor + MCP</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="fa-solid fa-table"></i> pgAdmin</span>
+                                <span class="ticker-sep">·</span>
+                                <span class="ticker-item"><i class="devicon-java-plain"></i> Java</span>
+                                <span class="ticker-sep">·</span>
                             </div>
                         </div>
-
-                        <div class="skill-pill-grid skill-pill-grid-single">
-                            <span class="skill-pill"><i class="fa-solid fa-cloud-arrow-down"></i><span class="skill-pill-label">Webservices</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-code-branch"></i><span class="skill-pill-label">Integrações</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-box-archive"></i><span class="skill-pill-label">Lotes / arquivos</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-wand-magic-sparkles"></i><span class="skill-pill-label">Mocks no SoapUI</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-mobile-screen"></i><span class="skill-pill-label">Apps & web</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-network-wired"></i><span class="skill-pill-label">Protocolos & conectividade</span></span>
-                        </div>
-
-                        <div class="skill-note">
-                            <p><strong class="skill-note-label">Em destaque:</strong> <span>Validação de integrações, tratamento de retorno, simulações com mock e análise de fluxos entre aplicações e serviços externos.</span></p>
-                        </div>
-                    </article>
-
-                    <article class="skill-category tools-card">
-                        <div class="skill-head">
-                            <i class="fa-solid fa-laptop-code icon-main"></i>
-                            <div>
-                                <h4 class="skill-title">Dados & ferramentas</h4>
-                                <p class="skill-subtitle">Ferramentas para investigar, validar e rastrear fluxos</p>
-                            </div>
-                        </div>
-
-                        <div class="skill-pill-grid">
-                            <span class="skill-pill"><i class="fa-solid fa-database"></i><span class="skill-pill-label">PostgreSQL</span></span>
-                            <span class="skill-pill"><i class="devicon-dbeaver-plain"></i><span class="skill-pill-label">DBeaver</span></span>
-                            <span class="skill-pill"><i class="devicon-intellij-plain"></i><span class="skill-pill-label">IntelliJ IDEA</span></span>
-                            <span class="skill-pill"><i class="devicon-eclipse-plain"></i><span class="skill-pill-label">Eclipse</span></span>
-                            <span class="skill-pill"><i class="devicon-vscode-plain"></i><span class="skill-pill-label">VS Code</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-flask"></i><span class="skill-pill-label">SoapUI</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-bolt"></i><span class="skill-pill-label">Thunder Client</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-clipboard-list"></i><span class="skill-pill-label">Redmine</span></span>
-                            <span class="skill-pill"><i class="devicon-git-plain"></i><span class="skill-pill-label">Git</span></span>
-                            <span class="skill-pill"><i class="devicon-github-original"></i><span class="skill-pill-label">GitHub</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-table"></i><span class="skill-pill-label">pgAdmin</span></span>
-                            <span class="skill-pill"><i class="fa-solid fa-gauge-high"></i><span class="skill-pill-label">Clumsy</span></span>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="highlight-box">
-                    <div class="highlight-box-header">
-                        <h3>Diferenciais</h3>
-                        <span class="highlight-badge">Base técnica atual</span>
                     </div>
 
-                    <div class="highlight-grid">
-                        <article class="highlight-item">
-                            <i class="fa-solid fa-microscope"></i>
-                            <div>
-                                <strong>Contexto de atuação</strong>
-                                <p>Backend Java, operações críticas, homologação e suporte a integrações.</p>
+                    <!-- Skills Bento Grid -->
+                    <div class="skills-bento">
+
+                        <!-- QA & Processos — 7 cols -->
+                        <article class="skill-card skill-wide" data-animate>
+                            <div class="skill-card-head">
+                                <i class="fa-solid fa-vial-circle-check skill-card-icon" aria-hidden="true"></i>
+                                <div>
+                                    <h3 class="skill-card-title">QA &amp; Processos</h3>
+                                    <p class="skill-card-sub">Base técnica em qualidade de software</p>
+                                </div>
+                            </div>
+                            <div class="skill-pills">
+                                <span class="skill-pill"><i class="fa-solid fa-check" aria-hidden="true"></i> Testes funcionais</span>
+                                <span class="skill-pill"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Regressão</span>
+                                <span class="skill-pill"><i class="fa-solid fa-link" aria-hidden="true"></i> Integração</span>
+                                <span class="skill-pill"><i class="fa-solid fa-eye" aria-hidden="true"></i> Usabilidade</span>
+                                <span class="skill-pill"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Casos de teste</span>
+                                <span class="skill-pill"><i class="fa-solid fa-bug" aria-hidden="true"></i> Bug report</span>
+                                <span class="skill-pill"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Homologação</span>
+                                <span class="skill-pill"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Regra de negócio</span>
+                            </div>
+                            <p class="skill-card-note">Planejamento e execução de testes em sistemas com operação crítica. Análise de requisitos, homologação e validação de dados via SQL.</p>
+                        </article>
+
+                        <!-- Automação — 5 cols FEATURED (violet) -->
+                        <article class="skill-card skill-featured" data-animate>
+                            <div class="skill-card-head">
+                                <i class="fa-solid fa-robot skill-card-icon skill-card-icon--violet" aria-hidden="true"></i>
+                                <div>
+                                    <div class="skill-card-title-row">
+                                        <h3 class="skill-card-title">Automação</h3>
+                                        <span class="skill-evo-tag">Em evolução</span>
+                                    </div>
+                                    <p class="skill-card-sub">Playwright E2E e scripts de processo</p>
+                                </div>
+                            </div>
+                            <div class="skill-pills">
+                                <span class="skill-pill skill-pill--featured"><i class="devicon-playwright-plain" aria-hidden="true"></i> Playwright E2E</span>
+                                <span class="skill-pill"><i class="fa-solid fa-arrows-turn-right" aria-hidden="true"></i> Cenários E2E</span>
+                                <span class="skill-pill"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Regressão automatizada</span>
+                                <span class="skill-pill"><i class="devicon-python-plain" aria-hidden="true"></i> PyAutoGUI</span>
+                                <span class="skill-pill"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Cursor + MCP</span>
+                            </div>
+                            <p class="skill-card-note">Automação de fluxos com Playwright, scripts com PyAutoGUI e IA com Cursor + MCP como acelerador de testes.</p>
+                        </article>
+
+                        <!-- APIs & Ferramentas — 5 cols -->
+                        <article class="skill-card skill-tools" data-animate>
+                            <div class="skill-card-head">
+                                <i class="fa-solid fa-plug-circle-check skill-card-icon" aria-hidden="true"></i>
+                                <div>
+                                    <h3 class="skill-card-title">APIs &amp; Ferramentas</h3>
+                                    <p class="skill-card-sub">Validação REST, integrações e contratos</p>
+                                </div>
+                            </div>
+                            <div class="skill-pills">
+                                <span class="skill-pill skill-pill--featured"><i class="devicon-postman-plain" aria-hidden="true"></i> Postman</span>
+                                <span class="skill-pill"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Thunder Client</span>
+                                <span class="skill-pill"><i class="fa-solid fa-moon" aria-hidden="true"></i> Insomnia</span>
+                                <span class="skill-pill"><i class="fa-solid fa-flask" aria-hidden="true"></i> SoapUI</span>
+                                <span class="skill-pill"><i class="fa-solid fa-cloud-arrow-down" aria-hidden="true"></i> REST APIs</span>
+                                <span class="skill-pill"><i class="fa-solid fa-code-branch" aria-hidden="true"></i> Contratos</span>
+                            </div>
+                            <p class="skill-card-note">Testes de API com Postman, Thunder Client e SoapUI. Simulação de respostas e validação de contratos entre serviços.</p>
+                        </article>
+
+                        <!-- O que me destaca — 7 cols -->
+                        <article class="skill-card skill-impact" data-animate>
+                            <h3 class="skill-impact-title">O que me destaca</h3>
+                            <div class="skill-impact-grid">
+                                <div class="skill-impact-item">
+                                    <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Playwright &amp; Automação E2E</strong>
+                                        <p>Evolução ativa em scripts E2E com Playwright e uso de Cursor + MCP como apoio à execução com IA.</p>
+                                    </div>
+                                </div>
+                                <div class="skill-impact-item">
+                                    <i class="fa-solid fa-microscope" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Contexto HealthTech</strong>
+                                        <p>Biomedicina aplicada ao QA: visão sistêmica do fluxo clínico, criticidade dos dados e impacto operacional.</p>
+                                    </div>
+                                </div>
+                                <div class="skill-impact-item">
+                                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Impacto mensurável</strong>
+                                        <p>Banco Padrão de Exames (LIS): tempo médio de implantação reduzido de <strong class="impact-accent">3 meses para 1 mês.</strong></p>
+                                    </div>
+                                </div>
                             </div>
                         </article>
 
-                        <article class="highlight-item">
-                            <i class="fa-solid fa-sitemap"></i>
-                            <div>
-                                <strong>Foco atual</strong>
-                                <p>QA backend, APIs, integrações, consistência de dados e automação de testes.</p>
-                            </div>
-                        </article>
-
-                        <article class="highlight-item">
-                            <i class="fa-solid fa-toolbox"></i>
-                            <div>
-                                <strong>Ferramentas-chave</strong>
-                                <p>PostgreSQL, DBeaver, Redmine, Eclipse IDE, IntelliJ IDEA, VS Code, SoapUI e Thunder Client.</p>
-                            </div>
-                        </article>
                     </div>
                 </div>
             </section>
 
+            <!-- ============================================================
+                 FORMAÇÃO
+            ============================================================ -->
+            <section id="formacao">
+                <div class="container">
+                    <header class="section-header" data-animate>
+                        <span class="section-label">Formação</span>
+                        <h2>Formação &amp;<br>certificações.</h2>
+                    </header>
+
+                    <div class="edu-timeline" role="list" data-animate>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2027</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Análise e Desenvolvimento de Sistemas</h3>
+                                    <span class="edu-status edu-active">Cursando</span>
+                                </div>
+                                <p class="edu-institution">UniCV</p>
+                                <p class="edu-date">Previsão: Dezembro 2027</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Dev Full Stack Junior — Bolsa Mérito</h3>
+                                    <span class="edu-status edu-inprogress">Em andamento</span>
+                                </div>
+                                <p class="edu-institution">Grupo +praTI &amp; Codifica — Java, React, Spring Boot, DevOps, AI</p>
+                                <p class="edu-date">Previsão: Dezembro 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Arquitetura de Sistemas</h3>
+                                    <span class="edu-status edu-inprogress">Em andamento</span>
+                                </div>
+                                <p class="edu-institution">Fundação FAT / SP — MVC, microsserviços, SOLID, Design Patterns, Java · 120h</p>
+                                <p class="edu-date">Previsão: Maio 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Fundamentos em Teste de Software</h3>
+                                    <span class="edu-status edu-done">Concluído</span>
+                                </div>
+                                <p class="edu-institution">Instituto Eldorado · 24h</p>
+                                <p class="edu-date">Março 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Processos de Teste de Software</h3>
+                                    <span class="edu-status edu-done">Concluído</span>
+                                </div>
+                                <p class="edu-institution">Instituto Eldorado · 24h</p>
+                                <p class="edu-date">Março 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Engenharia de Software</h3>
+                                    <span class="edu-status edu-done">Concluído</span>
+                                </div>
+                                <p class="edu-institution">UniCV — Projeto de Ensino · 20h</p>
+                                <p class="edu-date">Março 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2026</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Programação Web</h3>
+                                    <span class="edu-status edu-done">Concluído</span>
+                                </div>
+                                <p class="edu-institution">Fundação FAT / SP — JS, HTML5, CSS3, design responsivo · 120h</p>
+                                <p class="edu-date">Fevereiro 2026</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-entry" role="listitem">
+                            <span class="edu-year">2017</span>
+                            <div class="edu-card-wrap">
+                                <div class="edu-card-head">
+                                    <h3 class="edu-card-title">Bacharelado em Biomedicina</h3>
+                                    <span class="edu-status edu-done">Concluído</span>
+                                </div>
+                                <p class="edu-institution">UniCesumar — Análises Clínicas e Diagnóstico por Imagem</p>
+                                <p class="edu-date">2017</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 PROJETOS
+            ============================================================ -->
             <section id="projetos">
-                <div class="section-title">
-                    <h2>Projetos & casos selecionados</h2>
-                    <div class="line"></div>
-                    <p class="section-intro">Dois casos mostram profundidade de análise em QA. Os projetos complementares reforçam cuidado com interface, estrutura visual e apresentação técnica.</p>
-                </div>
+                <div class="container">
+                    <header class="section-header" data-animate>
+                        <span class="section-label">Projetos</span>
+                        <h2>Casos selecionados.</h2>
+                    </header>
 
-                <div class="project-grid">
-                    <article class="card card-case">
-                        <a href="estudo-caso-pagamentos.html" class="card-main-link"
-                            aria-label="Acessar estudo de caso profissional"></a>
+                    <div class="projects-bento">
 
-                        <div class="card-banner case-banner case-banner-business">
-                            <div class="case-banner-content">
-                                <span class="card-badge">Estudo de caso profissional</span>
-                                <i class="fa-solid fa-receipt"></i>
+                        <!-- Pagamentos — PRIMARY 7 cols -->
+                        <article class="project-card project-primary" data-animate>
+                            <a href="estudo-caso-pagamentos.html" class="project-overlay-link"
+                                aria-label="Abrir estudo de caso: Pagamentos, regressão e regra de negócio"></a>
+                            <div class="project-card-meta">
+                                <span class="project-type-badge">Estudo de caso QA</span>
+                                <span class="project-cat">Regra de negócio</span>
                             </div>
-                        </div>
-
-                        <div class="card-info">
-                            <h3>Pagamentos, regressão<br>e regra de negócio</h3>
-                            <p>
-                                Caso que demonstra como conduzo validação de regra de negócio, bloqueio de resultados
-                                online, regressão e reteste até a aprovação.
-                            </p>
-
-                            <div class="card-footer">
-                                <div class="tech-used">
-                                    <i class="fa-solid fa-vial-circle-check" title="QA funcional"></i>
-                                    <i class="fa-solid fa-calendar-days" title="Datas e regras"></i>
-                                    <i class="fa-solid fa-rotate" title="Regressão"></i>
+                            <div class="project-card-body">
+                                <span class="project-bg-label" aria-hidden="true">QA</span>
+                                <h3>Pagamentos, regressão<br>e regra de negócio</h3>
+                                <p>Validação de regra de negócio, bloqueio de resultados online, regressão e reteste até a aprovação em sistema LIS crítico.</p>
+                            </div>
+                            <div class="project-card-footer">
+                                <div class="project-tags">
+                                    <span class="project-tag"><i class="fa-solid fa-vial-circle-check" aria-hidden="true"></i> QA funcional</span>
+                                    <span class="project-tag"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Regressão</span>
+                                    <span class="project-tag"><i class="devicon-postman-plain" aria-hidden="true"></i> Postman</span>
                                 </div>
-
-                                <a href="estudo-caso-pagamentos.html" class="btn-git">Ver estudo <i
-                                        class="fa-solid fa-arrow-right"></i></a>
+                                <span class="project-arrow" aria-hidden="true">→</span>
                             </div>
-                        </div>
-                    </article>
+                        </article>
 
-                    <article class="card card-case">
-                        <a href="cenario-tecnico-qa.html" class="card-main-link"
-                            aria-label="Acessar cenário técnico profissional"></a>
-
-                        <div class="card-banner case-banner case-banner-technical">
-                            <div class="case-banner-content">
-                                <span class="card-badge">Cenário técnico profissional</span>
-                                <i class="fa-solid fa-network-wired"></i>
+                        <!-- Cenário Técnico — SECONDARY 5 cols -->
+                        <article class="project-card project-secondary" data-animate>
+                            <a href="cenario-tecnico-qa.html" class="project-overlay-link"
+                                aria-label="Abrir cenário técnico: APIs, integrações e consistência técnica"></a>
+                            <div class="project-card-meta">
+                                <span class="project-type-badge project-type-badge--dim">Cenário técnico</span>
+                                <span class="project-cat">Integração &amp; API</span>
                             </div>
-                        </div>
-
-                        <div class="card-info">
-                            <h3>APIs, integrações<br>e consistência técnica</h3>
-                            <p>
-                                Cenário que resume como cruzo interface, banco, logs, APIs e respostas simuladas para
-                                validar comportamento e estabilidade.
-                            </p>
-
-                            <div class="card-footer">
-                                <div class="tech-used">
-                                    <i class="fa-solid fa-flask" title="SoapUI"></i>
-                                    <i class="fa-solid fa-bolt" title="Thunder Client"></i>
-                                    <i class="fa-solid fa-database" title="PostgreSQL"></i>
+                            <div class="project-card-body">
+                                <span class="project-bg-label" aria-hidden="true">API</span>
+                                <h3>APIs, integrações<br>e consistência técnica</h3>
+                                <p>Cruzamento de interface, banco, logs e APIs simuladas para validar comportamento e estabilidade sistêmica.</p>
+                            </div>
+                            <div class="project-card-footer">
+                                <div class="project-tags">
+                                    <span class="project-tag"><i class="fa-solid fa-flask" aria-hidden="true"></i> SoapUI</span>
+                                    <span class="project-tag"><i class="fa-solid fa-database" aria-hidden="true"></i> PostgreSQL</span>
                                 </div>
-
-                                <a href="cenario-tecnico-qa.html" class="btn-git">Ver cenário <i
-                                        class="fa-solid fa-arrow-right"></i></a>
+                                <span class="project-arrow" aria-hidden="true">→</span>
                             </div>
-                        </div>
-                    </article>
+                        </article>
 
-                    <article class="card card-portfolio">
-                        <a href="https://bruno-artacho.vercel.app" target="_blank" class="card-main-link"
-                            aria-label="Acessar o portfólio publicado" rel="noreferrer"></a>
-
-                        <div class="card-banner case-banner case-banner-portfolio">
-                            <div class="case-banner-content">
-                                <span class="card-badge">Projeto autoral</span>
-                                <i class="fa-solid fa-laptop-file"></i>
+                        <!-- Portfolio — CODE 4 cols -->
+                        <article class="project-card project-code" data-animate>
+                            <a href="https://bruno-artacho.vercel.app" target="_blank" rel="noreferrer"
+                                class="project-overlay-link"
+                                aria-label="Acessar portfólio publicado (abre em nova aba)"></a>
+                            <div class="project-code-cover" aria-hidden="true">
+                                <span class="pcc-brand">ARTACHO<span>.dev</span></span>
                             </div>
-                        </div>
-
-                        <div class="card-info">
-                            <h3>Portfólio profissional<br>ARTACHO.dev</h3>
-                            <p>
-                                Projeto do próprio portfólio, pensado para apresentar atuação em QA, estudos de caso,
-                                organização visual e clareza na comunicação técnica.
-                            </p>
-
-                            <div class="card-footer">
-                                <div class="tech-used">
-                                    <i class="fa-brands fa-html5" title="HTML5"></i>
-                                    <i class="fa-brands fa-css3-alt" title="CSS3"></i>
-                                    <i class="fa-brands fa-js" title="JavaScript"></i>
+                            <div class="project-card-meta">
+                                <span class="project-type-badge project-type-badge--dim">Projeto autoral</span>
+                            </div>
+                            <div class="project-card-body">
+                                <h3>Portfólio<br>ARTACHO.dev</h3>
+                                <p>Este portfólio — HTML, CSS e JS vanilla. Sem frameworks. Desenvolvido com foco em identidade visual e UX.</p>
+                            </div>
+                            <div class="project-card-footer">
+                                <div class="project-tags">
+                                    <span class="project-tag"><i class="fa-brands fa-html5" aria-hidden="true"></i> HTML5</span>
+                                    <span class="project-tag"><i class="fa-brands fa-css3-alt" aria-hidden="true"></i> CSS3</span>
+                                    <span class="project-tag"><i class="fa-brands fa-js" aria-hidden="true"></i> JS</span>
                                 </div>
-
-                                <a href="https://bruno-artacho.vercel.app" target="_blank"
-                                    class="btn-git" rel="noreferrer">Abrir site <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                <span class="project-arrow" aria-hidden="true">↗</span>
                             </div>
-                        </div>
-                    </article>
+                        </article>
 
-                    <article class="card card-showcase card-showcase-padaria">
-                        <a href="https://padaria-do-bairro-premium.vercel.app" target="_blank" class="card-main-link"
-                            aria-label="Acessar projeto Padaria do Bairro" rel="noreferrer"></a>
-
-                        <div class="card-banner">
-                            <img src="./imagens/capa_padaria_bairro_premium.jpg" alt="Padaria do Bairro" class="img-pos-top img-padaria-cover">
-                        </div>
-
-                        <div class="card-info">
-                            <h3>Padaria do Bairro<br>Projeto complementar</h3>
-                            <p>
-                                Projeto front-end responsivo usado como demonstração complementar de interface,
-                                estrutura visual e organização de componentes web.
-                            </p>
-
-                            <div class="card-footer">
-                                <div class="tech-used">
-                                    <i class="fa-brands fa-html5" title="HTML5"></i>
-                                    <i class="fa-brands fa-css3-alt" title="CSS3"></i>
-                                    <i class="fa-brands fa-js" title="JavaScript"></i>
+                        <!-- Padaria — IMAGE 5 cols -->
+                        <article class="project-card project-image" data-animate>
+                            <a href="https://padaria-do-bairro-premium.vercel.app" target="_blank" rel="noreferrer"
+                                class="project-overlay-link"
+                                aria-label="Acessar projeto Padaria do Bairro (abre em nova aba)"></a>
+                            <div class="project-image-cover">
+                                <img src="./imagens/capa_padaria_bairro_premium.jpg"
+                                     alt="Projeto Padaria do Bairro — interface responsiva"
+                                     loading="lazy">
+                            </div>
+                            <div class="project-card-meta">
+                                <span class="project-type-badge project-type-badge--dim">Demonstração front-end</span>
+                            </div>
+                            <div class="project-card-body">
+                                <h3>Padaria do Bairro</h3>
+                                <p>Interface responsiva como demonstração complementar de front-end e organização visual de componentes web.</p>
+                            </div>
+                            <div class="project-card-footer">
+                                <div class="project-tags">
+                                    <span class="project-tag"><i class="fa-brands fa-html5" aria-hidden="true"></i> HTML5</span>
+                                    <span class="project-tag"><i class="fa-brands fa-css3-alt" aria-hidden="true"></i> CSS3</span>
+                                    <span class="project-tag"><i class="fa-brands fa-js" aria-hidden="true"></i> JS</span>
                                 </div>
-
-                                <a href="https://github.com/brartacho/Padaria-do-Bairro" target="_blank"
-                                    class="btn-git" rel="noreferrer">Ver repositório <i class="fa-brands fa-github"></i></a>
+                                <a href="https://github.com/brartacho/Padaria-do-Bairro" target="_blank" rel="noreferrer"
+                                   class="project-repo-link" aria-label="Ver repositório no GitHub">
+                                    <i class="fa-brands fa-github" aria-hidden="true"></i>
+                                </a>
                             </div>
-                        </div>
-                    </article>
+                        </article>
+
+                        <!-- Em breve — WIP 3 cols -->
+                        <article class="project-card project-wip" data-animate>
+                            <div class="project-wip-cover" aria-hidden="true">
+                                <i class="devicon-java-plain"></i>
+                                <i class="devicon-spring-plain"></i>
+                                <i class="devicon-react-original"></i>
+                            </div>
+                            <div class="project-card-meta">
+                                <span class="project-wip-badge">Em desenvolvimento</span>
+                            </div>
+                            <div class="project-card-body">
+                                <h3>Full Stack App</h3>
+                                <p>Java + Spring Boot + React. Autenticação JWT, REST API e banco relacional.</p>
+                            </div>
+                            <div class="project-card-footer">
+                                <div class="project-wip-progress" role="progressbar" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100" aria-label="35% concluído">
+                                    <div class="project-wip-bar" style="--progress: 35%"></div>
+                                </div>
+                                <span class="project-wip-pct">35%</span>
+                            </div>
+                        </article>
+
+                    </div>
                 </div>
             </section>
 
+            <!-- ============================================================
+                 CONTATO
+            ============================================================ -->
             <section id="contato">
-                <div class="section-title">
-                    <h2>Vamos conversar?</h2>
-                    <div class="line"></div>
-                </div>
+                <div class="container">
+                    <div class="contact-layout" data-animate>
 
-                <div class="contact-container">
-                    <div class="contact-intro">
-                        <p class="contact-kicker">Contato</p>
-                        <p class="contact-text">
-                            Estou aberto a oportunidades em QA, testes de APIs, integrações e lógica de backend.
-                        </p>
-                    </div>
+                        <div class="contact-headline">
+                            <span class="section-label">Contato</span>
+                            <h2 class="contact-title">
+                                Vamos conversar<span class="accent-dot">?</span>
+                            </h2>
+                            <p class="contact-subtitle">
+                                Disponível para oportunidades em QA — remoto ou Maringá, PR.
+                            </p>
+                        </div>
 
-                    <div class="contact-cards">
-                        <a href="https://linkedin.com/in/bruno-artacho" target="_blank" class="contact-card"
-                            rel="noreferrer">
-                            <i class="fa-brands fa-linkedin"></i>
-                            <span>LinkedIn</span>
-                        </a>
+                        <div class="contact-actions">
+                            <a href="https://linkedin.com/in/bruno-artacho" target="_blank" rel="noreferrer"
+                               class="contact-primary-cta">
+                                <i class="fa-brands fa-linkedin" aria-hidden="true"></i>
+                                Conectar no LinkedIn
+                                <span class="cta-arrow" aria-hidden="true">↗</span>
+                            </a>
 
-                        <a href="mailto:br.artacho@gmail.com" class="contact-card">
-                            <i class="fa-solid fa-envelope"></i>
-                            <span>E-mail</span>
-                        </a>
+                            <div class="contact-secondary">
+                                <a href="mailto:br.artacho@gmail.com" class="contact-link">
+                                    <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+                                    br.artacho@gmail.com
+                                </a>
+                                <a href="https://wa.me/5544984366533" target="_blank" rel="noreferrer" class="contact-link">
+                                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                                    WhatsApp
+                                </a>
+                                <a href="https://github.com/brartacho" target="_blank" rel="noreferrer" class="contact-link">
+                                    <i class="fa-brands fa-github" aria-hidden="true"></i>
+                                    GitHub
+                                </a>
+                                <a href="/cv" class="contact-link">
+                                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                                    Currículo PDF
+                                </a>
+                            </div>
+                        </div>
 
-                        <a href="https://wa.me/5544984366533" target="_blank" class="contact-card" rel="noreferrer">
-                            <i class="fa-brands fa-whatsapp"></i>
-                            <span>WhatsApp</span>
-                        </a>
-
-                        <a href="https://github.com/brartacho" target="_blank" class="contact-card" rel="noreferrer">
-                            <i class="fa-brands fa-github"></i>
-                            <span>GitHub</span>
-                        </a>
                     </div>
                 </div>
             </section>
+
         </main>
 
         <footer class="simple-footer">
@@ -516,12 +702,19 @@
                             <a href="#home" class="footer-brand">ARTACHO<span>.</span>dev</a>
                             <p>© 2026 Bruno Artacho. Maringá, PR, Brasil.</p>
                         </div>
-                        <a href="#home" class="footer-top-link" aria-label="Voltar ao topo"><span>Voltar ao topo</span><i class="fa-solid fa-arrow-up"></i></a>
+                        <a href="#home" class="footer-top-link" aria-label="Voltar ao topo">
+                            <span>Voltar ao topo</span>
+                            <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </footer>
+
     </div>
+
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-ring" aria-hidden="true"></div>
 
     <script src="script.js"></script>
 </body>
