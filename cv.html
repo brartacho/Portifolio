@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currículo — Bruno Artacho</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="imagens/favicon-artacho.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --bg-surface: #1a1a28;
+            --card-bg: rgba(20, 20, 32, 0.94);
+            --border: #1e1e2e;
+            --text: #f0f0f5;
+            --text-soft: #a8a8c0;
+            --text-dim: #5c5c80;
+            --cyan: #22d3ee;
+            --cyan-soft: rgba(34, 211, 238, 0.08);
+            --cyan-mid: rgba(34, 211, 238, 0.15);
+            --violet: #7c3aed;
+            --success: #4ade80;
+            --success-soft: rgba(74, 222, 128, 0.08);
+            --danger: #ef4444;
+            --danger-soft: rgba(239, 68, 68, 0.08);
+            --warning: #f59e0b;
+            --warning-soft: rgba(245, 158, 11, 0.08);
+            --font-display: "Plus Jakarta Sans", sans-serif;
+            --font-mono: "Fira Code", monospace;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-display);
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .cv-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cv-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--violet), var(--cyan));
+        }
+
+        .cv-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .cv-icon--loading {
+            background: var(--cyan-soft);
+            border: 1px solid var(--cyan-mid);
+            color: var(--cyan);
+        }
+
+        .cv-icon--success {
+            background: var(--success-soft);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+
+        .cv-icon--error {
+            background: var(--danger-soft);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .cv-icon--warning {
+            background: var(--warning-soft);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .cv-subtitle {
+            color: var(--text-soft);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .cv-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--cyan-mid);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .cv-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-soft);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 24px;
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .cv-back:hover {
+            color: var(--cyan);
+            border-color: rgba(34, 211, 238, 0.3);
+        }
+
+        .cv-brand {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .cv-brand span { color: var(--cyan); }
+
+        @media (max-width: 480px) {
+            .cv-card { padding: 36px 24px; }
+            h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cv-card">
+        <div class="cv-icon cv-icon--loading" id="cvIcon">
+            <span class="cv-spinner" id="spinner"></span>
+        </div>
+        <h1 id="cvTitle">Preparando seu download…</h1>
+        <p class="cv-subtitle" id="cvSubtitle">Verificando o link e iniciando o download do currículo.</p>
+        <div id="cvActions"></div>
+        <p class="cv-brand">ARTACHO<span>.</span>dev</p>
+    </div>
+
+    <script>
+        (async () => {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('t');
+
+            const icon = document.getElementById('cvIcon');
+            const spinner = document.getElementById('spinner');
+            const title = document.getElementById('cvTitle');
+            const subtitle = document.getElementById('cvSubtitle');
+            const actions = document.getElementById('cvActions');
+
+            function backLink() {
+                return `<a href="/" class="cv-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao portfólio</a>`;
+            }
+
+            function setError(iconClass, iconHtml, t, s) {
+                icon.className = `cv-icon ${iconClass}`;
+                icon.innerHTML = iconHtml;
+                title.textContent = t;
+                subtitle.textContent = s;
+                actions.innerHTML = backLink();
+            }
+
+            if (!token) {
+                setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
+                    'Link inválido',
+                    'Este link não contém um token de acesso. Solicite um novo link ao remetente.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/cv/download?t=${encodeURIComponent(token)}`);
+
+                if (response.ok) {
+                    // Success — trigger download
+                    const blob = await response.blob();
+                    const disposition = response.headers.get('content-disposition') || '';
+                    const nameMatch = disposition.match(/filename="?([^"]+)"?/);
+                    const fileName = nameMatch ? nameMatch[1] : 'Curriculo-Bruno-Artacho.pdf';
+
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+                    spinner.remove();
+                    icon.className = 'cv-icon cv-icon--success';
+                    icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                    title.textContent = 'Download iniciado!';
+                    subtitle.textContent = 'O currículo de Bruno Artacho foi baixado com sucesso.';
+                    actions.innerHTML = backLink();
+                    return;
+                }
+
+                const { error } = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+
+                if (response.status === 410) {
+                    const isExpired = (error || '').toLowerCase().includes('expir');
+                    const isRevoked = (error || '').toLowerCase().includes('revog');
+
+                    if (isExpired) {
+                        setError('cv-icon--warning', '<i class="fa-solid fa-clock"></i>',
+                            'Link expirado',
+                            'Este link de acesso já passou da data de validade. Solicite um novo link ao remetente.');
+                    } else if (isRevoked) {
+                        setError('cv-icon--error', '<i class="fa-solid fa-ban"></i>',
+                            'Link revogado',
+                            'Este link foi desativado. Solicite um novo link ao remetente.');
+                    } else {
+                        setError('cv-icon--warning', '<i class="fa-solid fa-circle-xmark"></i>',
+                            'Limite de usos atingido',
+                            'Este link já foi utilizado o número máximo de vezes permitido.');
+                    }
+                } else if (response.status === 429) {
+                    setError('cv-icon--warning', '<i class="fa-solid fa-shield-halved"></i>',
+                        'Muitas tentativas',
+                        'Número excessivo de tentativas detectado. Aguarde um momento e tente novamente.');
+                } else {
+                    setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
+                        'Link inválido',
+                        error || 'Este link não é válido. Verifique se foi copiado corretamente.');
+                }
+            } catch {
+                setError('cv-icon--error', '<i class="fa-solid fa-wifi"></i>',
+                    'Erro de conexão',
+                    'Não foi possível verificar o link. Verifique sua conexão e tente novamente.');
+            }
+        })();
+    </script>
+</body>
+</html>
