@@ -1383,6 +1383,23 @@ function openSendCV(cv) {
 }
 function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
+// Templates puros (com placeholders [nome] e [link]) — substituições no envio
+const _msgTemplates = {
+    email: `Olá [nome],\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`,
+    whatsapp: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
+};
+
+// Quando a mensagem atual é um dos templates conhecidos (com [nome] OU já com nome substituído),
+// significa que o usuário não editou — pode atualizar livremente.
+function isUntouchedTemplate(currentMsg, name) {
+    if (!currentMsg) return true;
+    for (const tpl of Object.values(_msgTemplates)) {
+        if (currentMsg === tpl) return true;
+        if (currentMsg === tpl.replace(/\[nome\]/g, name)) return true;
+    }
+    return false;
+}
+
 function setSendMode(mode) {
     _sendMode = mode;
     const isEmail = mode === 'email';
@@ -1393,14 +1410,19 @@ function setSendMode(mode) {
     document.getElementById('sendBtnLabel').textContent = isEmail ? 'Enviar email com PDF' : 'Abrir WhatsApp com link';
     document.getElementById('sendBtnIcon').className = isEmail ? 'fa-solid fa-paper-plane' : 'fa-brands fa-whatsapp';
 
-    // Pré-preenche mensagem
-    const name = document.getElementById('sendName').value.trim() || '[nome]';
-    const defaultEmailMsg = `Olá ${name},\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`;
-    const defaultWaMsg = `Olá ${name}, conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`;
+    refreshDefaultMessage();
+}
+
+function refreshDefaultMessage() {
+    const nameInput = document.getElementById('sendName').value.trim();
     const cur = document.getElementById('sendMessage').value;
-    if (!cur || cur === defaultEmailMsg || cur === defaultWaMsg) {
-        document.getElementById('sendMessage').value = isEmail ? defaultEmailMsg : defaultWaMsg;
-    }
+
+    // Só atualiza se a mensagem atual ainda for um template não editado
+    if (!isUntouchedTemplate(cur, nameInput || '[nome]')) return;
+
+    const tpl = _sendMode === 'email' ? _msgTemplates.email : _msgTemplates.whatsapp;
+    const filled = nameInput ? tpl.replace(/\[nome\]/g, nameInput) : tpl;
+    document.getElementById('sendMessage').value = filled;
 }
 
 document.getElementById('sendCvModal').addEventListener('click', e => {
@@ -1415,9 +1437,13 @@ async function sendCV() {
     msgEl.className = 'forgot-msg';
 
     const name = document.getElementById('sendName').value.trim();
-    const message = document.getElementById('sendMessage').value.trim();
+    const rawMessage = document.getElementById('sendMessage').value.trim();
 
     if (name.length < 2) return showSendError('Informe o nome do destinatário (pelo menos 2 chars).');
+
+    // Substitui [nome] / [name] (case-insensitive) pelo nome real, mesmo se o usuário
+    // editou a mensagem mas esqueceu de trocar o placeholder
+    const message = rawMessage.replace(/\[nome\]|\[name\]/gi, name);
 
     btn.disabled = true;
 
@@ -1477,7 +1503,7 @@ async function sendCV() {
 }
 
 // Atualiza msg padrão quando user digita o nome
-document.getElementById('sendName').addEventListener('input', () => setSendMode(_sendMode));
+document.getElementById('sendName').addEventListener('input', refreshDefaultMessage);
 
 // ─── EDIT CV MODAL ────────────────────────────────────────
 function openEditCV(cv) {
