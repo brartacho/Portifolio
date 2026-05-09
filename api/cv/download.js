@@ -113,10 +113,19 @@ export default async function handler(req, res) {
 
     // Stream the PDF to the client — never expose storage URL
     const buffer = Buffer.from(await fileData.arrayBuffer());
-    const safeFileName = cv.file_name.replace(/[^a-zA-Z0-9_\-. ]/g, '_');
+
+    // Content-Disposition: usa RFC 5987 (filename*=UTF-8''…) pra suportar acentos.
+    // O `filename="..."` (ASCII) fica como fallback pra clientes antigos.
+    // Strip aspas/quebras de linha pra evitar header injection.
+    const original = cv.file_name.replace(/["\r\n]/g, '');
+    const asciiFallback = original
+        .normalize('NFD')                       // decompõe "ç" → "c" + combining cedilla
+        .replace(/[̀-ͯ]/g, '')        // remove diacritics (acentos)
+        .replace(/[^\x20-\x7E]/g, '_');         // qualquer non-ASCII restante vira "_"
+    const utf8Encoded = encodeURIComponent(original);
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`);
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('X-Content-Type-Options', 'nosniff');
