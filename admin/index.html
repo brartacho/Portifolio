@@ -90,6 +90,105 @@
             margin-bottom: 32px;
         }
 
+        .pw-wrap { position: relative; }
+        .pw-wrap input { padding-right: 44px; }
+        .pw-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            display: inline-flex;
+            transition: color 0.2s;
+        }
+        .pw-toggle:hover { color: var(--cyan); }
+
+        .forgot-link {
+            display: block;
+            width: 100%;
+            margin-top: 14px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: color 0.2s;
+            text-align: center;
+        }
+        .forgot-link:hover { color: var(--cyan); text-decoration: underline; }
+
+        .forgot-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 100;
+        }
+        .forgot-modal[hidden] { display: none; }
+        .forgot-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px 28px;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+        }
+        .forgot-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: color 0.2s;
+        }
+        .forgot-close:hover { color: var(--text); }
+        .forgot-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .forgot-desc {
+            color: var(--text-soft);
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+        .forgot-msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .forgot-msg.success {
+            background: var(--success-soft);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+        .forgot-msg.error {
+            background: var(--danger-soft);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
         /* ─── LAYOUT ─────────────────────────────────── */
         #appScreen { display: none; }
 
@@ -484,12 +583,34 @@
 
         <div class="form-group">
             <label for="loginPassword">Senha de acesso</label>
-            <input type="password" id="loginPassword" placeholder="••••••••••••" autocomplete="current-password">
+            <div class="pw-wrap">
+                <input type="password" id="loginPassword" placeholder="Digite sua senha" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
+                <button type="button" class="pw-toggle" id="pwToggleBtn" aria-label="Mostrar senha" onclick="togglePassword()">
+                    <i class="fa-regular fa-eye" id="pwToggleIcon"></i>
+                </button>
+            </div>
         </div>
         <button class="btn btn-cyan" id="loginBtn" style="width:100%" onclick="doLogin()">
             <i class="fa-solid fa-unlock-keyhole"></i> Entrar
         </button>
         <p id="loginError" style="color:var(--danger);font-size:0.85rem;margin-top:12px;display:none;"></p>
+        <button type="button" class="forgot-link" onclick="openForgot()">
+            Esqueci minha senha
+        </button>
+    </div>
+
+    <div id="forgotModal" class="forgot-modal" hidden>
+        <div class="forgot-card">
+            <button class="forgot-close" onclick="closeForgot()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="forgot-title">Recuperar acesso</h3>
+            <p class="forgot-desc" id="forgotDesc">
+                Vou enviar um link de recuperação para o email cadastrado do administrador. O link expira em 1 hora.
+            </p>
+            <button class="btn btn-cyan" id="forgotBtn" style="width:100%" onclick="sendRecovery()">
+                <i class="fa-solid fa-paper-plane"></i> Enviar link de recuperação
+            </button>
+            <p id="forgotMessage" class="forgot-msg" hidden></p>
+        </div>
     </div>
 </div>
 
@@ -677,6 +798,33 @@
     </div>
 </div>
 
+<!-- ─── EDIT CV MODAL ─────────────────────────────── -->
+<div id="editCvModal" class="forgot-modal" hidden>
+    <div class="forgot-card">
+        <button class="forgot-close" onclick="closeEditCV()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="forgot-title">Editar versão de currículo</h3>
+        <p class="forgot-desc">O arquivo PDF não muda — para trocar o PDF, suba uma versão nova e desative esta.</p>
+
+        <input type="hidden" id="editCvId">
+        <div class="form-group">
+            <label for="editCvName">Nome da versão</label>
+            <input type="text" id="editCvName">
+        </div>
+        <div class="form-group">
+            <label for="editCvDesc">Descrição</label>
+            <input type="text" id="editCvDesc" placeholder="(opcional)">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="editCvActive" style="width:18px;height:18px;cursor:pointer">
+            <label for="editCvActive" style="margin:0;cursor:pointer">Ativo (disponível para gerar tokens)</label>
+        </div>
+
+        <button class="btn btn-cyan" style="width:100%;margin-top:12px" onclick="saveEditCV()">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar alterações
+        </button>
+    </div>
+</div>
+
 <!-- ─── TOAST ────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
@@ -700,6 +848,16 @@ function logout() {
     sessionStorage.removeItem('admin_jwt');
     document.getElementById('appScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
+
+    // Limpa campos sensíveis pra não vazar credencial em sessão compartilhada
+    const pw = document.getElementById('loginPassword');
+    pw.value = '';
+    pw.type = 'password';
+    const icon = document.getElementById('pwToggleIcon');
+    if (icon) icon.className = 'fa-regular fa-eye';
+    const errEl = document.getElementById('loginError');
+    if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    pw.focus();
 }
 
 async function doLogin() {
@@ -725,6 +883,55 @@ async function doLogin() {
 
 document.getElementById('loginPassword').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
+});
+
+function togglePassword() {
+    const input = document.getElementById('loginPassword');
+    const icon = document.getElementById('pwToggleIcon');
+    const btn = document.getElementById('pwToggleBtn');
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+    btn.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Ocultar senha');
+    input.focus();
+}
+
+function openForgot() {
+    document.getElementById('forgotModal').hidden = false;
+    document.getElementById('forgotMessage').hidden = true;
+    document.getElementById('forgotMessage').className = 'forgot-msg';
+    document.getElementById('forgotMessage').textContent = '';
+    document.getElementById('forgotBtn').disabled = false;
+}
+
+function closeForgot() {
+    document.getElementById('forgotModal').hidden = true;
+}
+
+async function sendRecovery() {
+    const btn = document.getElementById('forgotBtn');
+    const msg = document.getElementById('forgotMessage');
+    btn.disabled = true;
+    msg.hidden = true;
+
+    try {
+        const r = await fetch('/api/admin/forgot-password', { method: 'POST' });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || 'Falha ao gerar link');
+
+        msg.className = 'forgot-msg success';
+        msg.textContent = data.message || 'Link enviado! Verifique seu email (incluindo spam) nos próximos minutos.';
+        msg.hidden = false;
+    } catch (e) {
+        msg.className = 'forgot-msg error';
+        msg.textContent = e.message;
+        msg.hidden = false;
+        btn.disabled = false;
+    }
+}
+
+document.getElementById('forgotModal').addEventListener('click', e => {
+    if (e.target.id === 'forgotModal') closeForgot();
 });
 
 // ─── API HELPER ───────────────────────────────────────────
@@ -768,7 +975,10 @@ async function loadCVs() {
                 <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
                 <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
                 <td>${fmtDate(cv.created_at)}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')"><i class="fa-solid fa-trash"></i></button></td>
+                <td style="white-space:nowrap">
+                    <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </td>
             </tr>
         `).join('');
 
@@ -919,7 +1129,10 @@ async function loadTokens() {
                     <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
                     <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
                     <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
-                    <td>${t.status === 'ativo' ? `<button class="btn btn-danger btn-sm" onclick="revokeToken('${t.id}')"><i class="fa-solid fa-ban"></i> Revogar</button>` : ''}</td>
+                    <td style="white-space:nowrap">
+                        ${t.status === 'ativo' ? `<button class="btn btn-sm" style="margin-right:6px" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -934,6 +1147,41 @@ async function revokeToken(id) {
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
+
+async function deleteToken(id, label) {
+    if (!confirm(`Excluir o token "${label}"?\n\nAtenção: esta ação remove o token permanentemente — perde-se o histórico de associação. Os logs de download ficam preservados.`)) return;
+    try {
+        await api('DELETE', `/api/admin/tokens?id=${id}`);
+        showToast('Token excluído');
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ─── EDIT CV MODAL ────────────────────────────────────────
+function openEditCV(cv) {
+    document.getElementById('editCvId').value = cv.id;
+    document.getElementById('editCvName').value = cv.name;
+    document.getElementById('editCvDesc').value = cv.description || '';
+    document.getElementById('editCvActive').checked = !!cv.active;
+    document.getElementById('editCvModal').hidden = false;
+}
+function closeEditCV() { document.getElementById('editCvModal').hidden = true; }
+async function saveEditCV() {
+    const id = document.getElementById('editCvId').value;
+    const name = document.getElementById('editCvName').value.trim();
+    const description = document.getElementById('editCvDesc').value.trim();
+    const active = document.getElementById('editCvActive').checked;
+    if (!name) return showToast('Nome obrigatório', 'error');
+    try {
+        await api('PATCH', `/api/admin/cv-versions?id=${id}`, { name, description, active });
+        showToast('Versão atualizada');
+        closeEditCV();
+        loadCVs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+document.getElementById('editCvModal')?.addEventListener('click', e => {
+    if (e.target.id === 'editCvModal') closeEditCV();
+});
 
 // ─── LOGS ─────────────────────────────────────────────────
 async function loadLogs() {
