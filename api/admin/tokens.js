@@ -93,5 +93,19 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
     }
 
+    if (req.method === 'PATCH') {
+        // Soft revoke (deixa o registro pra histórico)
+        const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
+
+        const { error } = await supabase
+            .from('download_tokens')
+            .update({ revoked: true })
+            .eq('id', id);
+
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ ok: true });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
 }

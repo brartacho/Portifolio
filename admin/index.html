@@ -1384,7 +1384,7 @@ async function loadCVs() {
 async function deleteCV(id, name) {
     if (!confirm(`Excluir "${name}"? Os tokens associados serão apagados.`)) return;
     try {
-        await api('DELETE', `/api/admin/cv-delete?id=${id}`);
+        await api('DELETE', `/api/admin/cv-versions?id=${id}`);
         showToast('Currículo excluído');
         loadCVs();
         loadStorageStats();
@@ -1531,7 +1531,7 @@ async function loadTokens() {
 async function revokeToken(id) {
     if (!confirm('Revogar este token? O link deixará de funcionar imediatamente.')) return;
     try {
-        await api('POST', `/api/admin/token-revoke?id=${id}`);
+        await api('PATCH', `/api/admin/tokens?id=${id}`);
         showToast('Token revogado');
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }

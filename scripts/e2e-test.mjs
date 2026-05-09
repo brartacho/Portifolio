@@ -152,8 +152,8 @@ console.log('\n— Cleanup —');
 const tokenList = await jsonReq('GET', '/api/admin/tokens', null, TOKEN);
 const ourToken = tokenList.json?.find(t => t.label?.includes('[E2E TEST]'));
 if (ourToken) {
-    const revoke = await fetch(`${BASE}/api/admin/token-revoke?id=${ourToken.id}`, {
-        method: 'POST',
+    const revoke = await fetch(`${BASE}/api/admin/tokens?id=${ourToken.id}`, {
+        method: 'PATCH',
         headers: { Authorization: `Bearer ${TOKEN}` },
     });
     log('Token de teste revogado (soft)', revoke.status === 200, `HTTP ${revoke.status}`);
@@ -168,7 +168,7 @@ if (ourToken) {
     const stillThere = tokensAfter.json?.some(t => t.id === ourToken.id);
     log('Token sumiu da listagem', !stillThere);
 }
-const delVersion = await fetch(`${BASE}/api/admin/cv-delete?id=${CV_ID}`, {
+const delVersion = await fetch(`${BASE}/api/admin/cv-versions?id=${CV_ID}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${TOKEN}` },
 });
