@@ -1376,6 +1376,7 @@ function openSendCV(cv) {
     document.getElementById('sendPhone').value = '';
     document.getElementById('sendMessage').value = '';
     document.getElementById('sendMsg').hidden = true;
+    _lastDefaultMsg = '';   // reset: textarea vazio é "default", próxima atualização escreve
     setSendMode('email');
     document.getElementById('sendCvModal').hidden = false;
     // Foca no campo certo: mensagem se já tem nome+email, senão nome
@@ -1390,16 +1391,10 @@ const _msgTemplates = {
     whatsapp: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
 };
 
-// Quando a mensagem atual é um dos templates conhecidos (com [nome] OU já com nome substituído),
-// significa que o usuário não editou — pode atualizar livremente.
-function isUntouchedTemplate(currentMsg, name) {
-    if (!currentMsg) return true;
-    for (const tpl of Object.values(_msgTemplates)) {
-        if (currentMsg === tpl) return true;
-        if (currentMsg === tpl.replace(/\[nome\]/g, name)) return true;
-    }
-    return false;
-}
+// Última mensagem default que escrevemos no textarea — usada pra detectar edição do usuário.
+// Se o textarea ainda for igual a isso, atualizamos livremente. Se mudou, o usuário editou
+// e respeitamos o conteúdo.
+let _lastDefaultMsg = '';
 
 function setSendMode(mode) {
     _sendMode = mode;
@@ -1418,12 +1413,13 @@ function refreshDefaultMessage() {
     const nameInput = document.getElementById('sendName').value.trim();
     const cur = document.getElementById('sendMessage').value;
 
-    // Só atualiza se a mensagem atual ainda for um template não editado
-    if (!isUntouchedTemplate(cur, nameInput || '[nome]')) return;
+    // Pode atualizar se: textarea está vazio OU bateu exatamente o último default que setamos
+    if (cur && cur !== _lastDefaultMsg) return;
 
     const tpl = _sendMode === 'email' ? _msgTemplates.email : _msgTemplates.whatsapp;
-    const filled = nameInput ? tpl.replace(/\[nome\]/g, nameInput) : tpl;
-    document.getElementById('sendMessage').value = filled;
+    const newMsg = nameInput ? tpl.replace(/\[nome\]/g, nameInput) : tpl;
+    document.getElementById('sendMessage').value = newMsg;
+    _lastDefaultMsg = newMsg;
 }
 
 document.getElementById('sendCvModal').addEventListener('click', e => {
