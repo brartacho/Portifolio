@@ -1067,13 +1067,17 @@
         </div>
 
         <div class="form-group" id="waSubmodeGroup" style="display:none">
-            <label>Modo WhatsApp</label>
+            <label>Forma de envio</label>
             <div style="display:flex;gap:8px;margin-top:6px">
-                <button type="button" id="waSubAttach" class="btn btn-sm" style="flex:1" onclick="setWaSubmode('attach')">
-                    <i class="fa-solid fa-paperclip"></i> PDF anexo manual
+                <button type="button" id="waSubLink" class="btn btn-sm" style="flex:1"
+                    onclick="setWaSubmode('link')"
+                    title="Link rastreado: 1 uso, válido por 1h. Histórico de abertura no painel Logs.">
+                    <i class="fa-solid fa-link"></i> Link rastreado
                 </button>
-                <button type="button" id="waSubLink" class="btn btn-sm" style="flex:1" onclick="setWaSubmode('link')">
-                    <i class="fa-solid fa-link"></i> Link tracked
+                <button type="button" id="waSubAttach" class="btn btn-sm" style="flex:1"
+                    onclick="setWaSubmode('attach')"
+                    title="Você baixa o PDF e anexa manualmente. Útil pra recrutadores que evitam clicar em links.">
+                    <i class="fa-solid fa-paperclip"></i> Anexo manual
                 </button>
             </div>
             <small id="waSubmodeHint" style="color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px"></small>
@@ -1104,6 +1108,21 @@
             <i class="fa-solid fa-paper-plane" id="sendBtnIcon"></i> <span id="sendBtnLabel">Enviar</span>
         </button>
         <p id="sendMsg" class="forgot-msg" hidden></p>
+
+        <!-- Área pós-processamento WhatsApp: botão clicável pra abrir o WA
+             (window.open() chamado dentro do click handler real evita popup blocker) -->
+        <div id="waReadyArea" class="forgot-msg success" hidden style="margin-top:14px">
+            <strong id="waReadyTitle">✓ Pronto!</strong>
+            <p id="waReadyDetail" style="margin:6px 0 12px;font-size:0.85rem;line-height:1.5"></p>
+            <div style="display:flex;gap:8px">
+                <button type="button" class="btn btn-cyan" style="flex:1.4" onclick="openWhatsAppNow()">
+                    <i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp →
+                </button>
+                <button type="button" class="btn btn-sm" style="flex:1" onclick="copyWaMessage()" title="Copiar mensagem para colar manualmente">
+                    <i class="fa-regular fa-copy"></i> Copiar mensagem
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1734,6 +1753,13 @@ function openSendCV(cv) {
     document.getElementById('sendPhone').value = '';
     document.getElementById('sendMessage').value = '';
     document.getElementById('sendMsg').hidden = true;
+
+    // Reset da área pós-processamento (waReadyArea) — começa fechada
+    document.getElementById('waReadyArea').hidden = true;
+    _pendingWaUrl = null;
+    _pendingWaMessage = null;
+
+    _waSubmode = 'link';    // padrão: link rastreado (anexo manual é exceção)
     _lastDefaultMsg = '';   // reset: textarea vazio é "default", próxima atualização escreve
     setSendMode('email');
     document.getElementById('sendCvModal').hidden = false;
@@ -1752,7 +1778,9 @@ const _msgTemplates = {
     whatsapp_attach: `Olá [nome], conforme combinado segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt, Bruno`,
     whatsapp_link: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
 };
-let _waSubmode = 'attach';   // sub-modo do WhatsApp ('attach' | 'link')
+let _waSubmode = 'link';     // sub-modo do WhatsApp ('link' = padrão | 'attach' = exceção)
+let _pendingWaUrl = null;    // URL final do wa.me a abrir quando user clicar
+let _pendingWaMessage = null;// Mensagem completa pra "Copiar mensagem"
 
 // Última mensagem default que escrevemos no textarea — usada pra detectar edição do usuário.
 // Se o textarea ainda for igual a isso, atualizamos livremente. Se mudou, o usuário editou
@@ -1784,11 +1812,11 @@ function setWaSubmode(mode) {
     document.getElementById('waSubAttach').className = 'btn btn-sm' + (isAttach ? ' btn-cyan' : '');
     document.getElementById('waSubLink').className = 'btn btn-sm' + (!isAttach ? ' btn-cyan' : '');
     document.getElementById('waSubmodeHint').textContent = isAttach
-        ? 'Baixa o PDF no seu computador. Você arrasta na conversa do WhatsApp. Sem tracking.'
-        : 'Gera link com token (1 uso, 1h). Você sabe quando o recrutador abre. Cuidado: alguns recrutadores não clicam em links.';
+        ? 'PDF baixa local — você anexa manualmente no WhatsApp.'
+        : 'Mensagem com link de download. Você é notificado quando o recrutador abre.';
     document.getElementById('sendBtnLabel').textContent = isAttach
-        ? 'Baixar PDF + abrir WhatsApp'
-        : 'Gerar link + abrir WhatsApp';
+        ? 'Baixar PDF + preparar WhatsApp'
+        : 'Gerar link + preparar WhatsApp';
     document.getElementById('sendBtnIcon').className = 'fa-brands fa-whatsapp';
     refreshDefaultMessage();
 }
@@ -1848,14 +1876,6 @@ async function sendCV() {
         ? 'Enviando email…'
         : (_waSubmode === 'link' ? 'Gerando link…' : 'Baixando PDF…');
 
-    // PRÉ-ABRE a janela do WhatsApp DENTRO do clique (mantém user gesture).
-    // Sem isso, navegadores bloqueiam window.open() chamado depois de await.
-    // Vamos atualizar a location dessa janela quando o link estiver pronto.
-    let waWindow = null;
-    if (_sendMode === 'whatsapp') {
-        waWindow = window.open('about:blank', '_blank');
-    }
-
     try {
         await withLoading(btn, async () => {
             if (_sendMode === 'email') {
@@ -1874,29 +1894,33 @@ async function sendCV() {
                 return;
             }
 
-            // WhatsApp
+            // ─── WhatsApp ──────────────────────────────────────
+            // Estratégia: NÃO chama window.open() aqui (browser bloqueia depois
+            // de await). Em vez disso, prepara waUrl/mensagem e mostra área
+            // pós-processamento com botão clicável — clique dispara window.open()
+            // dentro de event handler real, sem bloqueio.
             const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
-            let waUrl, successHtml;
+            let waUrl, finalMsg, titleText, detailHtml;
 
             if (_waSubmode === 'link') {
-                // Modo LINK TRACKED: gera token (1 uso, 1h) + link na mensagem
+                // LINK RASTREADO (padrão): gera token (1 uso, 1h) + link na mensagem
                 const tk = await api('POST', '/api/admin/tokens', {
                     cv_version_id: _sendCv.id,
                     label: `WhatsApp · ${name}`,
                     expires_in_hours: 1,
                     max_uses: 1,
                 });
-                const finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
+                finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
                 waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
-                successHtml = `
-                    <strong>WhatsApp aberto com link tracked.</strong><br>
-                    Token válido por 1h, 1 uso. Aparece na aba Tokens com label "WhatsApp · ${esc(name)}".
-                `;
+                titleText = '✓ Link gerado!';
+                detailHtml = `Token válido por 1h, 1 uso (já visível na aba Tokens com label "WhatsApp · ${esc(name)}"). Clique abaixo pra abrir o WhatsApp.`;
                 loadTokens();
             } else {
-                // Modo ATTACH (default): baixa PDF + abre WhatsApp sem link
-                const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
-                const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
+                // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
+                finalMsg = message.replace(/\[link\]\s*\n*/g, '');
+                const dlUrl = `/api/admin/cv-download-url?id=${_sendCv.id}`
+                    + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`;
+                const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
                 a.download = dl.file_name;
@@ -1904,34 +1928,43 @@ async function sendCV() {
                 a.click();
                 document.body.removeChild(a);
 
-                waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
-                successHtml = `
-                    <strong>WhatsApp aberto + PDF baixado.</strong><br>
-                    Arraste o arquivo da pasta <em>Downloads</em> para a conversa.
-                `;
+                waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+                titleText = '✓ PDF baixado!';
+                detailHtml = `Clique abaixo pra abrir o WhatsApp. Depois <strong>arraste o PDF da pasta <em>Downloads</em></strong> pra dentro da conversa. Envio registrado nos Logs.`;
+                loadLogs?.();   // refresh dos logs se a aba estiver carregada
             }
 
-            // Popula a janela pré-aberta. Se o navegador bloqueou (waWindow null),
-            // tenta de novo (pode funcionar dependendo da política) ou avisa o user.
-            if (waWindow && !waWindow.closed) {
-                waWindow.location.href = waUrl;
-            } else {
-                const fallback = window.open(waUrl, '_blank', 'noopener');
-                if (!fallback) {
-                    showToast('Pop-up bloqueado pelo navegador. Permita pop-ups nesse site e tente de novo.', 'error');
-                }
-            }
+            // Guarda na closure pra openWhatsAppNow()/copyWaMessage() acessarem
+            _pendingWaUrl = waUrl;
+            _pendingWaMessage = finalMsg;
 
-            msgEl.className = 'forgot-msg success';
-            msgEl.innerHTML = successHtml;
-            msgEl.hidden = false;
+            document.getElementById('waReadyTitle').textContent = titleText;
+            document.getElementById('waReadyDetail').innerHTML = detailHtml;
+            document.getElementById('waReadyArea').hidden = false;
+
+            // NÃO fecha o modal automaticamente — espera o user clicar em "Abrir WhatsApp"
             if (_pendingReply) dismissReply();
-            setTimeout(closeSendCV, _waSubmode === 'attach' ? 6000 : 5000);
         }, loadingLabel);
     } catch (e) {
-        // Fecha a janela vazia que foi pré-aberta se a operação falhou
-        if (waWindow && !waWindow.closed) waWindow.close();
         showSendError(e.message);
+    }
+}
+
+// Botão "Abrir WhatsApp →" — chamado dentro de event handler real (sem bloqueio)
+function openWhatsAppNow() {
+    if (!_pendingWaUrl) return;
+    window.open(_pendingWaUrl, '_blank', 'noopener');
+    setTimeout(closeSendCV, 500);   // pequeno delay pra mostrar feedback antes de fechar
+}
+
+// Botão "Copiar mensagem" — útil pra quem prefere outro canal ou WhatsApp Desktop
+async function copyWaMessage() {
+    if (!_pendingWaMessage) return;
+    try {
+        await navigator.clipboard.writeText(_pendingWaMessage);
+        showToast('Mensagem copiada para a área de transferência');
+    } catch {
+        showToast('Falha ao copiar — selecione e copie manualmente', 'error');
     }
 }
 
