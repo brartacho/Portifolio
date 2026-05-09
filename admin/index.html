@@ -356,6 +356,89 @@
         }
         .reply-banner-close:hover { color: var(--text); border-color: var(--text-dim); }
 
+        /* ─── STORAGE CARD ──────────────────────────────────── */
+        .storage-card {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+        }
+        .storage-card[hidden] { display: none; }
+        .storage-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .storage-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .storage-title i { color: var(--cyan); }
+        .storage-sub {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            margin-top: 2px;
+        }
+        .storage-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--cyan);
+            text-decoration: none;
+            padding: 6px 10px;
+            border: 1px solid var(--cyan-mid);
+            border-radius: 8px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .storage-dash-link:hover { background: var(--cyan-soft); border-color: var(--cyan); }
+        .storage-dash-link[hidden] { display: none; }
+        .storage-bar-track {
+            background: rgba(255,255,255,0.04);
+            border-radius: 999px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .storage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), #4ade80);
+            border-radius: 999px;
+            transition: width 0.5s ease, background 0.3s;
+        }
+        .storage-bar-fill.warn { background: linear-gradient(90deg, var(--warning), #f59e0b); }
+        .storage-bar-fill.danger { background: linear-gradient(90deg, var(--danger), #b91c1c); }
+        .storage-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-soft);
+            font-family: var(--font-mono);
+        }
+        .storage-alert {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: var(--warning-soft);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 8px;
+            color: var(--warning);
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.5;
+        }
+        .storage-alert[hidden] { display: none; }
+
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
@@ -712,6 +795,31 @@
 
         <!-- ─── CURRÍCULOS ─────────────────────────────── -->
         <div class="tab-panel active" id="tab-cvs">
+
+            <!-- Storage usage card (alimentado por /api/admin/storage-stats) -->
+            <div class="storage-card" id="storageCard" hidden>
+                <div class="storage-head">
+                    <div>
+                        <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
+                        <div class="storage-sub" id="storageSub">—</div>
+                    </div>
+                    <a id="storageDashLink" href="#" target="_blank" rel="noopener" class="storage-dash-link" hidden>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir no Supabase
+                    </a>
+                </div>
+                <div class="storage-bar-track">
+                    <div class="storage-bar-fill" id="storageBarFill" style="width:0%"></div>
+                </div>
+                <div class="storage-meta">
+                    <span id="storagePct">0%</span>
+                    <span id="storageFiles">0 arquivos</span>
+                </div>
+                <div class="storage-alert" id="storageAlert" hidden>
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Storage acima de 80%. Faça limpeza ou faça upgrade do plano antes que pare de aceitar uploads.</span>
+                </div>
+            </div>
+
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-upload"></i> Fazer upload de currículo</div>
 
@@ -1138,7 +1246,50 @@ function switchTab(name, btn) {
 function loadAll() {
     loadCVs();
     loadTokens();
+    loadStorageStats();
     detectReplyContext();
+}
+
+// ─── STORAGE STATS ────────────────────────────────────────
+let _storageAlertShown = false;
+function fmtBytes(b) {
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+    if (b < 1024 * 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
+    return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+async function loadStorageStats() {
+    try {
+        const s = await api('GET', '/api/admin/storage-stats');
+        const card = document.getElementById('storageCard');
+        const fill = document.getElementById('storageBarFill');
+        const pct = Math.min(100, s.used_percent);
+
+        card.hidden = false;
+        document.getElementById('storageSub').textContent = `bucket "${s.bucket}" · ${fmtBytes(s.used_bytes)} de ${fmtBytes(s.limit_bytes)}`;
+        fill.style.width = pct + '%';
+        fill.classList.remove('warn', 'danger');
+        if (pct >= 80) fill.classList.add('danger');
+        else if (pct >= 60) fill.classList.add('warn');
+
+        document.getElementById('storagePct').textContent = pct.toFixed(1) + '% usado';
+        document.getElementById('storageFiles').textContent = `${s.files_count} arquivo${s.files_count === 1 ? '' : 's'}`;
+
+        const dashLink = document.getElementById('storageDashLink');
+        if (s.dashboard_url) {
+            dashLink.href = s.dashboard_url;
+            dashLink.hidden = false;
+        }
+
+        document.getElementById('storageAlert').hidden = !s.should_alert;
+        if (s.should_alert && !_storageAlertShown) {
+            showToast(`⚠ Storage em ${pct.toFixed(1)}% — quase no limite. Faça limpeza ou upgrade.`, 'error');
+            _storageAlertShown = true;
+        }
+    } catch (e) {
+        // Silencioso — endpoint pode não existir em dev sem migration
+        console.warn('Storage stats indisponível:', e.message);
+    }
 }
 
 // ─── REPLY BANNER (vindo do email do recrutador) ─────────
@@ -1236,6 +1387,7 @@ async function deleteCV(id, name) {
         await api('DELETE', `/api/admin/cv-delete?id=${id}`);
         showToast('Currículo excluído');
         loadCVs();
+        loadStorageStats();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -1309,6 +1461,7 @@ async function uploadCV() {
 
         showToast('Currículo enviado com sucesso!');
         loadCVs();
+        loadStorageStats();
     } catch (e) {
         showToast(e.message, 'error');
     }
