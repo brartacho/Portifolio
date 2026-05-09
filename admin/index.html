@@ -1075,8 +1075,40 @@ async function sendRecovery() {
     }
 }
 
+// ─── Helpers de modal ─────────────────────────────────────
+function modalHasUnsavedData(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return false;
+    const inputs = modal.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), textarea');
+    for (const el of inputs) {
+        if (el.value && el.value.trim()) return true;
+    }
+    return false;
+}
+function safeCloseModal(modalId, closeFn) {
+    if (modalHasUnsavedData(modalId)) {
+        if (!confirm('Você tem dados não enviados nesse formulário. Fechar mesmo assim?')) return;
+    }
+    closeFn();
+}
+
+// Escape fecha qualquer modal aberto (com proteção)
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const openModals = [
+        ['forgotModal', closeForgot],
+        ['sendCvModal', closeSendCV],
+        ['editCvModal', closeEditCV],
+    ];
+    for (const [id, fn] of openModals) {
+        const el = document.getElementById(id);
+        if (el && !el.hidden) { safeCloseModal(id, fn); break; }
+    }
+});
+
+// Click no backdrop fecha (com proteção)
 document.getElementById('forgotModal').addEventListener('click', e => {
-    if (e.target.id === 'forgotModal') closeForgot();
+    if (e.target.id === 'forgotModal') safeCloseModal('forgotModal', closeForgot);
 });
 
 // ─── API HELPER ───────────────────────────────────────────
@@ -1423,7 +1455,7 @@ function refreshDefaultMessage() {
 }
 
 document.getElementById('sendCvModal').addEventListener('click', e => {
-    if (e.target.id === 'sendCvModal') closeSendCV();
+    if (e.target.id === 'sendCvModal') safeCloseModal('sendCvModal', closeSendCV);
 });
 
 async function sendCV() {
@@ -1525,7 +1557,7 @@ async function saveEditCV() {
     } catch (e) { showToast(e.message, 'error'); }
 }
 document.getElementById('editCvModal')?.addEventListener('click', e => {
-    if (e.target.id === 'editCvModal') closeEditCV();
+    if (e.target.id === 'editCvModal') safeCloseModal('editCvModal', closeEditCV);
 });
 
 // ─── LOGS ─────────────────────────────────────────────────
