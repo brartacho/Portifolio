@@ -640,7 +640,11 @@
         <p class="login-label">// painel administrativo</p>
 
         <div class="form-group">
-            <label for="loginPassword">Senha de acesso</label>
+            <label for="loginUsername">Email ou telefone</label>
+            <input type="text" id="loginUsername" placeholder="seu@email.com ou +55..." autocomplete="username" inputmode="email">
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Senha</label>
             <div class="pw-wrap">
                 <input type="password" id="loginPassword" placeholder="Digite sua senha" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
                 <button type="button" class="pw-toggle" id="pwToggleBtn" aria-label="Mostrar senha" onclick="togglePassword()">
@@ -970,6 +974,8 @@ function logout() {
     document.getElementById('loginScreen').style.display = 'flex';
 
     // Limpa campos sensíveis pra não vazar credencial em sessão compartilhada
+    const usr = document.getElementById('loginUsername');
+    if (usr) usr.value = '';
     const pw = document.getElementById('loginPassword');
     pw.value = '';
     pw.type = 'password';
@@ -977,30 +983,48 @@ function logout() {
     if (icon) icon.className = 'fa-regular fa-eye';
     const errEl = document.getElementById('loginError');
     if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
-    pw.focus();
+    if (usr) usr.focus();
+    else pw.focus();
 }
 
 async function doLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
     const pw = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
     const errEl = document.getElementById('loginError');
     btn.disabled = true;
     errEl.style.display = 'none';
 
+    if (!username) {
+        errEl.textContent = 'Informe seu email ou telefone.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        return;
+    }
+    if (!pw) {
+        errEl.textContent = 'Informe a senha.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        return;
+    }
+
     try {
-        const r = await api('POST', '/api/admin/login', { password: pw }, false);
+        const r = await api('POST', '/api/admin/login', { username, password: pw }, false);
         setJwt(r.token);
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appScreen').style.display = 'block';
         loadAll();
     } catch (e) {
-        errEl.textContent = e.message || 'Senha incorreta';
+        errEl.textContent = e.message || 'Usuário ou senha incorretos.';
         errEl.style.display = 'block';
     } finally {
         btn.disabled = false;
     }
 }
 
+document.getElementById('loginUsername').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+});
 document.getElementById('loginPassword').addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
 });
