@@ -311,6 +311,50 @@
 
         select option { background: var(--bg-elevated); }
 
+        /* ─── REPLY BANNER (vem do email do recrutador) ─────── */
+        .reply-banner {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.10), rgba(124, 58, 237, 0.10));
+            border: 1px solid var(--cyan-mid);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .reply-banner-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--cyan-soft);
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+        .reply-banner-info {
+            flex: 1;
+            min-width: 200px;
+            font-size: 0.88rem;
+        }
+        .reply-banner-info strong { color: var(--text); }
+        .reply-banner-info .email { color: var(--cyan); font-family: var(--font-mono); font-size: 0.82rem; }
+        .reply-banner-actions { display: flex; gap: 8px; }
+        .reply-banner-close {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .reply-banner-close:hover { color: var(--text); border-color: var(--text-dim); }
+
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
@@ -645,6 +689,21 @@
     </nav>
 
     <div class="app-content">
+
+        <!-- ─── REPLY BANNER (renderizado via JS quando vem dos params do email) ─── -->
+        <div id="replyBanner" class="reply-banner" hidden>
+            <div class="reply-banner-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+            <div class="reply-banner-info">
+                Responder a <strong id="rbName">—</strong>
+                <span id="rbCompanyWrap"> de <strong id="rbCompany">—</strong></span>
+                <br>
+                <span class="email" id="rbEmail">—</span>
+            </div>
+            <div class="reply-banner-actions">
+                <button class="btn btn-cyan btn-sm" onclick="startReply()"><i class="fa-solid fa-paper-plane"></i> Selecionar versão e enviar</button>
+                <button class="reply-banner-close" onclick="dismissReply()" title="Dispensar">Dispensar</button>
+            </div>
+        </div>
 
         <!-- ─── CURRÍCULOS ─────────────────────────────── -->
         <div class="tab-panel active" id="tab-cvs">
@@ -1019,7 +1078,65 @@ function switchTab(name, btn) {
 }
 
 // ─── LOAD ALL ─────────────────────────────────────────────
-function loadAll() { loadCVs(); loadTokens(); }
+function loadAll() {
+    loadCVs();
+    loadTokens();
+    detectReplyContext();
+}
+
+// ─── REPLY BANNER (vindo do email do recrutador) ─────────
+function detectReplyContext() {
+    const params = new URLSearchParams(location.search);
+    const name = params.get('to_name')?.trim();
+    const email = params.get('to_email')?.trim();
+    const company = params.get('to_company')?.trim();
+    if (!name || !email) return;
+
+    _pendingReply = { name, email, company: company || '' };
+    document.getElementById('rbName').textContent = name;
+    document.getElementById('rbEmail').textContent = email;
+    if (company) {
+        document.getElementById('rbCompany').textContent = company;
+        document.getElementById('rbCompanyWrap').style.display = '';
+    } else {
+        document.getElementById('rbCompanyWrap').style.display = 'none';
+    }
+    document.getElementById('replyBanner').hidden = false;
+
+    // Garante que está na aba de Currículos
+    const cvTabBtn = document.querySelector('.tab-btn[onclick*="cvs"]');
+    if (cvTabBtn) cvTabBtn.click();
+}
+
+function dismissReply() {
+    _pendingReply = null;
+    document.getElementById('replyBanner').hidden = true;
+    // Limpa a URL pra não reativar em refresh
+    if (location.search) history.replaceState(null, '', location.pathname);
+}
+
+function startReply() {
+    // Se só houver 1 versão ativa, abre o modal direto. Senão, scroll pra tabela e dá feedback visual.
+    api('GET', '/api/admin/cv-versions').then(versions => {
+        const active = versions.filter(v => v.active);
+        if (active.length === 1) {
+            const cv = active[0];
+            openSendCV({ id: cv.id, name: cv.name, file_name: cv.file_name });
+        } else if (active.length === 0) {
+            showToast('Nenhuma versão ativa. Suba um CV primeiro.', 'error');
+        } else {
+            // Várias versões: scroll pra tabela e pisca os botões de envio
+            document.getElementById('cvTable').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const btns = document.querySelectorAll('#cvTable .btn.btn-cyan.btn-sm');
+            btns.forEach(b => {
+                b.style.transition = 'box-shadow 0.6s';
+                b.style.boxShadow = '0 0 0 3px rgba(34, 211, 238, 0.5)';
+                setTimeout(() => b.style.boxShadow = '', 1800);
+            });
+            showToast(`Escolha qual versão enviar para ${_pendingReply.name}.`);
+        }
+    }).catch(e => showToast(e.message, 'error'));
+}
 
 // ─── CVS ──────────────────────────────────────────────────
 async function loadCVs() {
@@ -1222,18 +1339,23 @@ async function deleteToken(id, label) {
 // ─── SEND CV MODAL ────────────────────────────────────────
 let _sendCv = null;     // {id, name, file_name}
 let _sendMode = 'email';
+let _pendingReply = null;   // {name, email, company} pré-preenchido vindo do email do recrutador
 
 function openSendCV(cv) {
     _sendCv = cv;
     document.getElementById('sendCvSubtitle').textContent = `Versão: ${cv.name} (${cv.file_name})`;
-    document.getElementById('sendName').value = '';
-    document.getElementById('sendEmail').value = '';
+
+    // Pré-preenche se houver dados do banner de reply
+    document.getElementById('sendName').value = _pendingReply?.name || '';
+    document.getElementById('sendEmail').value = _pendingReply?.email || '';
     document.getElementById('sendPhone').value = '';
     document.getElementById('sendMessage').value = '';
     document.getElementById('sendMsg').hidden = true;
     setSendMode('email');
     document.getElementById('sendCvModal').hidden = false;
-    setTimeout(() => document.getElementById('sendName').focus(), 50);
+    // Foca no campo certo: mensagem se já tem nome+email, senão nome
+    const focusEl = (_pendingReply?.name && _pendingReply?.email) ? 'sendMessage' : 'sendName';
+    setTimeout(() => document.getElementById(focusEl).focus(), 50);
 }
 function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
@@ -1289,6 +1411,8 @@ async function sendCV() {
             msgEl.className = 'forgot-msg success';
             msgEl.textContent = r.message || 'Enviado!';
             msgEl.hidden = false;
+            // Limpa contexto de reply (recrutador atendido)
+            if (_pendingReply && _pendingReply.email === email) dismissReply();
             setTimeout(closeSendCV, 2500);
             return;
         }
@@ -1312,6 +1436,7 @@ async function sendCV() {
         msgEl.textContent = 'WhatsApp aberto! Token gerado: válido por 1h, 1 uso. Link tracked já dentro da mensagem.';
         msgEl.hidden = false;
         loadTokens();
+        if (_pendingReply) dismissReply();
         setTimeout(closeSendCV, 4000);
     } catch (e) {
         showSendError(e.message);

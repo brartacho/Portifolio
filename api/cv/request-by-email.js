@@ -71,6 +71,16 @@ export default async function handler(req, res) {
     const ua = (req.headers['user-agent'] || '').slice(0, 200);
     const ts = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
+    // CTA: link pro admin com dados do recrutador pré-preenchidos.
+    // Em prod, PUBLIC_SHARE_URL aponta pro domínio público; em dev cai pra localhost.
+    const baseUrl = process.env.PUBLIC_SHARE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://bruno-artacho.vercel.app';
+    const adminParams = new URLSearchParams({
+        to_name: name,
+        to_email: email,
+        ...(company ? { to_company: company } : {}),
+    }).toString();
+    const adminReplyUrl = `${baseUrl}/admin?${adminParams}`;
+
     const text = [
         '═══ Nova solicitação de CV ═══',
         '',
@@ -82,11 +92,12 @@ export default async function handler(req, res) {
         message,
         '',
         '─────────────────────────────',
+        `Responder no painel admin (já pré-preenchido):`,
+        adminReplyUrl,
+        '',
         `IP: ${ip}`,
         `UA: ${ua}`,
         `Quando: ${ts}`,
-        '',
-        'Pra responder: gera um link no admin → envia pra ' + email,
     ].join('\n');
 
     const html = `
@@ -99,6 +110,16 @@ export default async function handler(req, res) {
             </table>
             <h3 style="color: #0f172a; margin: 24px 0 8px; font-size: 14px;">Mensagem</h3>
             <div style="background: #f1f5f9; border-left: 3px solid #22d3ee; padding: 14px 16px; border-radius: 6px; color: #334155; font-size: 14px; line-height: 1.55; white-space: pre-wrap;">${escHtml(message)}</div>
+
+            <div style="margin: 28px 0 8px; text-align: center;">
+                <a href="${escHtml(adminReplyUrl)}" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px;">
+                    📨 Abrir no painel para responder
+                </a>
+            </div>
+            <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 8px;">
+                Já com o destinatário pré-preenchido — escolhe a versão e envia.
+            </p>
+
             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;">
             <p style="color: #94a3b8; font-size: 12px; line-height: 1.5;">
                 IP: <code>${escHtml(ip)}</code><br>
