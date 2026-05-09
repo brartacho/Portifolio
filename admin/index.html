@@ -295,6 +295,20 @@
             border-color: var(--cyan-mid);
         }
 
+        /* Override autofill do navegador (Chrome/Edge/Safari pintam de azul claro
+           ignorando o tema). Mantém background e text color do tema dark. */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active,
+        textarea:-webkit-autofill,
+        select:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px var(--bg-elevated) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            caret-color: var(--text);
+            transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+        }
+
         select option { background: var(--bg-elevated); }
 
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

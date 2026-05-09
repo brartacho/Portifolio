@@ -305,6 +305,18 @@
         }
         .req-row input:focus,
         .req-row textarea:focus { outline: none; border-color: var(--cyan); }
+
+        /* Override do autofill do navegador (Chrome/Edge/Safari pintam de azul claro) */
+        .req-row input:-webkit-autofill,
+        .req-row input:-webkit-autofill:hover,
+        .req-row input:-webkit-autofill:focus,
+        .req-row input:-webkit-autofill:active,
+        .req-row textarea:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            caret-color: var(--text);
+            transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+        }
         .req-counter {
             font-size: 0.72rem;
             color: var(--text-dim);
