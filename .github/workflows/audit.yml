@@ -2,14 +2,14 @@ name: Visual Audit
 
 on:
   push:
-    branches: [main]
+    branches: [main, qa]
     paths:
       - '**.html'
       - 'style.css'
       - 'script.js'
       - 'audit.mjs'
   pull_request:
-    branches: [main]
+    branches: [main, qa]
     paths:
       - '**.html'
       - 'style.css'
