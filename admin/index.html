@@ -798,6 +798,53 @@
     </div>
 </div>
 
+<!-- ─── SEND CV MODAL ─────────────────────────────── -->
+<div id="sendCvModal" class="forgot-modal" hidden>
+    <div class="forgot-card" style="max-width:500px">
+        <button class="forgot-close" onclick="closeSendCV()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        <h3 class="forgot-title">Enviar Currículo</h3>
+        <p class="forgot-desc" id="sendCvSubtitle">Versão: —</p>
+
+        <div class="form-group">
+            <label>Como enviar?</label>
+            <div style="display:flex;gap:8px;margin-top:6px">
+                <button type="button" id="sendModeEmail" class="btn btn-sm" style="flex:1" onclick="setSendMode('email')">
+                    <i class="fa-solid fa-envelope"></i> Email (com PDF anexo)
+                </button>
+                <button type="button" id="sendModeWhatsapp" class="btn btn-sm" style="flex:1" onclick="setSendMode('whatsapp')">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp (link tracked)
+                </button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="sendName">Nome do destinatário</label>
+            <input type="text" id="sendName" maxlength="100" placeholder="Ex: Maria Silva">
+        </div>
+
+        <div class="form-group" id="sendEmailField">
+            <label for="sendEmail">Email do destinatário</label>
+            <input type="email" id="sendEmail" maxlength="120" placeholder="recrutador@empresa.com">
+        </div>
+
+        <div class="form-group" id="sendPhoneField" style="display:none">
+            <label for="sendPhone">Telefone (com DDI, só números)</label>
+            <input type="tel" id="sendPhone" maxlength="20" placeholder="5544999999999" inputmode="numeric">
+            <small style="color:var(--text-dim);font-size:0.78rem">Ex: 5544999999999 (Brasil + DDD + número, sem espaços ou parênteses)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="sendMessage">Mensagem <small style="color:var(--text-dim);font-weight:400">(editável)</small></label>
+            <textarea id="sendMessage" rows="4" maxlength="1500" style="resize:vertical;width:100%"></textarea>
+        </div>
+
+        <button class="btn btn-cyan" id="sendBtn" style="width:100%" onclick="sendCV()">
+            <i class="fa-solid fa-paper-plane" id="sendBtnIcon"></i> <span id="sendBtnLabel">Enviar</span>
+        </button>
+        <p id="sendMsg" class="forgot-msg" hidden></p>
+    </div>
+</div>
+
 <!-- ─── EDIT CV MODAL ─────────────────────────────── -->
 <div id="editCvModal" class="forgot-modal" hidden>
     <div class="forgot-card">
@@ -976,6 +1023,7 @@ async function loadCVs() {
                 <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
                 <td>${fmtDate(cv.created_at)}</td>
                 <td style="white-space:nowrap">
+                    <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
                     <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -1156,6 +1204,117 @@ async function deleteToken(id, label) {
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
+
+// ─── SEND CV MODAL ────────────────────────────────────────
+let _sendCv = null;     // {id, name, file_name}
+let _sendMode = 'email';
+
+function openSendCV(cv) {
+    _sendCv = cv;
+    document.getElementById('sendCvSubtitle').textContent = `Versão: ${cv.name} (${cv.file_name})`;
+    document.getElementById('sendName').value = '';
+    document.getElementById('sendEmail').value = '';
+    document.getElementById('sendPhone').value = '';
+    document.getElementById('sendMessage').value = '';
+    document.getElementById('sendMsg').hidden = true;
+    setSendMode('email');
+    document.getElementById('sendCvModal').hidden = false;
+    setTimeout(() => document.getElementById('sendName').focus(), 50);
+}
+function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
+
+function setSendMode(mode) {
+    _sendMode = mode;
+    const isEmail = mode === 'email';
+    document.getElementById('sendModeEmail').className = 'btn btn-sm' + (isEmail ? ' btn-cyan' : '');
+    document.getElementById('sendModeWhatsapp').className = 'btn btn-sm' + (!isEmail ? ' btn-cyan' : '');
+    document.getElementById('sendEmailField').style.display = isEmail ? 'block' : 'none';
+    document.getElementById('sendPhoneField').style.display = isEmail ? 'none' : 'block';
+    document.getElementById('sendBtnLabel').textContent = isEmail ? 'Enviar email com PDF' : 'Abrir WhatsApp com link';
+    document.getElementById('sendBtnIcon').className = isEmail ? 'fa-solid fa-paper-plane' : 'fa-brands fa-whatsapp';
+
+    // Pré-preenche mensagem
+    const name = document.getElementById('sendName').value.trim() || '[nome]';
+    const defaultEmailMsg = `Olá ${name},\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`;
+    const defaultWaMsg = `Olá ${name}, conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`;
+    const cur = document.getElementById('sendMessage').value;
+    if (!cur || cur === defaultEmailMsg || cur === defaultWaMsg) {
+        document.getElementById('sendMessage').value = isEmail ? defaultEmailMsg : defaultWaMsg;
+    }
+}
+
+document.getElementById('sendCvModal').addEventListener('click', e => {
+    if (e.target.id === 'sendCvModal') closeSendCV();
+});
+
+async function sendCV() {
+    if (!_sendCv) return;
+    const btn = document.getElementById('sendBtn');
+    const msgEl = document.getElementById('sendMsg');
+    msgEl.hidden = true;
+    msgEl.className = 'forgot-msg';
+
+    const name = document.getElementById('sendName').value.trim();
+    const message = document.getElementById('sendMessage').value.trim();
+
+    if (name.length < 2) return showSendError('Informe o nome do destinatário (pelo menos 2 chars).');
+
+    btn.disabled = true;
+
+    try {
+        if (_sendMode === 'email') {
+            const email = document.getElementById('sendEmail').value.trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return showSendError('Email inválido.');
+
+            const r = await api('POST', '/api/admin/send-cv-email', {
+                cv_version_id: _sendCv.id,
+                recipient_name: name,
+                recipient_email: email,
+                message: message || null,
+            });
+            msgEl.className = 'forgot-msg success';
+            msgEl.textContent = r.message || 'Enviado!';
+            msgEl.hidden = false;
+            setTimeout(closeSendCV, 2500);
+            return;
+        }
+
+        // WhatsApp: gera token automaticamente (1 uso, 1h) + abre wa.me
+        const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
+        if (phone.length < 10) return showSendError('Telefone inválido (mínimo 10 dígitos com DDI+DDD).');
+
+        const tk = await api('POST', '/api/admin/tokens', {
+            cv_version_id: _sendCv.id,
+            label: `WhatsApp · ${name}`,
+            expires_in_hours: 1,
+            max_uses: 1,
+        });
+
+        const finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+        window.open(waUrl, '_blank', 'noopener');
+
+        msgEl.className = 'forgot-msg success';
+        msgEl.textContent = 'WhatsApp aberto! Token gerado: válido por 1h, 1 uso. Link tracked já dentro da mensagem.';
+        msgEl.hidden = false;
+        loadTokens();
+        setTimeout(closeSendCV, 4000);
+    } catch (e) {
+        showSendError(e.message);
+    } finally {
+        btn.disabled = false;
+    }
+
+    function showSendError(text) {
+        msgEl.className = 'forgot-msg error';
+        msgEl.textContent = text;
+        msgEl.hidden = false;
+        btn.disabled = false;
+    }
+}
+
+// Atualiza msg padrão quando user digita o nome
+document.getElementById('sendName').addEventListener('input', () => setSendMode(_sendMode));
 
 // ─── EDIT CV MODAL ────────────────────────────────────────
 function openEditCV(cv) {
