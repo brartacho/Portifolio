@@ -646,26 +646,49 @@
 
         .expiry-opt.active { border-color: var(--cyan-mid); color: var(--cyan); background: var(--cyan-soft); }
 
-        /* ─── TOAST ──────────────────────────────────── */
+        /* ─── TOAST (topo centralizado, mais visível) ──── */
         .toast {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            top: 20px;
+            left: 50%;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 14px 20px;
-            font-size: 0.88rem;
-            z-index: 200;
-            transform: translateY(80px);
+            padding: 14px 22px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            z-index: 9999;
+            transform: translate(-50%, -120%);
             opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            max-width: 320px;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            max-width: min(520px, calc(100vw - 40px));
+            box-shadow: 0 10px 30px -8px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { border-color: rgba(74,222,128,0.3); color: var(--success); }
-        .toast.error { border-color: rgba(239,68,68,0.3); color: var(--danger); }
+        .toast::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            flex-shrink: 0;
+        }
+        .toast.show { transform: translate(-50%, 0); opacity: 1; }
+        .toast.success {
+            border-color: rgba(74,222,128,0.4);
+            color: var(--success);
+            box-shadow: 0 10px 30px -8px rgba(74,222,128,0.35);
+        }
+        .toast.success::before { background: var(--success); box-shadow: 0 0 12px var(--success); }
+        .toast.error {
+            border-color: rgba(239,68,68,0.4);
+            color: var(--danger);
+            box-shadow: 0 10px 30px -8px rgba(239,68,68,0.4);
+        }
+        .toast.error::before { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
 
         /* ─── UPLOAD ZONE ────────────────────────────── */
         .upload-zone {
@@ -1788,6 +1811,14 @@ async function sendCV() {
         ? 'Enviando email…'
         : (_waSubmode === 'link' ? 'Gerando link…' : 'Baixando PDF…');
 
+    // PRÉ-ABRE a janela do WhatsApp DENTRO do clique (mantém user gesture).
+    // Sem isso, navegadores bloqueiam window.open() chamado depois de await.
+    // Vamos atualizar a location dessa janela quando o link estiver pronto.
+    let waWindow = null;
+    if (_sendMode === 'whatsapp') {
+        waWindow = window.open('about:blank', '_blank');
+    }
+
     try {
         await withLoading(btn, async () => {
             if (_sendMode === 'email') {
@@ -1808,6 +1839,7 @@ async function sendCV() {
 
             // WhatsApp
             const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
+            let waUrl, successHtml;
 
             if (_waSubmode === 'link') {
                 // Modo LINK TRACKED: gera token (1 uso, 1h) + link na mensagem
@@ -1818,44 +1850,50 @@ async function sendCV() {
                     max_uses: 1,
                 });
                 const finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
-                const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
-                window.open(waUrl, '_blank', 'noopener');
-
-                msgEl.className = 'forgot-msg success';
-                msgEl.innerHTML = `
+                waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+                successHtml = `
                     <strong>WhatsApp aberto com link tracked.</strong><br>
                     Token válido por 1h, 1 uso. Aparece na aba Tokens com label "WhatsApp · ${esc(name)}".
                 `;
-                msgEl.hidden = false;
                 loadTokens();
-                if (_pendingReply) dismissReply();
-                setTimeout(closeSendCV, 5000);
-                return;
+            } else {
+                // Modo ATTACH (default): baixa PDF + abre WhatsApp sem link
+                const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
+                const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
+                const a = document.createElement('a');
+                a.href = dl.signedUrl;
+                a.download = dl.file_name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
+                successHtml = `
+                    <strong>WhatsApp aberto + PDF baixado.</strong><br>
+                    Arraste o arquivo da pasta <em>Downloads</em> para a conversa.
+                `;
             }
 
-            // Modo ATTACH (default): baixa PDF + abre WhatsApp sem link
-            const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
-            const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
-            const a = document.createElement('a');
-            a.href = dl.signedUrl;
-            a.download = dl.file_name;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
-            window.open(waUrl, '_blank', 'noopener');
+            // Popula a janela pré-aberta. Se o navegador bloqueou (waWindow null),
+            // tenta de novo (pode funcionar dependendo da política) ou avisa o user.
+            if (waWindow && !waWindow.closed) {
+                waWindow.location.href = waUrl;
+            } else {
+                const fallback = window.open(waUrl, '_blank', 'noopener');
+                if (!fallback) {
+                    showToast('Pop-up bloqueado pelo navegador. Permita pop-ups nesse site e tente de novo.', 'error');
+                }
+            }
 
             msgEl.className = 'forgot-msg success';
-            msgEl.innerHTML = `
-                <strong>WhatsApp aberto + PDF baixado.</strong><br>
-                Arraste o arquivo da pasta <em>Downloads</em> para a conversa.
-            `;
+            msgEl.innerHTML = successHtml;
             msgEl.hidden = false;
             if (_pendingReply) dismissReply();
-            setTimeout(closeSendCV, 6000);
+            setTimeout(closeSendCV, _waSubmode === 'attach' ? 6000 : 5000);
         }, loadingLabel);
     } catch (e) {
+        // Fecha a janela vazia que foi pré-aberta se a operação falhou
+        if (waWindow && !waWindow.closed) waWindow.close();
         showSendError(e.message);
     }
 }
