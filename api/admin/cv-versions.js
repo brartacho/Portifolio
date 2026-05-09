@@ -1,5 +1,6 @@
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
+import { normalizeFileName } from '../_lib/filename.js';
 
 export default async function handler(req, res) {
     cors(res);
@@ -24,9 +25,12 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Campos obrigatórios: name, file_path, file_name' });
         }
 
+        // Padroniza file_name antes de salvar — todo download fica consistente
+        const cleanFileName = normalizeFileName(file_name);
+
         const { data, error } = await supabase
             .from('cv_versions')
-            .insert({ name, description, file_path, file_name, active: true })
+            .insert({ name, description, file_path, file_name: cleanFileName, active: true })
             .select()
             .single();
 

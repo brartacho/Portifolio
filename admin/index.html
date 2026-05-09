@@ -889,6 +889,7 @@
                 <div class="form-group">
                     <label>Nome do arquivo para download</label>
                     <input type="text" id="cvFileName" placeholder="Curriculo-Bruno-Artacho-QA-2026.pdf">
+                    <small id="cvFileNamePreview" style="color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px;font-family:var(--font-mono)"></small>
                 </div>
 
                 <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
@@ -1526,6 +1527,35 @@ async function deleteCV(id, name) {
 }
 
 // ─── UPLOAD ───────────────────────────────────────────────
+
+// Espelha api/_lib/filename.js — mantém em sync se mexer um, mexer o outro.
+function normalizeFileNameClient(input) {
+    if (!input || typeof input !== 'string') return 'arquivo.pdf';
+    let clean = input.trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const dotIdx = clean.lastIndexOf('.');
+    let base = dotIdx > 0 ? clean.slice(0, dotIdx) : clean;
+    let ext = (dotIdx > 0 ? clean.slice(dotIdx) : '').toLowerCase().replace(/[^a-z0-9.]/g, '');
+    if (ext !== '.pdf') ext = '.pdf';
+    base = base.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    if (!base) base = 'arquivo';
+    if (base.length > 200) base = base.slice(0, 200).replace(/_+$/, '');
+    return base + ext;
+}
+
+function updateFileNamePreview() {
+    const input = document.getElementById('cvFileName');
+    const preview = document.getElementById('cvFileNamePreview');
+    if (!input.value.trim()) { preview.textContent = ''; return; }
+    const normalized = normalizeFileNameClient(input.value);
+    if (normalized !== input.value.trim()) {
+        preview.textContent = `Será salvo como: ${normalized}`;
+        preview.style.color = 'var(--cyan)';
+    } else {
+        preview.textContent = '✓ Nome já está padronizado';
+        preview.style.color = 'var(--success)';
+    }
+}
+
 function onFileSelect(input) {
     const file = input.files[0];
     if (!file) return;
@@ -1534,7 +1564,10 @@ function onFileSelect(input) {
     if (!document.getElementById('cvFileName').value) {
         document.getElementById('cvFileName').value = file.name;
     }
+    updateFileNamePreview();
 }
+
+document.getElementById('cvFileName')?.addEventListener('input', updateFileNamePreview);
 
 const uploadZone = document.getElementById('uploadZone');
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
@@ -1547,6 +1580,7 @@ uploadZone.addEventListener('drop', e => {
         selectedFile = file;
         document.getElementById('uploadFileName').textContent = file.name;
         if (!document.getElementById('cvFileName').value) document.getElementById('cvFileName').value = file.name;
+        updateFileNamePreview();
     } else {
         showToast('Apenas arquivos PDF são aceitos', 'error');
     }

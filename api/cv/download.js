@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { notifyDownload } from '../_lib/notify.js';
+import { normalizeFileName } from '../_lib/filename.js';
 
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -114,18 +115,11 @@ export default async function handler(req, res) {
     // Stream the PDF to the client — never expose storage URL
     const buffer = Buffer.from(await fileData.arrayBuffer());
 
-    // Content-Disposition: usa RFC 5987 (filename*=UTF-8''…) pra suportar acentos.
-    // O `filename="..."` (ASCII) fica como fallback pra clientes antigos.
-    // Strip aspas/quebras de linha pra evitar header injection.
-    const original = cv.file_name.replace(/["\r\n]/g, '');
-    const asciiFallback = original
-        .normalize('NFD')                       // decompõe "ç" → "c" + combining cedilla
-        .replace(/[̀-ͯ]/g, '')        // remove diacritics (acentos)
-        .replace(/[^\x20-\x7E]/g, '_');         // qualquer non-ASCII restante vira "_"
-    const utf8Encoded = encodeURIComponent(original);
+    // Aplica normalize defensivamente (cobre entradas antigas no DB sem normalize)
+    const safeFileName = normalizeFileName(cv.file_name);
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('X-Content-Type-Options', 'nosniff');

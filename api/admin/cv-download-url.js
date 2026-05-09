@@ -1,5 +1,6 @@
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
+import { normalizeFileName } from '../_lib/filename.js';
 
 export default async function handler(req, res) {
     cors(res);
@@ -20,16 +21,20 @@ export default async function handler(req, res) {
 
     if (cvErr || !cv) return res.status(404).json({ error: 'Versão de CV não encontrada' });
 
-    // URL assinada com 60s de validade — só pra trigger do download local imediato
+    // Aplica normalize defensivo (cobre entradas antigas com acentos)
+    const safeFileName = normalizeFileName(cv.file_name);
+
+    // URL assinada com 60s de validade — { download: name } força download
+    // com o nome normalizado em vez de "objeto.pdf" ou afins
     const { data: signed, error: signErr } = await supabase
         .storage
         .from(BUCKET())
-        .createSignedUrl(cv.file_path, 60, { download: cv.file_name });
+        .createSignedUrl(cv.file_path, 60, { download: safeFileName });
 
     if (signErr || !signed) return res.status(500).json({ error: signErr?.message || 'Falha ao gerar URL' });
 
     return res.status(200).json({
         signedUrl: signed.signedUrl,
-        file_name: cv.file_name,
+        file_name: safeFileName,
     });
 }
