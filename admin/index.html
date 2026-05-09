@@ -1536,9 +1536,12 @@ function normalizeFileNameClient(input) {
     let base = dotIdx > 0 ? clean.slice(0, dotIdx) : clean;
     let ext = (dotIdx > 0 ? clean.slice(dotIdx) : '').toLowerCase().replace(/[^a-z0-9.]/g, '');
     if (ext !== '.pdf') ext = '.pdf';
-    base = base.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    base = base
+        .replace(/[^a-zA-Z0-9.]+/g, '_')   // preserva pontos (v1.4 fica legível)
+        .replace(/\.+/g, '.')              // colapsa pontos duplicados
+        .replace(/^[._]+|[._]+$/g, '');    // limpa pontas
     if (!base) base = 'arquivo';
-    if (base.length > 200) base = base.slice(0, 200).replace(/_+$/, '');
+    if (base.length > 200) base = base.slice(0, 200).replace(/[._]+$/, '');
     return base + ext;
 }
 
