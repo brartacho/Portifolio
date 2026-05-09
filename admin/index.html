@@ -687,19 +687,51 @@
         .upload-zone strong { color: var(--cyan); }
 
         .upload-progress {
-            height: 4px;
-            background: var(--bg-elevated);
-            border-radius: 4px;
-            margin-top: 12px;
-            overflow: hidden;
+            margin-top: 14px;
             display: none;
         }
-
+        .upload-phase {
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+            color: var(--cyan);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .upload-bar-track {
+            height: 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
         .upload-bar {
             height: 100%;
-            background: var(--cyan);
+            background: linear-gradient(90deg, var(--cyan), var(--violet));
             width: 0%;
-            transition: width 0.3s ease;
+            border-radius: 4px;
+            transition: width 0.25s ease;
+        }
+        .upload-bar.indeterminate {
+            width: 100% !important;
+            background: linear-gradient(90deg,
+                rgba(34,211,238,0.15) 25%,
+                rgba(34,211,238,0.6) 50%,
+                rgba(34,211,238,0.15) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s linear infinite;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .upload-percent {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 4px;
+            font-family: var(--font-mono);
         }
 
         /* ─── RESPONSIVE ─────────────────────────────── */
@@ -841,7 +873,14 @@
                     <p><strong>Clique ou arraste</strong> o PDF aqui</p>
                     <p id="uploadFileName" style="color:var(--cyan);margin-top:8px;font-size:0.82rem;"></p>
                     <div class="upload-progress" id="uploadProgress">
-                        <div class="upload-bar" id="uploadBar"></div>
+                        <div class="upload-phase" id="uploadPhase">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span id="uploadPhaseText">Preparando…</span>
+                        </div>
+                        <div class="upload-bar-track">
+                            <div class="upload-bar" id="uploadBar"></div>
+                        </div>
+                        <div class="upload-percent" id="uploadPercent"></div>
                     </div>
                 </div>
                 <input type="file" id="fileInput" accept="application/pdf" style="display:none" onchange="onFileSelect(this)">
@@ -998,9 +1037,22 @@
                     <i class="fa-solid fa-envelope"></i> Email (com PDF anexo)
                 </button>
                 <button type="button" id="sendModeWhatsapp" class="btn btn-sm" style="flex:1" onclick="setSendMode('whatsapp')">
-                    <i class="fa-brands fa-whatsapp"></i> WhatsApp (anexo manual)
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
                 </button>
             </div>
+        </div>
+
+        <div class="form-group" id="waSubmodeGroup" style="display:none">
+            <label>Modo WhatsApp</label>
+            <div style="display:flex;gap:8px;margin-top:6px">
+                <button type="button" id="waSubAttach" class="btn btn-sm" style="flex:1" onclick="setWaSubmode('attach')">
+                    <i class="fa-solid fa-paperclip"></i> PDF anexo manual
+                </button>
+                <button type="button" id="waSubLink" class="btn btn-sm" style="flex:1" onclick="setWaSubmode('link')">
+                    <i class="fa-solid fa-link"></i> Link tracked
+                </button>
+            </div>
+            <small id="waSubmodeHint" style="color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px"></small>
         </div>
 
         <div class="form-group">
@@ -1052,7 +1104,7 @@
             <label for="editCvActive" style="margin:0;cursor:pointer">Ativo (disponível para gerar tokens)</label>
         </div>
 
-        <button class="btn btn-cyan" style="width:100%;margin-top:12px" onclick="saveEditCV()">
+        <button class="btn btn-cyan" id="editCvSaveBtn" style="width:100%;margin-top:12px" onclick="saveEditCV()">
             <i class="fa-solid fa-floppy-disk"></i> Salvar alterações
         </button>
     </div>
@@ -1101,33 +1153,30 @@ async function doLogin() {
     const pw = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
     const errEl = document.getElementById('loginError');
-    btn.disabled = true;
     errEl.style.display = 'none';
 
     if (!username) {
         errEl.textContent = 'Informe seu email ou telefone.';
         errEl.style.display = 'block';
-        btn.disabled = false;
         return;
     }
     if (!pw) {
         errEl.textContent = 'Informe a senha.';
         errEl.style.display = 'block';
-        btn.disabled = false;
         return;
     }
 
     try {
-        const r = await api('POST', '/api/admin/login', { username, password: pw }, false);
-        setJwt(r.token);
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
-        loadAll();
+        await withLoading(btn, async () => {
+            const r = await api('POST', '/api/admin/login', { username, password: pw }, false);
+            setJwt(r.token);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            loadAll();
+        }, 'Autenticando…');
     } catch (e) {
         errEl.textContent = e.message || 'Usuário ou senha incorretos.';
         errEl.style.display = 'block';
-    } finally {
-        btn.disabled = false;
     }
 }
 
@@ -1164,22 +1213,22 @@ function closeForgot() {
 async function sendRecovery() {
     const btn = document.getElementById('forgotBtn');
     const msg = document.getElementById('forgotMessage');
-    btn.disabled = true;
     msg.hidden = true;
 
     try {
-        const r = await fetch('/api/admin/forgot-password', { method: 'POST' });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(data.error || 'Falha ao gerar link');
+        await withLoading(btn, async () => {
+            const r = await fetch('/api/admin/forgot-password', { method: 'POST' });
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.error || 'Falha ao gerar link');
 
-        msg.className = 'forgot-msg success';
-        msg.textContent = data.message || 'Link enviado! Verifique seu email (incluindo spam) nos próximos minutos.';
-        msg.hidden = false;
+            msg.className = 'forgot-msg success';
+            msg.textContent = data.message || 'Link enviado! Verifique seu email (incluindo spam) nos próximos minutos.';
+            msg.hidden = false;
+        }, 'Enviando…');
     } catch (e) {
         msg.className = 'forgot-msg error';
         msg.textContent = e.message;
         msg.hidden = false;
-        btn.disabled = false;
     }
 }
 
@@ -1228,6 +1277,67 @@ async function api(method, path, body, auth = true) {
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
     return data;
+}
+
+// ─── HELPERS DE UI ASYNC ──────────────────────────────────
+// Botão fica desabilitado + spinner girando + label trocada durante a operação
+async function withLoading(btn, asyncFn, loadingLabel = 'Processando…') {
+    if (!btn) return asyncFn();
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${loadingLabel}`;
+    try {
+        return await asyncFn();
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
+}
+
+// Upload via XHR com progresso real (fetch não suporta upload.onprogress)
+function uploadWithProgress(signedUrl, file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', signedUrl);
+        xhr.setRequestHeader('Content-Type', 'application/pdf');
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) onProgress(e.loaded / e.total);
+        };
+        xhr.onload = () => xhr.status >= 200 && xhr.status < 300
+            ? resolve(xhr)
+            : reject(new Error(`Upload falhou (HTTP ${xhr.status})`));
+        xhr.onerror = () => reject(new Error('Erro de rede no upload'));
+        xhr.send(file);
+    });
+}
+
+// Atualiza o widget de progresso do upload (mode: 'indeterminate' ou 'progress')
+function setUploadPhase(text, mode = 'indeterminate', percent = 0) {
+    document.getElementById('uploadPhaseText').textContent = text;
+    const bar = document.getElementById('uploadBar');
+    const pct = document.getElementById('uploadPercent');
+    if (mode === 'indeterminate') {
+        bar.classList.add('indeterminate');
+        pct.textContent = '';
+    } else {
+        bar.classList.remove('indeterminate');
+        bar.style.width = (percent * 100).toFixed(0) + '%';
+        pct.textContent = (percent * 100).toFixed(0) + '%';
+    }
+}
+
+// Download direto de uma versão de CV (atalho da lista)
+async function downloadCV(id) {
+    try {
+        const dl = await api('GET', `/api/admin/cv-download-url?id=${id}`);
+        const a = document.createElement('a');
+        a.href = dl.signedUrl;
+        a.download = dl.file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(`Baixando ${dl.file_name}`);
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 // ─── TABS ─────────────────────────────────────────────────
@@ -1362,6 +1472,7 @@ async function loadCVs() {
                 <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
                 <td>${fmtDate(cv.created_at)}</td>
                 <td style="white-space:nowrap">
+                    <button class="btn btn-sm" style="margin-right:6px" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
                     <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
                     <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
@@ -1427,29 +1538,30 @@ async function uploadCV() {
     if (!fileName) return showToast('Nome do arquivo obrigatório', 'error');
     if (!selectedFile) return showToast('Selecione um arquivo PDF', 'error');
 
+    const progress = document.getElementById('uploadProgress');
+    progress.style.display = 'block';
+
     try {
-        // 1. Get pre-signed upload URL
+        // Fase 1: gera URL assinada de upload (rápido, indeterminate)
+        setUploadPhase('Preparando upload…', 'indeterminate');
         const { signedUrl, filePath } = await api('GET', `/api/admin/cv-upload-url?fileName=${encodeURIComponent(selectedFile.name)}`);
 
-        // 2. Upload directly to Supabase Storage
-        const progress = document.getElementById('uploadProgress');
-        const bar = document.getElementById('uploadBar');
-        progress.style.display = 'block';
-        bar.style.width = '30%';
-
-        const uploadRes = await fetch(signedUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/pdf' },
-            body: selectedFile,
+        // Fase 2: upload do PDF com progresso real (XHR)
+        setUploadPhase('Enviando arquivo…', 'progress', 0);
+        await uploadWithProgress(signedUrl, selectedFile, p => {
+            setUploadPhase('Enviando arquivo…', 'progress', p);
         });
 
-        if (!uploadRes.ok) throw new Error('Falha no upload do arquivo');
-        bar.style.width = '70%';
-
-        // 3. Register in DB
+        // Fase 3: registra no banco (rápido, indeterminate)
+        setUploadPhase('Registrando no banco…', 'indeterminate');
         await api('POST', '/api/admin/cv-versions', { name, description: desc, file_path: filePath, file_name: fileName });
-        bar.style.width = '100%';
-        setTimeout(() => { progress.style.display = 'none'; bar.style.width = '0%'; }, 500);
+
+        // Fase 4: concluído
+        setUploadPhase('Concluído ✓', 'progress', 1);
+        setTimeout(() => {
+            progress.style.display = 'none';
+            setUploadPhase('Preparando…', 'progress', 0);
+        }, 1200);
 
         // Reset form
         selectedFile = null;
@@ -1463,6 +1575,7 @@ async function uploadCV() {
         loadCVs();
         loadStorageStats();
     } catch (e) {
+        progress.style.display = 'none';
         showToast(e.message, 'error');
     }
 }
@@ -1571,12 +1684,15 @@ function openSendCV(cv) {
 function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
 // Templates puros — placeholder [nome] é substituído ao digitar nome do destinatário.
-// WhatsApp: PDF é baixado localmente pra você anexar manualmente (sem link na mensagem,
-// evita "receio de clicar em link" que muitos recrutadores têm).
+// WhatsApp tem 2 sub-modos:
+//   - 'attach': PDF baixa local + WhatsApp abre sem link (evita receio de clicar em link)
+//   - 'link':   gera token tracked + link na mensagem (rastreia abertura do recrutador)
 const _msgTemplates = {
     email: `Olá [nome],\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`,
-    whatsapp: `Olá [nome], conforme combinado segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt, Bruno`,
+    whatsapp_attach: `Olá [nome], conforme combinado segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt, Bruno`,
+    whatsapp_link: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
 };
+let _waSubmode = 'attach';   // sub-modo do WhatsApp ('attach' | 'link')
 
 // Última mensagem default que escrevemos no textarea — usada pra detectar edição do usuário.
 // Se o textarea ainda for igual a isso, atualizamos livremente. Se mudou, o usuário editou
@@ -1590,9 +1706,30 @@ function setSendMode(mode) {
     document.getElementById('sendModeWhatsapp').className = 'btn btn-sm' + (!isEmail ? ' btn-cyan' : '');
     document.getElementById('sendEmailField').style.display = isEmail ? 'block' : 'none';
     document.getElementById('sendPhoneField').style.display = isEmail ? 'none' : 'block';
-    document.getElementById('sendBtnLabel').textContent = isEmail ? 'Enviar email com PDF' : 'Baixar PDF + abrir WhatsApp';
-    document.getElementById('sendBtnIcon').className = isEmail ? 'fa-solid fa-paper-plane' : 'fa-brands fa-whatsapp';
+    document.getElementById('waSubmodeGroup').style.display = isEmail ? 'none' : 'block';
 
+    if (isEmail) {
+        document.getElementById('sendBtnLabel').textContent = 'Enviar email com PDF';
+        document.getElementById('sendBtnIcon').className = 'fa-solid fa-paper-plane';
+        refreshDefaultMessage();
+    } else {
+        // Aplica o sub-modo atual (que ajusta label do submit, hint e mensagem)
+        setWaSubmode(_waSubmode);
+    }
+}
+
+function setWaSubmode(mode) {
+    _waSubmode = mode;
+    const isAttach = mode === 'attach';
+    document.getElementById('waSubAttach').className = 'btn btn-sm' + (isAttach ? ' btn-cyan' : '');
+    document.getElementById('waSubLink').className = 'btn btn-sm' + (!isAttach ? ' btn-cyan' : '');
+    document.getElementById('waSubmodeHint').textContent = isAttach
+        ? 'Baixa o PDF no seu computador. Você arrasta na conversa do WhatsApp. Sem tracking.'
+        : 'Gera link com token (1 uso, 1h). Você sabe quando o recrutador abre. Cuidado: alguns recrutadores não clicam em links.';
+    document.getElementById('sendBtnLabel').textContent = isAttach
+        ? 'Baixar PDF + abrir WhatsApp'
+        : 'Gerar link + abrir WhatsApp';
+    document.getElementById('sendBtnIcon').className = 'fa-brands fa-whatsapp';
     refreshDefaultMessage();
 }
 
@@ -1603,7 +1740,10 @@ function refreshDefaultMessage() {
     // Pode atualizar se: textarea está vazio OU bateu exatamente o último default que setamos
     if (cur && cur !== _lastDefaultMsg) return;
 
-    const tpl = _sendMode === 'email' ? _msgTemplates.email : _msgTemplates.whatsapp;
+    let tpl;
+    if (_sendMode === 'email') tpl = _msgTemplates.email;
+    else tpl = _waSubmode === 'link' ? _msgTemplates.whatsapp_link : _msgTemplates.whatsapp_attach;
+
     const newMsg = nameInput ? tpl.replace(/\[nome\]/g, nameInput) : tpl;
     document.getElementById('sendMessage').value = newMsg;
     _lastDefaultMsg = newMsg;
@@ -1629,69 +1769,94 @@ async function sendCV() {
     // editou a mensagem mas esqueceu de trocar o placeholder
     const message = rawMessage.replace(/\[nome\]|\[name\]/gi, name);
 
-    btn.disabled = true;
-
-    try {
-        if (_sendMode === 'email') {
-            const email = document.getElementById('sendEmail').value.trim();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return showSendError('Email inválido.');
-
-            const r = await api('POST', '/api/admin/send-cv-email', {
-                cv_version_id: _sendCv.id,
-                recipient_name: name,
-                recipient_email: email,
-                message: message || null,
-            });
-            msgEl.className = 'forgot-msg success';
-            msgEl.textContent = r.message || 'Enviado!';
-            msgEl.hidden = false;
-            // Limpa contexto de reply (recrutador atendido)
-            if (_pendingReply && _pendingReply.email === email) dismissReply();
-            setTimeout(closeSendCV, 2500);
-            return;
-        }
-
-        // WhatsApp: baixa PDF localmente + abre conversa SEM link (recrutador
-        // recebe o anexo direto pelo WhatsApp, evita receio de clicar em link)
-        const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
-        if (phone.length < 10) return showSendError('Telefone inválido (mínimo 10 dígitos com DDI+DDD).');
-
-        // Remove qualquer [link] que tenha sobrado em mensagem editada (defesa)
-        const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
-
-        // 1. Pega URL assinada e dispara download local
-        const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
-        const a = document.createElement('a');
-        a.href = dl.signedUrl;
-        a.download = dl.file_name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // 2. Abre WhatsApp com a mensagem (sem link)
-        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
-        window.open(waUrl, '_blank', 'noopener');
-
-        msgEl.className = 'forgot-msg success';
-        msgEl.innerHTML = `
-            <strong>WhatsApp aberto + PDF baixado.</strong><br>
-            Arraste o arquivo da pasta <em>Downloads</em> para a conversa
-            no WhatsApp pra anexar.
-        `;
-        msgEl.hidden = false;
-        if (_pendingReply) dismissReply();
-        setTimeout(closeSendCV, 6000);
-    } catch (e) {
-        showSendError(e.message);
-    } finally {
-        btn.disabled = false;
-    }
-
     function showSendError(text) {
         msgEl.className = 'forgot-msg error';
         msgEl.textContent = text;
         msgEl.hidden = false;
-        btn.disabled = false;
+    }
+
+    // Validações por modo (antes do withLoading pra não travar UI à toa)
+    if (_sendMode === 'email') {
+        const email = document.getElementById('sendEmail').value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return showSendError('Email inválido.');
+    } else {
+        const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
+        if (phone.length < 10) return showSendError('Telefone inválido (mínimo 10 dígitos com DDI+DDD).');
+    }
+
+    const loadingLabel = _sendMode === 'email'
+        ? 'Enviando email…'
+        : (_waSubmode === 'link' ? 'Gerando link…' : 'Baixando PDF…');
+
+    try {
+        await withLoading(btn, async () => {
+            if (_sendMode === 'email') {
+                const email = document.getElementById('sendEmail').value.trim();
+                const r = await api('POST', '/api/admin/send-cv-email', {
+                    cv_version_id: _sendCv.id,
+                    recipient_name: name,
+                    recipient_email: email,
+                    message: message || null,
+                });
+                msgEl.className = 'forgot-msg success';
+                msgEl.textContent = r.message || 'Enviado!';
+                msgEl.hidden = false;
+                if (_pendingReply && _pendingReply.email === email) dismissReply();
+                setTimeout(closeSendCV, 2500);
+                return;
+            }
+
+            // WhatsApp
+            const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
+
+            if (_waSubmode === 'link') {
+                // Modo LINK TRACKED: gera token (1 uso, 1h) + link na mensagem
+                const tk = await api('POST', '/api/admin/tokens', {
+                    cv_version_id: _sendCv.id,
+                    label: `WhatsApp · ${name}`,
+                    expires_in_hours: 1,
+                    max_uses: 1,
+                });
+                const finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
+                const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+                window.open(waUrl, '_blank', 'noopener');
+
+                msgEl.className = 'forgot-msg success';
+                msgEl.innerHTML = `
+                    <strong>WhatsApp aberto com link tracked.</strong><br>
+                    Token válido por 1h, 1 uso. Aparece na aba Tokens com label "WhatsApp · ${esc(name)}".
+                `;
+                msgEl.hidden = false;
+                loadTokens();
+                if (_pendingReply) dismissReply();
+                setTimeout(closeSendCV, 5000);
+                return;
+            }
+
+            // Modo ATTACH (default): baixa PDF + abre WhatsApp sem link
+            const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
+            const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
+            const a = document.createElement('a');
+            a.href = dl.signedUrl;
+            a.download = dl.file_name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
+            window.open(waUrl, '_blank', 'noopener');
+
+            msgEl.className = 'forgot-msg success';
+            msgEl.innerHTML = `
+                <strong>WhatsApp aberto + PDF baixado.</strong><br>
+                Arraste o arquivo da pasta <em>Downloads</em> para a conversa.
+            `;
+            msgEl.hidden = false;
+            if (_pendingReply) dismissReply();
+            setTimeout(closeSendCV, 6000);
+        }, loadingLabel);
+    } catch (e) {
+        showSendError(e.message);
     }
 }
 
@@ -1712,12 +1877,15 @@ async function saveEditCV() {
     const name = document.getElementById('editCvName').value.trim();
     const description = document.getElementById('editCvDesc').value.trim();
     const active = document.getElementById('editCvActive').checked;
+    const btn = document.getElementById('editCvSaveBtn');
     if (!name) return showToast('Nome obrigatório', 'error');
     try {
-        await api('PATCH', `/api/admin/cv-versions?id=${id}`, { name, description, active });
-        showToast('Versão atualizada');
-        closeEditCV();
-        loadCVs();
+        await withLoading(btn, async () => {
+            await api('PATCH', `/api/admin/cv-versions?id=${id}`, { name, description, active });
+            showToast('Versão atualizada');
+            closeEditCV();
+            loadCVs();
+        }, 'Salvando…');
     } catch (e) { showToast(e.message, 'error'); }
 }
 document.getElementById('editCvModal')?.addEventListener('click', e => {
