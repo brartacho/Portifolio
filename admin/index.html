@@ -998,7 +998,7 @@
                     <i class="fa-solid fa-envelope"></i> Email (com PDF anexo)
                 </button>
                 <button type="button" id="sendModeWhatsapp" class="btn btn-sm" style="flex:1" onclick="setSendMode('whatsapp')">
-                    <i class="fa-brands fa-whatsapp"></i> WhatsApp (link tracked)
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp (anexo manual)
                 </button>
             </div>
         </div>
@@ -1570,10 +1570,12 @@ function openSendCV(cv) {
 }
 function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
-// Templates puros (com placeholders [nome] e [link]) — substituições no envio
+// Templates puros — placeholder [nome] é substituído ao digitar nome do destinatário.
+// WhatsApp: PDF é baixado localmente pra você anexar manualmente (sem link na mensagem,
+// evita "receio de clicar em link" que muitos recrutadores têm).
 const _msgTemplates = {
     email: `Olá [nome],\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`,
-    whatsapp: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
+    whatsapp: `Olá [nome], conforme combinado segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt, Bruno`,
 };
 
 // Última mensagem default que escrevemos no textarea — usada pra detectar edição do usuário.
@@ -1588,7 +1590,7 @@ function setSendMode(mode) {
     document.getElementById('sendModeWhatsapp').className = 'btn btn-sm' + (!isEmail ? ' btn-cyan' : '');
     document.getElementById('sendEmailField').style.display = isEmail ? 'block' : 'none';
     document.getElementById('sendPhoneField').style.display = isEmail ? 'none' : 'block';
-    document.getElementById('sendBtnLabel').textContent = isEmail ? 'Enviar email com PDF' : 'Abrir WhatsApp com link';
+    document.getElementById('sendBtnLabel').textContent = isEmail ? 'Enviar email com PDF' : 'Baixar PDF + abrir WhatsApp';
     document.getElementById('sendBtnIcon').className = isEmail ? 'fa-solid fa-paper-plane' : 'fa-brands fa-whatsapp';
 
     refreshDefaultMessage();
@@ -1649,27 +1651,36 @@ async function sendCV() {
             return;
         }
 
-        // WhatsApp: gera token automaticamente (1 uso, 1h) + abre wa.me
+        // WhatsApp: baixa PDF localmente + abre conversa SEM link (recrutador
+        // recebe o anexo direto pelo WhatsApp, evita receio de clicar em link)
         const phone = document.getElementById('sendPhone').value.replace(/\D/g, '');
         if (phone.length < 10) return showSendError('Telefone inválido (mínimo 10 dígitos com DDI+DDD).');
 
-        const tk = await api('POST', '/api/admin/tokens', {
-            cv_version_id: _sendCv.id,
-            label: `WhatsApp · ${name}`,
-            expires_in_hours: 1,
-            max_uses: 1,
-        });
+        // Remove qualquer [link] que tenha sobrado em mensagem editada (defesa)
+        const cleanMsg = message.replace(/\[link\]\s*\n*/g, '');
 
-        const finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
-        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+        // 1. Pega URL assinada e dispara download local
+        const dl = await api('GET', `/api/admin/cv-download-url?id=${_sendCv.id}`);
+        const a = document.createElement('a');
+        a.href = dl.signedUrl;
+        a.download = dl.file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // 2. Abre WhatsApp com a mensagem (sem link)
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(cleanMsg)}`;
         window.open(waUrl, '_blank', 'noopener');
 
         msgEl.className = 'forgot-msg success';
-        msgEl.textContent = 'WhatsApp aberto! Token gerado: válido por 1h, 1 uso. Link tracked já dentro da mensagem.';
+        msgEl.innerHTML = `
+            <strong>WhatsApp aberto + PDF baixado.</strong><br>
+            Arraste o arquivo da pasta <em>Downloads</em> para a conversa
+            no WhatsApp pra anexar.
+        `;
         msgEl.hidden = false;
-        loadTokens();
         if (_pendingReply) dismissReply();
-        setTimeout(closeSendCV, 4000);
+        setTimeout(closeSendCV, 6000);
     } catch (e) {
         showSendError(e.message);
     } finally {
