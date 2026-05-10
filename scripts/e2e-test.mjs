@@ -44,8 +44,10 @@ log('Login com senha errada → 401', badLogin.status === 401, `HTTP ${badLogin.
 
 // ─── 2. UPLOAD URL ──────────────────────────────────────
 console.log('\n— Fluxo: Upload de CV —');
-const uploadUrl = await fetch(`${BASE}/api/admin/cv-upload-url?fileName=e2e-test.pdf`, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
+const uploadUrl = await fetch(`${BASE}/api/admin/cv-storage-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+    body: JSON.stringify({ fileName: 'e2e-test.pdf' }),
 }).then(r => r.json());
 log('Gera URL assinada (Storage)', !!uploadUrl?.signedUrl, uploadUrl?.filePath);
 

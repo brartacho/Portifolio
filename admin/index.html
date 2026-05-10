@@ -1762,7 +1762,7 @@ function setUploadPhase(text, mode = 'indeterminate', percent = 0) {
 // Download direto de uma versão de CV (atalho da lista)
 async function downloadCV(id) {
     try {
-        const dl = await api('GET', `/api/admin/cv-download-url?id=${id}`);
+        const dl = await api('GET', `/api/admin/cv-storage-url?id=${id}`);
         const a = document.createElement('a');
         a.href = dl.signedUrl;
         a.download = dl.file_name;
@@ -2140,7 +2140,7 @@ async function uploadCV() {
     try {
         // Fase 1: gera URL assinada de upload (rápido, indeterminate)
         setUploadPhase('Preparando upload…', 'indeterminate');
-        const { signedUrl, filePath } = await api('GET', `/api/admin/cv-upload-url?fileName=${encodeURIComponent(selectedFile.name)}`);
+        const { signedUrl, filePath } = await api('POST', '/api/admin/cv-storage-url', { fileName: selectedFile.name });
 
         // Fase 2: upload do PDF com progresso real (XHR)
         setUploadPhase('Enviando arquivo…', 'progress', 0);
@@ -2506,7 +2506,7 @@ async function sendCV() {
             } else {
                 // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
                 finalMsg = message.replace(/\[link\]\s*\n*/g, '');
-                const dlUrl = `/api/admin/cv-download-url?id=${_sendCv.id}`
+                const dlUrl = `/api/admin/cv-storage-url?id=${_sendCv.id}`
                     + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`
                     + (empresa ? `&empresa=${encodeURIComponent(empresa)}` : '')
                     + (vaga    ? `&vaga=${encodeURIComponent(vaga)}`       : '');

@@ -54,8 +54,8 @@ test.describe('API — endpoints protegidos sem auth', () => {
     { method: 'GET',  path: '/api/admin/tokens' },
     { method: 'GET',  path: '/api/admin/storage-stats' },
     { method: 'GET',  path: '/api/admin/logs' },
-    { method: 'GET',  path: '/api/admin/cv-download-url' },
-    { method: 'GET',  path: '/api/admin/cv-upload-url' },
+    { method: 'GET',  path: '/api/admin/cv-storage-url' },
+    { method: 'POST', path: '/api/admin/cv-storage-url' },
     { method: 'POST', path: '/api/admin/tokens' },
     { method: 'POST', path: '/api/admin/send-cv-email' },
   ];
