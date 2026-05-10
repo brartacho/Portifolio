@@ -1470,7 +1470,7 @@
         </div>
 
         <!-- Contexto da vaga — campos opcionais de rastreio -->
-        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 10px;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 6px;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div class="form-group" style="margin:0">
                 <label for="sendEmpresa" style="font-size:0.78rem">Empresa <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
                 <input type="text" id="sendEmpresa" placeholder="Nubank, iFood…" maxlength="200" autocomplete="off" data-form-type="other">
@@ -1479,6 +1479,20 @@
                 <label for="sendVaga" style="font-size:0.78rem">Vaga <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
                 <input type="text" id="sendVaga" placeholder="Sr QA, Tech Lead…" maxlength="200" autocomplete="off" data-form-type="other">
             </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+            <div class="form-group" style="margin:0">
+                <label for="sendLinkedinEmpresa" style="font-size:0.78rem">LinkedIn da empresa <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <input type="text" id="sendLinkedinEmpresa" placeholder="linkedin.com/company/…" maxlength="300" autocomplete="off" data-form-type="other">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label for="sendLinkVaga" style="font-size:0.78rem">Link da vaga <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <input type="text" id="sendLinkVaga" placeholder="linkedin.com/jobs/…" maxlength="500" autocomplete="off" data-form-type="other">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+            <label for="sendObservacoes" style="font-size:0.78rem">Observações <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+            <input type="text" id="sendObservacoes" placeholder="headhunter, urgência, referência…" maxlength="500" autocomplete="off" data-form-type="other">
         </div>
 
         <div class="form-group">
@@ -2293,8 +2307,11 @@ function openSendCV(cv) {
     document.getElementById('sendEmail').value   = _pendingReply?.email || '';
     document.getElementById('sendPhone').value   = '';
     document.getElementById('sendMessage').value = '';
-    document.getElementById('sendEmpresa').value = '';
-    document.getElementById('sendVaga').value    = '';
+    document.getElementById('sendEmpresa').value         = '';
+    document.getElementById('sendVaga').value            = '';
+    document.getElementById('sendLinkedinEmpresa').value = '';
+    document.getElementById('sendLinkVaga').value        = '';
+    document.getElementById('sendObservacoes').value     = '';
     document.getElementById('sendMsg').hidden = true;
 
     // Reset da área pós-processamento (waReadyArea) — começa fechada
@@ -2401,9 +2418,12 @@ async function sendCV() {
     msgEl.hidden = true;
     msgEl.className = 'forgot-msg';
 
-    const name    = document.getElementById('sendName').value.trim();
-    const empresa = document.getElementById('sendEmpresa').value.trim();
-    const vaga    = document.getElementById('sendVaga').value.trim();
+    const name            = document.getElementById('sendName').value.trim();
+    const empresa         = document.getElementById('sendEmpresa').value.trim();
+    const vaga            = document.getElementById('sendVaga').value.trim();
+    const linkedinEmpresa = document.getElementById('sendLinkedinEmpresa').value.trim();
+    const linkVaga        = document.getElementById('sendLinkVaga').value.trim();
+    const observacoes     = document.getElementById('sendObservacoes').value.trim();
     const rawMessage = document.getElementById('sendMessage').value.trim();
 
     if (name.length < 2) return showSendError('Informe o nome do destinatário (pelo menos 2 chars).');
@@ -2436,12 +2456,15 @@ async function sendCV() {
             if (_sendMode === 'email') {
                 const email = document.getElementById('sendEmail').value.trim();
                 const r = await api('POST', '/api/admin/send-cv-email', {
-                    cv_version_id: _sendCv.id,
-                    recipient_name: name,
-                    recipient_email: email,
-                    message: message || null,
-                    empresa: empresa || null,
-                    vaga:    vaga    || null,
+                    cv_version_id:    _sendCv.id,
+                    recipient_name:   name,
+                    recipient_email:  email,
+                    message:          message || null,
+                    empresa:          empresa          || null,
+                    vaga:             vaga             || null,
+                    linkedin_empresa: linkedinEmpresa  || null,
+                    link_vaga:        linkVaga         || null,
+                    observacoes:      observacoes      || null,
                 });
                 msgEl.className = 'forgot-msg success';
                 msgEl.textContent = r.message || 'Enviado!';
