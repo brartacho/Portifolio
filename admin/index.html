@@ -2299,6 +2299,132 @@ async function addCustomStage(appId) {
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
+function vagaFormHTML(app) {
+    const v = (field, max) => `value="${esc(app?.[field] || '')}" maxlength="${max}"`;
+    return `
+        <div style="border-top:1px solid var(--border-soft);padding-top:12px;display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim)">${app ? 'Editar candidatura' : 'Nova candidatura'}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Empresa *</label>
+                    <input id="vfEmpresa" class="mock-input" placeholder="Nubank…" ${v('empresa',200)} autocomplete="off" data-form-type="other">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Vaga</label>
+                    <input id="vfVaga" class="mock-input" placeholder="Sr QA…" ${v('vaga',200)} autocomplete="off" data-form-type="other">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">LinkedIn empresa</label>
+                    <input id="vfLinkedin" class="mock-input" placeholder="linkedin.com/company/…" ${v('linkedin_empresa',300)} autocomplete="off" data-form-type="other">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Link da vaga</label>
+                    <input id="vfLinkVaga" class="mock-input" placeholder="linkedin.com/jobs/…" ${v('link_vaga',500)} autocomplete="off" data-form-type="other">
+                </div>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label style="font-size:0.75rem">Observações</label>
+                <input id="vfObs" class="mock-input" placeholder="headhunter, urgência…" ${v('observacoes',500)} autocomplete="off" data-form-type="other">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Gestor (nome)</label>
+                    <input id="vfGestorNome" class="mock-input" placeholder="Maria Silva" ${v('gestor_nome',100)} autocomplete="off" data-form-type="other">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Gestor (email)</label>
+                    <input id="vfGestorEmail" class="mock-input" placeholder="m.silva@empresa.com" ${v('gestor_email',120)} autocomplete="off" data-form-type="other">
+                </div>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label style="font-size:0.75rem">Data de envio</label>
+                <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-cyan btn-sm" style="flex:1" onclick="${app ? `saveEditVaga('${app.id}')` : 'saveNovaVaga()'}">
+                    <i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar candidatura'}
+                </button>
+                <button class="btn btn-sm" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
+            </div>
+            <p id="vfMsg" hidden style="font-size:0.78rem"></p>
+        </div>
+    `;
+}
+
+function openNovaVaga() {
+    const existing = document.getElementById('novaVagaForm');
+    if (existing) { existing.remove(); return; }
+    const wrap = document.createElement('div');
+    wrap.id = 'novaVagaForm';
+    wrap.innerHTML = vagaFormHTML(null);
+    document.getElementById('vagasTableWrap').before(wrap);
+    document.getElementById('vfEmpresa').focus();
+}
+function closeNovaVaga() {
+    document.getElementById('novaVagaForm')?.remove();
+}
+async function saveNovaVaga() {
+    const msg = document.getElementById('vfMsg');
+    const empresa = document.getElementById('vfEmpresa').value.trim();
+    if (!empresa) { msg.textContent = 'Empresa é obrigatório.'; msg.hidden = false; return; }
+    try {
+        await api('POST', '/api/admin/applications', {
+            empresa,
+            vaga:             document.getElementById('vfVaga').value.trim() || null,
+            linkedin_empresa: document.getElementById('vfLinkedin').value.trim() || null,
+            link_vaga:        document.getElementById('vfLinkVaga').value.trim() || null,
+            observacoes:      document.getElementById('vfObs').value.trim() || null,
+            gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
+            gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
+            data_envio:       document.getElementById('vfDataEnvio').value || null,
+        });
+        closeNovaVaga();
+        await loadApplications();
+        showToast('Candidatura criada.');
+    } catch (e) {
+        msg.textContent = e.message;
+        msg.hidden = false;
+    }
+}
+
+function openEditVaga(appId) {
+    const section = document.getElementById('editVagaSection');
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    section.innerHTML = vagaFormHTML(app);
+    section.hidden = false;
+}
+function closeEditVaga() {
+    document.getElementById('editVagaSection').hidden = true;
+}
+async function saveEditVaga(appId) {
+    const msg = document.getElementById('vfMsg');
+    const empresa = document.getElementById('vfEmpresa').value.trim();
+    if (!empresa) { msg.textContent = 'Empresa é obrigatório.'; msg.hidden = false; return; }
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${appId}`, {
+            empresa,
+            vaga:             document.getElementById('vfVaga').value.trim() || null,
+            linkedin_empresa: document.getElementById('vfLinkedin').value.trim() || null,
+            link_vaga:        document.getElementById('vfLinkVaga').value.trim() || null,
+            observacoes:      document.getElementById('vfObs').value.trim() || null,
+            gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
+            gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
+            data_envio:       document.getElementById('vfDataEnvio').value || null,
+        });
+        const idx = _applications.findIndex(a => a.id === appId);
+        if (idx !== -1) _applications[idx] = updated;
+        renderDrawerBody(updated);
+        renderApplicationsTable();
+        showToast('Candidatura atualizada.');
+    } catch (e) {
+        msg.textContent = e.message;
+        msg.hidden = false;
+    }
+}
+
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name, btn) {
     _activeTab = name;
