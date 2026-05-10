@@ -17,7 +17,10 @@ export async function sendEmail({ to, subject, html, text, attachments, replyTo 
     }
 
     const payload = {
-        from: 'ARTACHO.dev <onboarding@resend.dev>',
+        // Gmail/Outlook geram o avatar do remetente a partir do email.
+        // Como usamos onboarding@resend.dev (modo teste), só conseguimos controlar o NOME exibido.
+        // Pra avatar com foto real do Bruno, precisa verificar artacho.dev no Resend e usar bruno@artacho.dev.
+        from: 'Bruno Artacho <onboarding@resend.dev>',
         to: [to],
         subject,
         html,

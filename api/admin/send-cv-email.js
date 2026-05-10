@@ -35,9 +35,9 @@ const EMAIL_SIGNATURE_HTML = `
             <img src="https://github.com/brartacho.png" alt="Bruno Artacho" width="72" height="72" style="display:block;border-radius:50%;border:2px solid #22d3ee;width:72px;height:72px;object-fit:cover">
         </td>
         <td style="padding:6px 20px 6px 0;vertical-align:top;border-right:3px solid #22d3ee">
-            <div style="font-weight:800;font-size:18px;color:#0f172a;letter-spacing:-0.4px;line-height:1.15">Bruno Artacho</div>
-            <div style="color:#64748b;font-size:11px;margin-top:5px;font-weight:600;letter-spacing:1px;text-transform:uppercase">QA Analyst · Test Automation</div>
-            <div style="color:#94a3b8;font-size:11px;margin-top:8px;font-weight:500">Playwright · Postman · Cursor + MCP</div>
+            <div style="font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:22px;color:#0f172a;letter-spacing:-0.6px;line-height:1.1">Bruno Artacho</div>
+            <div style="color:#64748b;font-size:10px;margin-top:8px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase">QA Analyst · Test Automation</div>
+            <div style="color:#94a3b8;font-size:11px;margin-top:10px;font-weight:500;font-style:italic">Playwright · Postman · Cursor + MCP</div>
         </td>
         <td style="padding:6px 0 6px 20px;vertical-align:top;font-size:13px;line-height:1.7;color:#475569">
             <div style="margin-bottom:2px">
