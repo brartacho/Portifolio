@@ -496,9 +496,26 @@
                 return `<a href="/" class="cv-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao portfólio</a>`;
             }
 
-            // Botões de re-solicitação reaproveitados do fluxo "sem token" (linhas ~484-499)
-            function renderRequestButtons(showMetaNote = false) {
-                const initUrl = `https://wa.me/5544984366533?text=${encodeURIComponent('Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.')}`;
+            const _waBaseMsgs = {
+                new:      'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.',
+                expired:  'Olá Bruno, vim do seu portfólio (artacho.dev). O link do currículo que recebi expirou — gostaria de receber um novo link.',
+                maxuses:  'Olá Bruno, vim do seu portfólio (artacho.dev). O link do currículo que recebi atingiu o limite de usos — gostaria de receber um novo link.',
+                revoked:  'Olá Bruno, vim do seu portfólio (artacho.dev). O link do currículo que recebi foi desativado — gostaria de receber um novo link.',
+                invalid:  'Olá Bruno, vim do seu portfólio (artacho.dev). O link do currículo que recebi não está funcionando — gostaria de receber um novo link.',
+                ratelimit:'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.',
+            };
+            const _waSuffixes = {
+                new:      'Gostaria de receber seu currículo.',
+                expired:  'O link que recebi expirou — gostaria de receber um novo link.',
+                maxuses:  'O link que recebi atingiu o limite de usos — gostaria de receber um novo link.',
+                revoked:  'O link que recebi foi desativado — gostaria de receber um novo link.',
+                invalid:  'O link que recebi não está funcionando — gostaria de receber um novo link.',
+                ratelimit:'Gostaria de receber seu currículo.',
+            };
+
+            function renderRequestButtons(showMetaNote = false, context = 'new') {
+                _waContext = context;
+                const initUrl = `https://wa.me/5544984366533?text=${encodeURIComponent(_waBaseMsgs[context] || _waBaseMsgs.new)}`;
                 const metaNote = showMetaNote ? `
                     <p class="cv-meta-note">
                         <strong>Já recebeu um link personalizado?</strong> Use o link enviado diretamente — ele inicia o download na hora.
@@ -525,12 +542,12 @@
                 `;
             }
 
-            function setError(iconClass, iconHtml, t, s, withRequest = false) {
+            function setError(iconClass, iconHtml, t, s, withRequest = false, context = 'new') {
                 icon.className = `cv-icon ${iconClass}`;
                 icon.innerHTML = iconHtml;
                 title.textContent = t;
                 subtitle.textContent = s;
-                actions.innerHTML = withRequest ? renderRequestButtons() : backLink();
+                actions.innerHTML = withRequest ? renderRequestButtons(false, context) : backLink();
             }
 
             if (!token) {
@@ -580,24 +597,24 @@
                     if (isExpired) {
                         setError('cv-icon--warning', '<i class="fa-solid fa-clock"></i>',
                             'Link expirado',
-                            'Esse link já passou da validade. Solicite um novo abaixo.', true);
+                            'Esse link já passou da validade. Solicite um novo abaixo.', true, 'expired');
                     } else if (isRevoked) {
                         setError('cv-icon--error', '<i class="fa-solid fa-ban"></i>',
                             'Link revogado',
-                            'Esse link foi desativado. Solicite um novo abaixo.', true);
+                            'Esse link foi desativado. Solicite um novo abaixo.', true, 'revoked');
                     } else {
                         setError('cv-icon--warning', '<i class="fa-solid fa-circle-xmark"></i>',
                             'Limite de usos atingido',
-                            'Esse link já foi usado o máximo de vezes. Solicite um novo abaixo.', true);
+                            'Esse link já foi usado o máximo de vezes. Solicite um novo abaixo.', true, 'maxuses');
                     }
                 } else if (response.status === 429) {
                     setError('cv-icon--warning', '<i class="fa-solid fa-shield-halved"></i>',
                         'Muitas tentativas',
-                        'Limite de tentativas atingido. Você ainda pode entrar em contato diretamente para receber o currículo.', true);
+                        'Limite de tentativas atingido. Você ainda pode entrar em contato diretamente para receber o currículo.', true, 'ratelimit');
                 } else {
                     setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
                         'Link inválido',
-                        'Esse link não foi reconhecido. Entre em contato diretamente para receber um novo link.', true);
+                        'Esse link não foi reconhecido. Entre em contato diretamente para receber um novo link.', true, 'invalid');
                 }
             } catch {
                 setError('cv-icon--error', '<i class="fa-solid fa-wifi"></i>',
@@ -607,11 +624,18 @@
         })();
 
         // ─── Modal de solicitação por email ───────────────────────
+        let _waContext   = 'new';  // contexto atual: 'new' | 'expired' | 'maxuses' | 'revoked' | 'invalid' | 'ratelimit'
         let _lastAutoMsg = '';
 
         function buildDefaultMsg() {
             const empresa = document.getElementById('reqCompany').value.trim() || '[empresa]';
             const cargo   = document.getElementById('reqRole').value.trim()    || '[cargo]';
+            const ctx     = (typeof _waContext !== 'undefined') ? _waContext : 'new';
+            const reRequest = ctx !== 'new' && ctx !== 'ratelimit';
+            if (reRequest) {
+                const motivo = { expired: 'expirou', maxuses: 'atingiu o limite de usos', revoked: 'foi desativado', invalid: 'não está funcionando' }[ctx] || 'expirou';
+                return `Olá Bruno, vim do seu portfólio (artacho.dev). Estou recrutando para a vaga de ${cargo} na empresa ${empresa}. O link que recebi ${motivo} — gostaria de receber um novo link.`;
+            }
             return `Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo. Estou recrutando para a vaga de ${cargo} na empresa ${empresa} e gostaria de avaliar seu perfil.`;
         }
 
@@ -670,16 +694,17 @@
             const nome    = document.getElementById('waName')?.value.trim()    || '';
             const empresa = document.getElementById('waCompany')?.value.trim() || '';
             const cargo   = document.getElementById('waRole')?.value.trim()    || '';
+            const suffix  = (typeof _waContext !== 'undefined' && _waSuffixes?.[_waContext]) || 'Gostaria de receber seu currículo.';
             let msg;
             if (!nome && !empresa && !cargo) {
-                msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.';
+                msg = (typeof _waContext !== 'undefined' && _waBaseMsgs?.[_waContext]) || 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.';
             } else {
                 const id = [
                     nome    && `Sou ${nome}`,
                     empresa && `da empresa ${empresa}`,
                     cargo   && `estou recrutando para a vaga de ${cargo}`,
                 ].filter(Boolean).join(', ');
-                msg = `Olá Bruno, vim do seu portfólio (artacho.dev). ${id}. Gostaria de receber seu currículo.`;
+                msg = `Olá Bruno, vim do seu portfólio (artacho.dev). ${id}. ${suffix}`;
             }
             const btn = document.getElementById('waBtn');
             if (btn) btn.href = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
