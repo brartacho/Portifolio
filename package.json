@@ -5,6 +5,10 @@
   "engines": {
     "node": ">=20"
   },
+  "scripts": {
+    "test": "playwright test",
+    "dev": "vercel dev"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.0",
     "bcryptjs": "^2.4.3",

@@ -500,6 +500,10 @@
             ratelimit:'Gostaria de receber seu currículo.',
         };
 
+        // Declarados antes da IIFE para evitar TDZ quando renderRequestButtons() atribuir _waContext
+        let _waContext   = 'new';
+        let _lastAutoMsg = '';
+
         (async () => {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('t');
@@ -625,8 +629,6 @@
         })();
 
         // ─── Modal de solicitação por email ───────────────────────
-        let _waContext   = 'new';  // contexto atual: 'new' | 'expired' | 'maxuses' | 'revoked' | 'invalid' | 'ratelimit'
-        let _lastAutoMsg = '';
 
         function buildDefaultMsg() {
             const empresa = document.getElementById('reqCompany').value.trim() || '[empresa]';
