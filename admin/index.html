@@ -2195,6 +2195,110 @@ async function deleteApplication(id) {
     }
 }
 
+let _stageManagerOpen = false;
+
+function toggleStageManager(appId) {
+    const section = document.getElementById('stageManagerSection');
+    if (_stageManagerOpen) {
+        section.hidden = true;
+        _stageManagerOpen = false;
+        return;
+    }
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    renderStageManager(app);
+    section.hidden = false;
+    _stageManagerOpen = true;
+}
+
+function renderStageManager(app) {
+    const section = document.getElementById('stageManagerSection');
+    const rows = app.stages.map((s, i) => `
+        <div class="stage-manager-row${!s.active ? ' inactive' : ''}" id="smRow${i}">
+            <span class="stage-toggle${s.active ? ' active' : ''}" title="${s.active ? 'Ativa — clique para inativar' : 'Inativa — clique para ativar'}"
+                  onclick="toggleStageActive('${app.id}',${i})">
+                <i class="fa-solid fa-${s.active ? 'toggle-on' : 'toggle-off'}"></i>
+            </span>
+            <input class="stage-name-input" value="${esc(s.name)}" maxlength="80"
+                   onblur="renameStage('${app.id}',${i},this.value)"
+                   onkeydown="if(event.key==='Enter')this.blur()">
+            <span style="display:flex;gap:4px">
+                ${s.active && !s.done && !s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem" title="Marcar como etapa atual" onclick="setCurrentStage('${app.id}',${i})"><i class="fa-solid fa-circle-dot"></i></button>` : ''}
+                ${s.active && s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;color:var(--success)" title="Marcar como concluída" onclick="markStageDone('${app.id}',${i})"><i class="fa-solid fa-check"></i></button>` : ''}
+            </span>
+        </div>
+    `).join('');
+
+    section.innerHTML = `
+        <div style="border-top:1px solid var(--border-soft);padding-top:12px">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Gerenciar etapas</div>
+            <div class="stage-manager" id="stageManagerList">${rows}</div>
+            <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick="addCustomStage('${app.id}')">
+                <i class="fa-solid fa-plus"></i> Adicionar etapa
+            </button>
+        </div>
+    `;
+}
+
+async function patchStages(appId, stages) {
+    const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { stages });
+    const idx = _applications.findIndex(a => a.id === appId);
+    if (idx !== -1) _applications[idx] = updated;
+    renderDrawerBody(updated);
+    renderApplicationsTable();
+    toggleStageManager(appId); // reabrir manager após update
+    toggleStageManager(appId);
+    return updated;
+}
+
+async function toggleStageActive(appId, stageIdx) {
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, active: !s.active, current: false } : s);
+    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function renameStage(appId, stageIdx, newName) {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app || app.stages[stageIdx].name === trimmed) return;
+    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, name: trimmed } : s);
+    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function setCurrentStage(appId, stageIdx) {
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const stages = app.stages.map((s, i) => ({
+        ...s,
+        current: i === stageIdx && s.active !== false,
+        done:    i < stageIdx && s.active !== false ? true : s.done,
+    }));
+    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function markStageDone(appId, stageIdx) {
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const stages = app.stages.map((s, i) => {
+        if (i === stageIdx) return { ...s, done: true, current: false };
+        const nextActive = app.stages.findIndex((ns, ni) => ni > stageIdx && ns.active !== false);
+        if (i === nextActive) return { ...s, current: true };
+        return s;
+    });
+    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function addCustomStage(appId) {
+    const name = prompt('Nome da nova etapa:');
+    if (!name || !name.trim()) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const stages = [...app.stages, { name: name.trim(), done: false, current: false, active: true }];
+    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name, btn) {
     _activeTab = name;
