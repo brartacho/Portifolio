@@ -1109,15 +1109,19 @@
         </button>
         <p id="sendMsg" class="forgot-msg" hidden></p>
 
-        <!-- Área pós-processamento WhatsApp: botão clicável pra abrir o WA
-             (window.open() chamado dentro do click handler real evita popup blocker) -->
+        <!-- Área pós-processamento WhatsApp.
+             Usa <a target="_blank"> em vez de <button onclick=window.open>:
+             anchors com target="_blank" são consideradas navegação explícita do
+             usuário e NUNCA são bloqueadas por popup blockers. -->
         <div id="waReadyArea" class="forgot-msg success" hidden style="margin-top:14px">
             <strong id="waReadyTitle">✓ Pronto!</strong>
             <p id="waReadyDetail" style="margin:6px 0 12px;font-size:0.85rem;line-height:1.5"></p>
             <div style="display:flex;gap:8px">
-                <button type="button" class="btn btn-cyan" style="flex:1.4" onclick="openWhatsAppNow()">
-                    <i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp →
-                </button>
+                <a id="waOpenLink" class="btn btn-cyan" href="#" target="_blank" rel="noopener"
+                    style="flex:1.4;display:inline-flex;align-items:center;justify-content:center;text-decoration:none"
+                    onclick="afterWhatsAppOpened()">
+                    <i class="fa-brands fa-whatsapp"></i>&nbsp;Abrir WhatsApp →
+                </a>
                 <button type="button" class="btn btn-sm" style="flex:1" onclick="copyWaMessage()" title="Copiar mensagem para colar manualmente">
                     <i class="fa-regular fa-copy"></i> Copiar mensagem
                 </button>
@@ -1756,6 +1760,7 @@ function openSendCV(cv) {
 
     // Reset da área pós-processamento (waReadyArea) — começa fechada
     document.getElementById('waReadyArea').hidden = true;
+    document.getElementById('waOpenLink').href = '#';
     _pendingWaUrl = null;
     _pendingWaMessage = null;
 
@@ -1934,10 +1939,13 @@ async function sendCV() {
                 loadLogs?.();   // refresh dos logs se a aba estiver carregada
             }
 
-            // Guarda na closure pra openWhatsAppNow()/copyWaMessage() acessarem
+            // Guarda mensagem pra copyWaMessage(); URL vai direto no <a href>
             _pendingWaUrl = waUrl;
             _pendingWaMessage = finalMsg;
 
+            // Popula o <a target="_blank"> com a URL real — anchor click NÃO é
+            // bloqueado por popup blocker (é navegação explícita do usuário)
+            document.getElementById('waOpenLink').href = waUrl;
             document.getElementById('waReadyTitle').textContent = titleText;
             document.getElementById('waReadyDetail').innerHTML = detailHtml;
             document.getElementById('waReadyArea').hidden = false;
@@ -1950,11 +1958,10 @@ async function sendCV() {
     }
 }
 
-// Botão "Abrir WhatsApp →" — chamado dentro de event handler real (sem bloqueio)
-function openWhatsAppNow() {
-    if (!_pendingWaUrl) return;
-    window.open(_pendingWaUrl, '_blank', 'noopener');
-    setTimeout(closeSendCV, 500);   // pequeno delay pra mostrar feedback antes de fechar
+// Chamado depois que o user clica no <a> pra abrir WhatsApp.
+// Não tenta abrir nada (o anchor já fez isso); só fecha o modal com pequeno delay.
+function afterWhatsAppOpened() {
+    setTimeout(closeSendCV, 500);
 }
 
 // Botão "Copiar mensagem" — útil pra quem prefere outro canal ou WhatsApp Desktop
