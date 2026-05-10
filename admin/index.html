@@ -2050,6 +2050,7 @@ function setSendMode(mode) {
     document.getElementById('sendEmailField').style.display = isEmail ? 'block' : 'none';
     document.getElementById('sendPhoneField').style.display = isEmail ? 'none' : 'block';
     document.getElementById('waSubmodeGroup').style.display = isEmail ? 'none' : 'block';
+    if (isEmail) document.getElementById('waLinkParamsGroup').style.display = 'none';
 
     if (isEmail) {
         document.getElementById('sendBtnLabel').textContent = 'Enviar email com PDF';
