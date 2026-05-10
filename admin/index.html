@@ -1114,17 +1114,18 @@
 
         <div class="form-group">
             <label for="sendName">Nome do destinatário</label>
-            <input type="text" id="sendName" name="cv-recipient-name" maxlength="100" placeholder="Ex: Maria Silva" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <input type="text" id="sendName" name="cv-send-to" maxlength="100" placeholder="Ex: Maria Silva"
+                   autocomplete="name" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
         </div>
 
         <div class="form-group" id="sendEmailField">
             <label for="sendEmail">Email do destinatário</label>
-            <input type="email" id="sendEmail" name="cv-recipient-email" maxlength="120" placeholder="recrutador@empresa.com" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <input type="email" id="sendEmail" name="cv-recipient-email" maxlength="120" placeholder="recrutador@empresa.com" autocomplete="email" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
         </div>
 
         <div class="form-group" id="sendPhoneField" style="display:none">
             <label for="sendPhone">Telefone (com DDI, só números)</label>
-            <input type="tel" id="sendPhone" name="cv-recipient-phone" maxlength="20" placeholder="5544999999999" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+            <input type="tel" id="sendPhone" name="cv-recipient-phone" maxlength="20" placeholder="5544999999999" inputmode="numeric" autocomplete="tel" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
             <small style="color:var(--text-dim);font-size:0.78rem">Ex: 5544999999999 (Brasil + DDD + número, sem espaços ou parênteses)</small>
         </div>
 
@@ -1814,9 +1815,9 @@ function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 // Email: corpo enxuto, contatos vão na assinatura visual injetada pelo backend.
 // WhatsApp: tom informal de abertura ("tudo bem?") com fechamento formal ("Atenciosamente").
 const _msgTemplates = {
-    email: `Olá [nome],\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
-    whatsapp_attach: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
-    whatsapp_link: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue o link para download do meu currículo:\n\n[link]\n\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
+    email: `Olá [nome],\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
+    whatsapp_attach: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
+    whatsapp_link: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue o link para download do meu currículo:\n\n[link]\n\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
 };
 let _waSubmode = 'link';     // sub-modo do WhatsApp ('link' = padrão | 'attach' = exceção)
 let _pendingWaUrl = null;    // URL final do wa.me a abrir quando user clicar
