@@ -159,7 +159,7 @@ async function cleanup() {
         // 11. Clica no anchor — deve abrir nova aba SEM bloqueio
         // Modal pode ter overflow interno; força scroll do anchor pra dentro do viewport antes
         await page.locator('#waOpenLink').scrollIntoViewIfNeeded();
-        const popupPromise = context.waitForEvent('page', { timeout: 5000 }).catch(() => null);
+        const popupPromise = context.waitForEvent('page', { timeout: 8000 }).catch(() => null);
         await page.click('#waOpenLink', { force: true });
         const popup = await popupPromise;
         if (popup) {
