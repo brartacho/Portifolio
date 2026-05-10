@@ -35,21 +35,18 @@ const EMAIL_SIGNATURE_HTML = `
             <img src="https://github.com/brartacho.png" alt="Bruno Artacho" width="72" height="72" style="display:block;border-radius:50%;border:2px solid #22d3ee;width:72px;height:72px;object-fit:cover">
         </td>
         <td style="padding:6px 20px 6px 0;vertical-align:top;border-right:3px solid #22d3ee">
-            <div style="font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:22px;color:#0f172a;letter-spacing:-0.6px;line-height:1.1">Bruno Artacho</div>
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-size:21px;color:#0f172a;letter-spacing:-0.3px;line-height:1.1">Bruno Artacho</div>
             <div style="color:#64748b;font-size:10px;margin-top:8px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase">QA Analyst · Test Automation</div>
             <div style="color:#94a3b8;font-size:11px;margin-top:10px;font-weight:500;font-style:italic">Playwright · Postman · Cursor + MCP</div>
         </td>
         <td style="padding:6px 0 6px 20px;vertical-align:top;font-size:13px;line-height:1.7;color:#475569">
             <div style="margin-bottom:2px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 <a href="mailto:br.artacho@gmail.com" style="color:#0891b2;text-decoration:none">br.artacho@gmail.com</a>
             </div>
             <div style="margin-bottom:2px">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 <a href="https://wa.me/5544984366533" style="color:#0891b2;text-decoration:none">+55 44 98436-6533</a>
             </div>
             <div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span>Maringá, PR · Brasil</span>
             </div>
         </td>
@@ -109,7 +106,7 @@ export default async function handler(req, res) {
     const base64 = buffer.toString('base64');
 
     const fromEmail = process.env.NOTIFY_EMAIL || 'br.artacho@gmail.com';
-    const defaultMsg = `Olá ${name},\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`;
+    const defaultMsg = `Olá ${name},\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`;
     const finalMsg = msg || defaultMsg;
     const finalHtml = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; padding: 20px; color: #0f172a; line-height: 1.6;">
         ${escHtml(finalMsg).replace(/\n/g, '<br>')}
@@ -121,7 +118,6 @@ export default async function handler(req, res) {
             to: email,
             replyTo: fromEmail,
             subject: `Currículo Bruno Artacho — ${cv.name}`,
-            text: finalMsg,
             html: finalHtml,
             attachments: [{
                 filename: cv.file_name,
