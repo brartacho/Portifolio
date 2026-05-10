@@ -2,6 +2,7 @@ import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { sendEmail } from '../_lib/email.js';
 import { checkRateLimit } from '../_lib/rate-limit.js';
+import { DEFAULT_STAGES } from '../_lib/stages.js';
 
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const NAME_MAX = 100;
@@ -73,7 +74,10 @@ export default async function handler(req, res) {
         return res.status(429).json({ error: `Limite atingido. Aguarde ${Math.ceil(rl.retryAfterSec / 60)} min.` });
     }
 
-    const { cv_version_id, recipient_name, recipient_email, message, empresa, vaga, notas, contato } = req.body || {};
+    const {
+        cv_version_id, recipient_name, recipient_email, message,
+        empresa, vaga, linkedin_empresa, link_vaga, observacoes,
+    } = req.body || {};
 
     const name = clean(recipient_name);
     const email = clean(recipient_email).toLowerCase();
@@ -137,6 +141,20 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: e.message || 'Falha no envio.' });
     }
 
+    // Registra candidatura (fire & forget — não bloqueia o envio)
+    supabase.from('job_applications').insert({
+        empresa:          empresa          ? clean(empresa).slice(0, 200)          : 'N/A',
+        vaga:             vaga             ? clean(vaga).slice(0, 200)             : null,
+        linkedin_empresa: linkedin_empresa ? clean(linkedin_empresa).slice(0, 300) : null,
+        link_vaga:        link_vaga        ? clean(link_vaga).slice(0, 500)        : null,
+        observacoes:      observacoes      ? clean(observacoes).slice(0, 500)      : null,
+        gestor_nome:      name,
+        gestor_email:     email,
+        data_envio:       new Date().toISOString(),
+        source:           'cv_send',
+        stages:           DEFAULT_STAGES,
+    }).then(() => {}, (e) => console.error('[job_applications] insert failed:', e.message));
+
     // Log de envio
     await supabase.from('download_logs').insert({
         cv_version_id: cv.id,
@@ -146,8 +164,6 @@ export default async function handler(req, res) {
         user_agent: `Send to ${name} <${email}>`,
         empresa: empresa ? clean(empresa).slice(0, 200) : null,
         vaga:    vaga    ? clean(vaga).slice(0, 200)    : null,
-        notas:   notas   ? clean(notas).slice(0, 500)   : null,
-        contato: contato ? clean(contato).slice(0, 300) : null,
     }).then(() => {}, () => {});
 
     return res.status(200).json({
