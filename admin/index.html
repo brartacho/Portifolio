@@ -1213,11 +1213,13 @@
                         <span class="th-filter-count" id="logCount"></span>
                         <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:200px;flex-shrink:0">
+                    <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:210px;flex-shrink:0">
                         <option value="">Todos os eventos</option>
                         <option value="download">Acesso do recrutador</option>
-                        <option value="email">Log de envio — email</option>
-                        <option value="whatsapp">Log de envio — WhatsApp</option>
+                        <option value="email">Envio por email</option>
+                        <option value="whatsapp">Envio WhatsApp (tudo)</option>
+                        <option value="whatsapp-link">Envio WhatsApp · link</option>
+                        <option value="whatsapp-attach">Envio WhatsApp · arquivo</option>
                     </select>
                     <div class="filter-date-group">
                         <span class="th-filter-label">De</span>
@@ -2346,6 +2348,17 @@ async function sendCV() {
                     expires_in_hours: expiresHours,
                     max_uses: maxUses,
                 });
+
+                // Loga o envio do link (fire & forget — não bloqueia o fluxo)
+                api('POST', '/api/admin/log-share', {
+                    cv_version_id:    _sendCv.id,
+                    cv_name_snapshot: _sendCv.name,
+                    cv_id_snapshot:   _sendCv.id,
+                    ip_address:       'admin-send-whatsapp-link',
+                    user_agent:       `Send to ${name} via whatsapp-link`,
+                    token_id:         tk.id,
+                }).catch(() => {});
+
                 const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
                 finalMsg = message.replace(/\[link\]/g, tk.shareUrl).replace(/\[validade\]/g, validade);
                 waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
@@ -2460,7 +2473,10 @@ function smartLogLabel(l) {
         // Captura nome do recrutador: "Send to Maria <..." ou "Send to Maria via..."
         const m = ua.match(/^Send to ([^<\(]+?)(?:\s*<|\s+via|\s*$)/);
         const recipient = m ? m[1].trim() : '?';
-        const channelLabel = channel === 'whatsapp' ? 'WhatsApp anexo' : (channel === 'email' ? 'Email' : channel);
+        const channelLabel = channel === 'whatsapp-link'   ? 'WhatsApp · link'
+                           : channel === 'whatsapp'        ? 'WhatsApp · arquivo'
+                           : channel === 'email'           ? 'Email'
+                           : channel;
         return `<span title="${esc(ua)}">${esc(channelLabel)} · <strong>${esc(recipient)}</strong></span>`;
     }
 

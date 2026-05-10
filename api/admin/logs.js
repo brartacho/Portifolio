@@ -62,7 +62,12 @@ export default async function handler(req, res) {
     } else if (tipo === 'email') {
         query = query.eq('ip_address', 'admin-send-email');
     } else if (tipo === 'whatsapp') {
-        query = query.like('ip_address', 'admin-send-%').neq('ip_address', 'admin-send-email');
+        // Todos os envios WhatsApp (link + arquivo)
+        query = query.like('ip_address', 'admin-send-whatsapp%');
+    } else if (tipo === 'whatsapp-link') {
+        query = query.eq('ip_address', 'admin-send-whatsapp-link');
+    } else if (tipo === 'whatsapp-attach') {
+        query = query.eq('ip_address', 'admin-send-whatsapp');
     }
 
     // ── PERÍODO ───────────────────────────────────────────
