@@ -161,13 +161,316 @@
 
         .cv-brand span { color: var(--cyan); }
 
+        .cv-request-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .cv-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-family: var(--font-display);
+            font-size: 0.98rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .cv-btn i { font-size: 1.1rem; }
+
+        .cv-btn--whatsapp {
+            background: #25d366;
+            color: #0a0a0f;
+            box-shadow: 0 6px 20px -8px rgba(37, 211, 102, 0.65);
+        }
+        .cv-btn--whatsapp:hover {
+            background: #20bd5a;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px -10px rgba(37, 211, 102, 0.85);
+        }
+
+        .cv-btn--email {
+            background: transparent;
+            color: var(--cyan);
+            border-color: var(--cyan-mid);
+        }
+        .cv-btn--email:hover {
+            background: var(--cyan-soft);
+            border-color: var(--cyan);
+            transform: translateY(-1px);
+        }
+
+        .cv-meta-note {
+            margin-top: 18px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .cv-meta-note strong { color: var(--text-soft); font-weight: 600; }
+
+        /* ─── MODAL DE SOLICITAÇÃO POR EMAIL ─────────────── */
+        .req-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .req-modal[hidden] { display: none; }
+        .req-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px 28px 26px;
+            max-width: 520px;
+            width: 100%;
+            position: relative;
+            text-align: left;
+            max-height: calc(100dvh - 36px);
+            overflow-y: auto;
+        }
+        .req-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: color 0.2s;
+        }
+        .req-close:hover { color: var(--text); }
+        .req-title {
+            font-size: 1.18rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        .req-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-soft);
+            text-align: center;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+        .req-row { margin-bottom: 14px; }
+        .req-row label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-soft);
+            margin-bottom: 5px;
+        }
+        .req-row label .req {
+            color: var(--cyan);
+            font-weight: 700;
+        }
+        .req-row input,
+        .req-row textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        .req-row textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+        .req-row input:focus,
+        .req-row textarea:focus { outline: none; border-color: var(--cyan); }
+
+        /* Override do autofill do navegador (Chrome/Edge/Safari pintam de azul claro) */
+        .req-row input:-webkit-autofill,
+        .req-row input:-webkit-autofill:hover,
+        .req-row input:-webkit-autofill:focus,
+        .req-row input:-webkit-autofill:active,
+        .req-row textarea:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            caret-color: var(--text);
+            transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+        }
+        .req-counter {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 4px;
+        }
+        .req-counter.warn { color: #f59e0b; }
+        .req-counter.over { color: var(--danger); }
+        .req-honeypot {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+            tab-index: -1;
+        }
+        .req-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .req-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .req-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .req-btn--primary {
+            background: var(--cyan);
+            color: #0a0a0f;
+        }
+        .req-btn--primary:hover:not(:disabled) {
+            background: #1bc1da;
+            transform: translateY(-1px);
+        }
+        .req-btn--ghost {
+            background: transparent;
+            color: var(--text-soft);
+            border-color: var(--border);
+        }
+        .req-btn--ghost:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--text-dim);
+        }
+        .req-msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+        .req-msg.success {
+            background: var(--success-soft);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+        .req-msg.error {
+            background: var(--danger-soft);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .cv-wa-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 20px 0 14px;
+        }
+
+        .cv-wa-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .cv-wa-input:focus { border-color: rgba(34,211,238,0.35); }
+        .cv-wa-input::placeholder { color: var(--text-dim); }
+
+        .cv-wa-hint {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: left;
+            margin: 2px 0 0;
+        }
+
         @media (max-width: 480px) {
             .cv-card { padding: 36px 24px; }
             h1 { font-size: 1.3rem; }
+            .cv-btn { padding: 13px 18px; font-size: 0.94rem; }
         }
     </style>
 </head>
 <body>
+    <!-- ─── Modal de solicitação por email ──────────────────────── -->
+    <div id="reqModal" class="req-modal" hidden>
+        <div class="req-card">
+            <button class="req-close" type="button" onclick="closeReq()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="req-title">Solicitar acesso ao currículo</h3>
+            <p class="req-subtitle">Vou te responder no email informado em poucas horas.</p>
+
+            <form id="reqForm" novalidate autocomplete="off">
+                <div class="req-row">
+                    <label for="reqName">Nome <span class="req">*</span></label>
+                    <input type="text" id="reqName" name="name" maxlength="100" required>
+                </div>
+                <div class="req-row">
+                    <label for="reqCompany">Empresa <span class="req">*</span></label>
+                    <input type="text" id="reqCompany" name="company" maxlength="100" required>
+                </div>
+                <div class="req-row">
+                    <label for="reqRole">Cargo da vaga <span class="req">*</span></label>
+                    <input type="text" id="reqRole" name="role" maxlength="100" required>
+                </div>
+                <div class="req-row">
+                    <label for="reqEmail">Seu email <span class="req">*</span></label>
+                    <input type="email" id="reqEmail" name="email" maxlength="120" required inputmode="email">
+                </div>
+                <div class="req-row">
+                    <label for="reqMessage">Mensagem <span class="req">*</span></label>
+                    <textarea id="reqMessage" name="message" maxlength="1000" required></textarea>
+                    <div class="req-counter" id="reqCounter">0 / 1000</div>
+                </div>
+
+                <!-- honeypot anti-bot: humano nunca preenche -->
+                <div class="req-honeypot" aria-hidden="true">
+                    <label>Website (não preencher) <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+
+                <div class="req-actions">
+                    <button type="button" class="req-btn req-btn--ghost" onclick="closeReq()">Cancelar</button>
+                    <button type="submit" class="req-btn req-btn--primary" id="reqSubmit">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar solicitação
+                    </button>
+                </div>
+                <p id="reqMsg" class="req-msg" hidden></p>
+            </form>
+        </div>
+    </div>
+
     <div class="cv-card">
         <div class="cv-icon cv-icon--loading" id="cvIcon">
             <span class="cv-spinner" id="spinner"></span>
@@ -193,18 +496,50 @@
                 return `<a href="/" class="cv-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao portfólio</a>`;
             }
 
-            function setError(iconClass, iconHtml, t, s) {
+            // Botões de re-solicitação reaproveitados do fluxo "sem token" (linhas ~484-499)
+            function renderRequestButtons(showMetaNote = false) {
+                const initUrl = `https://wa.me/5544984366533?text=${encodeURIComponent('Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.')}`;
+                const metaNote = showMetaNote ? `
+                    <p class="cv-meta-note">
+                        <strong>Já recebeu um link personalizado?</strong> Use o link enviado diretamente — ele inicia o download na hora.
+                    </p>` : '';
+                return `
+                    <div class="cv-wa-form">
+                        <input id="waName"    type="text" class="cv-wa-input" placeholder="Seu nome"      maxlength="100" oninput="updateWaLink()">
+                        <input id="waCompany" type="text" class="cv-wa-input" placeholder="Empresa"       maxlength="100" oninput="updateWaLink()">
+                        <input id="waRole"    type="text" class="cv-wa-input" placeholder="Cargo da vaga" maxlength="100" oninput="updateWaLink()">
+                        <p class="cv-wa-hint">Preencha para eu saber com quem estou falando antes de responder.</p>
+                    </div>
+                    <div class="cv-request-actions">
+                        <a id="waBtn" href="${initUrl}" target="_blank" rel="noopener" class="cv-btn cv-btn--whatsapp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            Contato via WhatsApp
+                        </a>
+                        <button type="button" class="cv-btn cv-btn--email" onclick="openReqPrefilled()">
+                            <i class="fa-solid fa-envelope"></i>
+                            Solicitar por email
+                        </button>
+                    </div>
+                    ${metaNote}
+                    ${backLink()}
+                `;
+            }
+
+            function setError(iconClass, iconHtml, t, s, withRequest = false) {
                 icon.className = `cv-icon ${iconClass}`;
                 icon.innerHTML = iconHtml;
                 title.textContent = t;
                 subtitle.textContent = s;
-                actions.innerHTML = backLink();
+                actions.innerHTML = withRequest ? renderRequestButtons() : backLink();
             }
 
             if (!token) {
-                setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
-                    'Link inválido',
-                    'Este link não contém um token de acesso. Solicite um novo link ao remetente.');
+                spinner.remove();
+                icon.className = 'cv-icon cv-icon--success';
+                icon.innerHTML = '<i class="fa-solid fa-shield-halved"></i>';
+                title.textContent = 'Currículo enviado sob solicitação';
+                subtitle.textContent = 'Para proteger meus dados pessoais, envio o currículo personalizado por solicitação. Respondo em poucas horas.';
+                actions.innerHTML = renderRequestButtons(true);
                 return;
             }
 
@@ -245,24 +580,24 @@
                     if (isExpired) {
                         setError('cv-icon--warning', '<i class="fa-solid fa-clock"></i>',
                             'Link expirado',
-                            'Este link de acesso já passou da data de validade. Solicite um novo link ao remetente.');
+                            'Esse link já passou da validade. Solicite um novo abaixo.', true);
                     } else if (isRevoked) {
                         setError('cv-icon--error', '<i class="fa-solid fa-ban"></i>',
                             'Link revogado',
-                            'Este link foi desativado. Solicite um novo link ao remetente.');
+                            'Esse link foi desativado. Solicite um novo abaixo.', true);
                     } else {
                         setError('cv-icon--warning', '<i class="fa-solid fa-circle-xmark"></i>',
                             'Limite de usos atingido',
-                            'Este link já foi utilizado o número máximo de vezes permitido.');
+                            'Esse link já foi usado o máximo de vezes. Solicite um novo abaixo.', true);
                     }
                 } else if (response.status === 429) {
                     setError('cv-icon--warning', '<i class="fa-solid fa-shield-halved"></i>',
                         'Muitas tentativas',
-                        'Número excessivo de tentativas detectado. Aguarde um momento e tente novamente.');
+                        'Limite de tentativas atingido. Você ainda pode entrar em contato diretamente para receber o currículo.', true);
                 } else {
                     setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
                         'Link inválido',
-                        error || 'Este link não é válido. Verifique se foi copiado corretamente.');
+                        'Esse link não foi reconhecido. Entre em contato diretamente para receber um novo link.', true);
                 }
             } catch {
                 setError('cv-icon--error', '<i class="fa-solid fa-wifi"></i>',
@@ -270,6 +605,147 @@
                     'Não foi possível verificar o link. Verifique sua conexão e tente novamente.');
             }
         })();
+
+        // ─── Modal de solicitação por email ───────────────────────
+        let _lastAutoMsg = '';
+
+        function buildDefaultMsg() {
+            const empresa = document.getElementById('reqCompany').value.trim() || '[empresa]';
+            const cargo   = document.getElementById('reqRole').value.trim()    || '[cargo]';
+            return `Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo. Estou recrutando para a vaga de ${cargo} na empresa ${empresa} e gostaria de avaliar seu perfil.`;
+        }
+
+        function syncMsgFromInputs() {
+            if (!msgField.value || msgField.value === _lastAutoMsg) {
+                _lastAutoMsg = buildDefaultMsg();
+                msgField.value = _lastAutoMsg;
+                updateCounter();
+            }
+        }
+
+        function openReq() {
+            const modal = document.getElementById('reqModal');
+            modal.hidden = false;
+            if (!msgField.value || msgField.value === _lastAutoMsg) {
+                _lastAutoMsg = buildDefaultMsg();
+                msgField.value = _lastAutoMsg;
+                updateCounter();
+            }
+            setTimeout(() => document.getElementById('reqName').focus(), 50);
+            document.body.style.overflow = 'hidden';
+        }
+        function closeReq() {
+            document.getElementById('reqModal').hidden = true;
+            document.body.style.overflow = '';
+        }
+        function reqHasData() {
+            const m = document.getElementById('reqModal');
+            const inputs = m.querySelectorAll('input:not([name="website"]), textarea');
+            for (const el of inputs) if (el.value && el.value.trim()) return true;
+            return false;
+        }
+        function safeCloseReq() {
+            if (reqHasData() && !confirm('Você tem dados não enviados nesse formulário. Fechar mesmo assim?')) return;
+            closeReq();
+        }
+        document.getElementById('reqModal').addEventListener('click', e => {
+            if (e.target.id === 'reqModal') safeCloseReq();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !document.getElementById('reqModal').hidden) safeCloseReq();
+        });
+
+        const msgField = document.getElementById('reqMessage');
+        const counter = document.getElementById('reqCounter');
+        function updateCounter() {
+            const n = msgField.value.length;
+            counter.textContent = `${n} / 1000`;
+            counter.className = 'req-counter' + (n > 950 ? ' warn' : '') + (n >= 1000 ? ' over' : '');
+        }
+        msgField.addEventListener('input', updateCounter);
+        document.getElementById('reqCompany').addEventListener('input', syncMsgFromInputs);
+        document.getElementById('reqRole').addEventListener('input', syncMsgFromInputs);
+
+        function updateWaLink() {
+            const nome    = document.getElementById('waName')?.value.trim()    || '';
+            const empresa = document.getElementById('waCompany')?.value.trim() || '';
+            const cargo   = document.getElementById('waRole')?.value.trim()    || '';
+            let msg;
+            if (!nome && !empresa && !cargo) {
+                msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.';
+            } else {
+                const id = [
+                    nome    && `Sou ${nome}`,
+                    empresa && `da empresa ${empresa}`,
+                    cargo   && `estou recrutando para a vaga de ${cargo}`,
+                ].filter(Boolean).join(', ');
+                msg = `Olá Bruno, vim do seu portfólio (artacho.dev). ${id}. Gostaria de receber seu currículo.`;
+            }
+            const btn = document.getElementById('waBtn');
+            if (btn) btn.href = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
+        }
+
+        function openReqPrefilled() {
+            const nome    = document.getElementById('waName')?.value.trim()    || '';
+            const empresa = document.getElementById('waCompany')?.value.trim() || '';
+            const cargo   = document.getElementById('waRole')?.value.trim()    || '';
+            if (nome)    { const f = document.getElementById('reqName');    if (f && !f.value) f.value = nome; }
+            if (empresa) { const f = document.getElementById('reqCompany'); if (f && !f.value) f.value = empresa; }
+            if (cargo)   { const f = document.getElementById('reqRole');    if (f && !f.value) f.value = cargo; }
+            openReq();
+        }
+
+        document.getElementById('reqForm').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const submitBtn = document.getElementById('reqSubmit');
+            const msgEl = document.getElementById('reqMsg');
+            msgEl.hidden = true;
+            msgEl.className = 'req-msg';
+
+            const fd = new FormData(ev.target);
+            const data = {
+                name: fd.get('name')?.trim() || '',
+                company: fd.get('company')?.trim() || '',
+                role: fd.get('role')?.trim() || '',
+                email: fd.get('email')?.trim() || '',
+                message: fd.get('message')?.trim() || '',
+                website: fd.get('website') || '', // honeypot
+            };
+
+            // Validação client-side (UX) — backend valida de novo
+            if (data.name.length < 2)  return showReqError('Informe seu nome.');
+            if (!data.company)         return showReqError('Informe o nome da empresa.');
+            if (!data.role)            return showReqError('Informe o cargo da vaga.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email)) return showReqError('Email inválido.');
+            if (data.message.length < 10) return showReqError('Mensagem muito curta.');
+
+            submitBtn.disabled = true;
+            try {
+                const r = await fetch('/api/cv/request-by-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                const out = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(out.error || 'Falha ao enviar.');
+
+                msgEl.className = 'req-msg success';
+                msgEl.textContent = out.message || 'Solicitação enviada!';
+                msgEl.hidden = false;
+                document.getElementById('reqForm').querySelectorAll('input,textarea,button[type="submit"]').forEach(el => el.disabled = true);
+                setTimeout(() => { closeReq(); document.getElementById('reqForm').reset(); _lastAutoMsg = ''; }, 4000);
+            } catch (e) {
+                showReqError(e.message);
+                submitBtn.disabled = false;
+            }
+
+            function showReqError(text) {
+                msgEl.className = 'req-msg error';
+                msgEl.textContent = text;
+                msgEl.hidden = false;
+                submitBtn.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>

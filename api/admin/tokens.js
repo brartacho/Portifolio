@@ -49,8 +49,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Data de expiração inválida ou no passado' });
         }
 
-        // Generate cryptographically secure token
-        const rawToken = randomBytes(32).toString('base64url');
+        // Hex token: URL-safe sem caracteres que confundem markdown do WhatsApp/Telegram (`_`, `-`)
+        const rawToken = randomBytes(24).toString('hex');
         const tokenHash = createHash('sha256').update(rawToken).digest('hex');
 
         const { data, error } = await supabase
@@ -69,7 +69,12 @@ export default async function handler(req, res) {
 
         if (error) return res.status(500).json({ error: error.message });
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://bruno-artacho.vercel.app';
+        // Share URL: SEMPRE público (recrutador clica no celular dele).
+        // Em dev, NEXT_PUBLIC_BASE_URL aponta pra localhost (usado em links de reset),
+        // mas o link compartilhado precisa ser o domínio público.
+        const baseUrl = process.env.PUBLIC_SHARE_URL
+            || process.env.NEXT_PUBLIC_BASE_URL
+            || 'https://bruno-artacho.vercel.app';
         const shareUrl = `${baseUrl}/cv?t=${rawToken}`;
 
         return res.status(201).json({
@@ -77,6 +82,29 @@ export default async function handler(req, res) {
             token: rawToken,
             shareUrl,
         });
+    }
+
+    if (req.method === 'DELETE') {
+        const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
+
+        const { error } = await supabase.from('download_tokens').delete().eq('id', id);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'PATCH') {
+        // Soft revoke (deixa o registro pra histórico)
+        const { id } = req.query;
+        if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
+
+        const { error } = await supabase
+            .from('download_tokens')
+            .update({ revoked: true })
+            .eq('id', id);
+
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ ok: true });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

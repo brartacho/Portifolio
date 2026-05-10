@@ -1,5 +1,6 @@
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
+import { normalizeFileName } from '../_lib/filename.js';
 
 export default async function handler(req, res) {
     cors(res);
@@ -10,8 +11,8 @@ export default async function handler(req, res) {
     const { fileName } = req.query;
     if (!fileName) return res.status(400).json({ error: 'fileName obrigatório' });
 
-    // Sanitize and build storage path
-    const safe = fileName.replace(/[^a-zA-Z0-9_\-. ]/g, '_');
+    // Padroniza nome (sem acentos, sem espaços, só [a-zA-Z0-9._-])
+    const safe = normalizeFileName(fileName);
     const filePath = `cv/${Date.now()}_${safe}`;
 
     const supabase = getSupabase();

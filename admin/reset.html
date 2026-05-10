@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir senha — ARTACHO.dev</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="../imagens/favicon-artacho.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0a0f;
+            --card-bg: rgba(20, 20, 32, 0.97);
+            --border: #1e1e2e;
+            --text: #f0f0f5;
+            --text-soft: #a8a8c0;
+            --text-dim: #5c5c80;
+            --cyan: #22d3ee;
+            --cyan-soft: rgba(34, 211, 238, 0.08);
+            --cyan-mid: rgba(34, 211, 238, 0.15);
+            --violet: #7c3aed;
+            --success: #4ade80;
+            --success-soft: rgba(74, 222, 128, 0.08);
+            --danger: #ef4444;
+            --danger-soft: rgba(239, 68, 68, 0.08);
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Plus Jakarta Sans", sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 44px 36px;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--violet), var(--cyan));
+        }
+        .brand { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+        .brand span { color: var(--cyan); }
+        .label { color: var(--text-dim); font-family: "Fira Code", monospace; font-size: 0.72rem; margin-bottom: 28px; }
+        h1 { font-size: 1.15rem; margin-bottom: 8px; }
+        .desc { color: var(--text-soft); font-size: 0.88rem; line-height: 1.55; margin-bottom: 22px; }
+        label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+        .pw-wrap { position: relative; margin-bottom: 14px; }
+        input {
+            width: 100%;
+            padding: 12px 44px 12px 14px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+        }
+        input:focus { outline: none; border-color: var(--cyan); }
+
+        /* Override autofill do navegador pra manter o tema dark */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px var(--card-bg) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            caret-color: var(--text);
+            transition: background-color 9999s ease-in-out 0s, color 9999s ease-in-out 0s;
+        }
+        .pw-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .pw-toggle:hover { color: var(--cyan); }
+        .btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--cyan);
+            color: #0a0a0f;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn:hover { background: #1bc1da; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .msg {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .msg.success {
+            background: var(--success-soft);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+        .msg.error {
+            background: var(--danger-soft);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        .login-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            color: var(--cyan);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+        .login-link:hover { text-decoration: underline; }
+        .hint { color: var(--text-dim); font-size: 0.78rem; margin-top: -8px; margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <p class="brand">ARTACHO<span>.</span>dev</p>
+        <p class="label">// redefinir senha</p>
+
+        <h1 id="title">Crie uma nova senha</h1>
+        <p class="desc" id="desc">Após salvar, faça login normalmente com a nova senha.</p>
+
+        <div id="formArea">
+            <label for="pw">Nova senha</label>
+            <div class="pw-wrap">
+                <input type="password" id="pw" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                <button type="button" class="pw-toggle" onclick="toggle('pw', this)" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button>
+            </div>
+
+            <label for="pw2">Confirmar senha</label>
+            <div class="pw-wrap">
+                <input type="password" id="pw2" placeholder="Digite novamente" autocomplete="new-password">
+                <button type="button" class="pw-toggle" onclick="toggle('pw2', this)" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <p class="hint">A senha precisa ter pelo menos 8 caracteres.</p>
+
+            <button class="btn" id="submitBtn" onclick="submitReset()">
+                <i class="fa-solid fa-shield-halved"></i> Salvar nova senha
+            </button>
+        </div>
+
+        <p id="msg" class="msg" hidden></p>
+        <a href="/admin" class="login-link" id="loginBack" hidden>
+            <i class="fa-solid fa-arrow-right"></i> Ir para o login
+        </a>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const token = params.get('t');
+
+        if (!token) {
+            document.getElementById('formArea').style.display = 'none';
+            document.getElementById('title').textContent = 'Link inválido';
+            document.getElementById('desc').textContent = 'Este endereço não contém um token de recuperação. Solicite um novo link no painel de login.';
+            document.getElementById('loginBack').hidden = false;
+        }
+
+        function toggle(id, btn) {
+            const input = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+            input.focus();
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('msg');
+            el.className = 'msg ' + type;
+            el.textContent = text;
+            el.hidden = false;
+        }
+
+        async function submitReset() {
+            const pw = document.getElementById('pw').value;
+            const pw2 = document.getElementById('pw2').value;
+            const btn = document.getElementById('submitBtn');
+
+            if (pw.length < 8) return showMsg('A senha precisa ter pelo menos 8 caracteres.', 'error');
+            if (pw !== pw2) return showMsg('As senhas não conferem.', 'error');
+
+            btn.disabled = true;
+            try {
+                const r = await fetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, password: pw }),
+                });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(data.error || 'Falha ao redefinir senha');
+
+                document.getElementById('formArea').style.display = 'none';
+                document.getElementById('title').textContent = 'Senha redefinida!';
+                document.getElementById('desc').textContent = 'Já pode fazer login com a senha nova.';
+                showMsg(data.message || 'Senha atualizada com sucesso.', 'success');
+                document.getElementById('loginBack').hidden = false;
+            } catch (e) {
+                showMsg(e.message, 'error');
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('pw2')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitReset(); });
+    </script>
+</body>
+</html>

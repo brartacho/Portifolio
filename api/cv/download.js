@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { notifyDownload } from '../_lib/notify.js';
+import { normalizeFileName } from '../_lib/filename.js';
 
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -113,7 +114,9 @@ export default async function handler(req, res) {
 
     // Stream the PDF to the client — never expose storage URL
     const buffer = Buffer.from(await fileData.arrayBuffer());
-    const safeFileName = cv.file_name.replace(/[^a-zA-Z0-9_\-. ]/g, '_');
+
+    // Aplica normalize defensivamente (cobre entradas antigas no DB sem normalize)
+    const safeFileName = normalizeFileName(cv.file_name);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
