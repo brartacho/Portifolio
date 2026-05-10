@@ -839,6 +839,7 @@
             <div class="reply-banner-info">
                 Responder a <strong id="rbName">—</strong>
                 <span id="rbCompanyWrap"> de <strong id="rbCompany">—</strong></span>
+                <span id="rbRoleWrap"> · vaga de <strong id="rbRole">—</strong></span>
                 <br>
                 <span class="email" id="rbEmail">—</span>
             </div>
@@ -1482,12 +1483,13 @@ async function loadStorageStats() {
 // ─── REPLY BANNER (vindo do email do recrutador) ─────────
 function detectReplyContext() {
     const params = new URLSearchParams(location.search);
-    const name = params.get('to_name')?.trim();
-    const email = params.get('to_email')?.trim();
+    const name    = params.get('to_name')?.trim();
+    const email   = params.get('to_email')?.trim();
     const company = params.get('to_company')?.trim();
+    const role    = params.get('to_role')?.trim();
     if (!name || !email) return;
 
-    _pendingReply = { name, email, company: company || '' };
+    _pendingReply = { name, email, company: company || '', role: role || '' };
     document.getElementById('rbName').textContent = name;
     document.getElementById('rbEmail').textContent = email;
     if (company) {
@@ -1495,6 +1497,12 @@ function detectReplyContext() {
         document.getElementById('rbCompanyWrap').style.display = '';
     } else {
         document.getElementById('rbCompanyWrap').style.display = 'none';
+    }
+    if (role) {
+        document.getElementById('rbRole').textContent = role;
+        document.getElementById('rbRoleWrap').style.display = '';
+    } else {
+        document.getElementById('rbRoleWrap').style.display = 'none';
     }
     document.getElementById('replyBanner').hidden = false;
 
@@ -1775,7 +1783,7 @@ async function deleteToken(id, label) {
 // ─── SEND CV MODAL ────────────────────────────────────────
 let _sendCv = null;     // {id, name, file_name}
 let _sendMode = 'email';
-let _pendingReply = null;   // {name, email, company} pré-preenchido vindo do email do recrutador
+let _pendingReply = null;   // {name, email, company, role} pré-preenchido vindo do email do recrutador
 
 function openSendCV(cv) {
     _sendCv = cv;
@@ -1813,11 +1821,11 @@ function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
 // Templates aprovados pelo usuário — placeholder [nome] substituído ao digitar.
 // Email: corpo enxuto, contatos vão na assinatura visual injetada pelo backend.
-// WhatsApp: tom informal de abertura ("tudo bem?") com fechamento formal ("Atenciosamente").
+// WhatsApp: fechamento com "Atenciosamente,\nBruno Artacho". Email: sem nome (assinatura HTML já assina).
 const _msgTemplates = {
     email: `Olá [nome],\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
-    whatsapp_attach: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
-    whatsapp_link: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue o link para download do meu currículo:\n\n[link]\n\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`,
+    whatsapp_attach: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
+    whatsapp_link: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue o link para download do meu currículo:\n\n[link]\n\nO link é válido até [validade].\n\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
 };
 let _waSubmode = 'link';     // sub-modo do WhatsApp ('link' = padrão | 'attach' = exceção)
 let _pendingWaUrl = null;    // URL final do wa.me a abrir quando user clicar
@@ -1961,7 +1969,8 @@ async function sendCV() {
                     expires_in_hours: expiresHours,
                     max_uses: maxUses,
                 });
-                finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
+                const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
+                finalMsg = message.replace(/\[link\]/g, tk.shareUrl).replace(/\[validade\]/g, validade);
                 waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
 
                 // Texto humano da validade pra o detail

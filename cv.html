@@ -388,6 +388,35 @@
             color: var(--danger);
         }
 
+        .cv-wa-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 20px 0 14px;
+        }
+
+        .cv-wa-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .cv-wa-input:focus { border-color: rgba(34,211,238,0.35); }
+        .cv-wa-input::placeholder { color: var(--text-dim); }
+
+        .cv-wa-hint {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: left;
+            margin: 2px 0 0;
+        }
+
         @media (max-width: 480px) {
             .cv-card { padding: 36px 24px; }
             h1 { font-size: 1.3rem; }
@@ -409,8 +438,12 @@
                     <input type="text" id="reqName" name="name" maxlength="100" required>
                 </div>
                 <div class="req-row">
-                    <label for="reqCompany">Empresa</label>
-                    <input type="text" id="reqCompany" name="company" maxlength="100">
+                    <label for="reqCompany">Empresa <span class="req">*</span></label>
+                    <input type="text" id="reqCompany" name="company" maxlength="100" required>
+                </div>
+                <div class="req-row">
+                    <label for="reqRole">Cargo da vaga <span class="req">*</span></label>
+                    <input type="text" id="reqRole" name="role" maxlength="100" required>
                 </div>
                 <div class="req-row">
                     <label for="reqEmail">Seu email <span class="req">*</span></label>
@@ -464,23 +497,31 @@
             }
 
             // Botões de re-solicitação reaproveitados do fluxo "sem token" (linhas ~484-499)
-            function renderRequestButtons() {
-                const msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber um novo link do seu currículo. O link anterior expirou ou já foi usado.';
-                const waUrl = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
+            function renderRequestButtons(showMetaNote = false) {
+                const initUrl = `https://wa.me/5544984366533?text=${encodeURIComponent('Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.')}`;
+                const metaNote = showMetaNote ? `
+                    <p class="cv-meta-note">
+                        <strong>Já recebeu um link personalizado?</strong> Use o link enviado diretamente — ele inicia o download na hora.
+                    </p>` : '';
                 return `
-                    <p style="color:var(--text-soft);font-size:0.86rem;margin:18px 0 12px">
-                        Solicite um novo link diretamente — leva poucos minutos:
-                    </p>
+                    <div class="cv-wa-form">
+                        <input id="waName"    type="text" class="cv-wa-input" placeholder="Seu nome"      maxlength="100" oninput="updateWaLink()">
+                        <input id="waCompany" type="text" class="cv-wa-input" placeholder="Empresa"       maxlength="100" oninput="updateWaLink()">
+                        <input id="waRole"    type="text" class="cv-wa-input" placeholder="Cargo da vaga" maxlength="100" oninput="updateWaLink()">
+                        <p class="cv-wa-hint">Preencha para eu saber com quem estou falando antes de responder.</p>
+                    </div>
                     <div class="cv-request-actions">
-                        <a href="${waUrl}" target="_blank" rel="noopener" class="cv-btn cv-btn--whatsapp">
+                        <a id="waBtn" href="${initUrl}" target="_blank" rel="noopener" class="cv-btn cv-btn--whatsapp">
                             <i class="fa-brands fa-whatsapp"></i>
-                            Solicitar via WhatsApp
+                            Contato via WhatsApp
                         </a>
-                        <button type="button" class="cv-btn cv-btn--email" onclick="openReq()">
+                        <button type="button" class="cv-btn cv-btn--email" onclick="openReqPrefilled()">
                             <i class="fa-solid fa-envelope"></i>
                             Solicitar por email
                         </button>
                     </div>
+                    ${metaNote}
+                    ${backLink()}
                 `;
             }
 
@@ -498,26 +539,7 @@
                 icon.innerHTML = '<i class="fa-solid fa-shield-halved"></i>';
                 title.textContent = 'Currículo enviado sob solicitação';
                 subtitle.textContent = 'Para proteger meus dados pessoais, envio o currículo personalizado por solicitação. Respondo em poucas horas.';
-
-                const msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.';
-                const waUrl = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
-
-                actions.innerHTML = `
-                    <div class="cv-request-actions">
-                        <a href="${waUrl}" target="_blank" rel="noopener" class="cv-btn cv-btn--whatsapp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                            Solicitar via WhatsApp
-                        </a>
-                        <button type="button" class="cv-btn cv-btn--email" onclick="openReq()">
-                            <i class="fa-solid fa-envelope"></i>
-                            Solicitar por email
-                        </button>
-                    </div>
-                    <p class="cv-meta-note">
-                        <strong>Já recebeu um link personalizado?</strong> Use o link enviado diretamente — ele inicia o download na hora.
-                    </p>
-                    ${backLink()}
-                `;
+                actions.innerHTML = renderRequestButtons(true);
                 return;
             }
 
@@ -571,11 +593,11 @@
                 } else if (response.status === 429) {
                     setError('cv-icon--warning', '<i class="fa-solid fa-shield-halved"></i>',
                         'Muitas tentativas',
-                        'Número excessivo de tentativas detectado. Aguarde um momento e tente novamente.');
+                        'Limite de tentativas atingido. Você ainda pode entrar em contato diretamente para receber o currículo.', true);
                 } else {
                     setError('cv-icon--error', '<i class="fa-solid fa-link-slash"></i>',
                         'Link inválido',
-                        error || 'Este link não é válido. Verifique se foi copiado corretamente.');
+                        'Esse link não foi reconhecido. Entre em contato diretamente para receber um novo link.', true);
                 }
             } catch {
                 setError('cv-icon--error', '<i class="fa-solid fa-wifi"></i>',
@@ -585,13 +607,28 @@
         })();
 
         // ─── Modal de solicitação por email ───────────────────────
+        let _lastAutoMsg = '';
+
+        function buildDefaultMsg() {
+            const empresa = document.getElementById('reqCompany').value.trim() || '[empresa]';
+            const cargo   = document.getElementById('reqRole').value.trim()    || '[cargo]';
+            return `Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo. Estou recrutando para a vaga de ${cargo} na empresa ${empresa} e gostaria de avaliar seu perfil.`;
+        }
+
+        function syncMsgFromInputs() {
+            if (!msgField.value || msgField.value === _lastAutoMsg) {
+                _lastAutoMsg = buildDefaultMsg();
+                msgField.value = _lastAutoMsg;
+                updateCounter();
+            }
+        }
+
         function openReq() {
             const modal = document.getElementById('reqModal');
             modal.hidden = false;
-            // Pre-preenche mensagem padrão (editável)
-            const msgField = document.getElementById('reqMessage');
-            if (!msgField.value) {
-                msgField.value = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo. Estou recrutando para a vaga de [cargo] na empresa [nome] e gostaria de avaliar seu perfil.';
+            if (!msgField.value || msgField.value === _lastAutoMsg) {
+                _lastAutoMsg = buildDefaultMsg();
+                msgField.value = _lastAutoMsg;
                 updateCounter();
             }
             setTimeout(() => document.getElementById('reqName').focus(), 50);
@@ -626,6 +663,37 @@
             counter.className = 'req-counter' + (n > 950 ? ' warn' : '') + (n >= 1000 ? ' over' : '');
         }
         msgField.addEventListener('input', updateCounter);
+        document.getElementById('reqCompany').addEventListener('input', syncMsgFromInputs);
+        document.getElementById('reqRole').addEventListener('input', syncMsgFromInputs);
+
+        function updateWaLink() {
+            const nome    = document.getElementById('waName')?.value.trim()    || '';
+            const empresa = document.getElementById('waCompany')?.value.trim() || '';
+            const cargo   = document.getElementById('waRole')?.value.trim()    || '';
+            let msg;
+            if (!nome && !empresa && !cargo) {
+                msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber seu currículo.';
+            } else {
+                const id = [
+                    nome    && `Sou ${nome}`,
+                    empresa && `da empresa ${empresa}`,
+                    cargo   && `estou recrutando para a vaga de ${cargo}`,
+                ].filter(Boolean).join(', ');
+                msg = `Olá Bruno, vim do seu portfólio (artacho.dev). ${id}. Gostaria de receber seu currículo.`;
+            }
+            const btn = document.getElementById('waBtn');
+            if (btn) btn.href = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
+        }
+
+        function openReqPrefilled() {
+            const nome    = document.getElementById('waName')?.value.trim()    || '';
+            const empresa = document.getElementById('waCompany')?.value.trim() || '';
+            const cargo   = document.getElementById('waRole')?.value.trim()    || '';
+            if (nome)    { const f = document.getElementById('reqName');    if (f && !f.value) f.value = nome; }
+            if (empresa) { const f = document.getElementById('reqCompany'); if (f && !f.value) f.value = empresa; }
+            if (cargo)   { const f = document.getElementById('reqRole');    if (f && !f.value) f.value = cargo; }
+            openReq();
+        }
 
         document.getElementById('reqForm').addEventListener('submit', async (ev) => {
             ev.preventDefault();
@@ -638,13 +706,16 @@
             const data = {
                 name: fd.get('name')?.trim() || '',
                 company: fd.get('company')?.trim() || '',
+                role: fd.get('role')?.trim() || '',
                 email: fd.get('email')?.trim() || '',
                 message: fd.get('message')?.trim() || '',
                 website: fd.get('website') || '', // honeypot
             };
 
             // Validação client-side (UX) — backend valida de novo
-            if (data.name.length < 2) return showReqError('Informe seu nome.');
+            if (data.name.length < 2)  return showReqError('Informe seu nome.');
+            if (!data.company)         return showReqError('Informe o nome da empresa.');
+            if (!data.role)            return showReqError('Informe o cargo da vaga.');
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email)) return showReqError('Email inválido.');
             if (data.message.length < 10) return showReqError('Mensagem muito curta.');
 
@@ -662,7 +733,7 @@
                 msgEl.textContent = out.message || 'Solicitação enviada!';
                 msgEl.hidden = false;
                 document.getElementById('reqForm').querySelectorAll('input,textarea,button[type="submit"]').forEach(el => el.disabled = true);
-                setTimeout(closeReq, 4000);
+                setTimeout(() => { closeReq(); document.getElementById('reqForm').reset(); _lastAutoMsg = ''; }, 4000);
             } catch (e) {
                 showReqError(e.message);
                 submitBtn.disabled = false;
