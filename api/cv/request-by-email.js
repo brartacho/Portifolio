@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
     // CTA: link pro admin com dados do recrutador pré-preenchidos.
     // Em prod, PUBLIC_SHARE_URL aponta pro domínio público; em dev cai pra localhost.
-    const baseUrl = process.env.PUBLIC_SHARE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://bruno-artacho.vercel.app';
+    const baseUrl = process.env.PUBLIC_SHARE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://artacho.dev';
     const adminParams = new URLSearchParams({
         to_name: name,
         to_email: email,

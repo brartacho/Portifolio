@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         // mas o link compartilhado precisa ser o domínio público.
         const baseUrl = process.env.PUBLIC_SHARE_URL
             || process.env.NEXT_PUBLIC_BASE_URL
-            || 'https://bruno-artacho.vercel.app';
+            || 'https://artacho.dev';
         const shareUrl = `${baseUrl}/cv?t=${rawToken}`;
 
         return res.status(201).json({

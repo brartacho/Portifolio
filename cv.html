@@ -482,6 +482,24 @@
     </div>
 
     <script>
+        // Globais — acessíveis tanto dentro da IIFE quanto nas funções globais (updateWaLink, etc.)
+        const _waBaseMsgs = {
+            new:      'Olá Bruno, vim do seu portfólio (https://artacho.dev) e gostaria de receber seu currículo.',
+            expired:  'Olá Bruno, vim do seu portfólio (https://artacho.dev). O link do currículo que recebi expirou — gostaria de receber um novo link.',
+            maxuses:  'Olá Bruno, vim do seu portfólio (https://artacho.dev). O link do currículo que recebi atingiu o limite de usos — gostaria de receber um novo link.',
+            revoked:  'Olá Bruno, vim do seu portfólio (https://artacho.dev). O link do currículo que recebi foi desativado — gostaria de receber um novo link.',
+            invalid:  'Olá Bruno, vim do seu portfólio (https://artacho.dev). O link do currículo que recebi não está funcionando — gostaria de receber um novo link.',
+            ratelimit:'Olá Bruno, vim do seu portfólio (https://artacho.dev) e gostaria de receber seu currículo.',
+        };
+        const _waSuffixes = {
+            new:      'Gostaria de receber seu currículo.',
+            expired:  'O link que recebi expirou — gostaria de receber um novo link.',
+            maxuses:  'O link que recebi atingiu o limite de usos — gostaria de receber um novo link.',
+            revoked:  'O link que recebi foi desativado — gostaria de receber um novo link.',
+            invalid:  'O link que recebi não está funcionando — gostaria de receber um novo link.',
+            ratelimit:'Gostaria de receber seu currículo.',
+        };
+
         (async () => {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('t');
@@ -495,23 +513,6 @@
             function backLink() {
                 return `<a href="/" class="cv-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao portfólio</a>`;
             }
-
-            const _waBaseMsgs = {
-                new:      'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app) e gostaria de receber seu currículo.',
-                expired:  'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). O link do currículo que recebi expirou — gostaria de receber um novo link.',
-                maxuses:  'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). O link do currículo que recebi atingiu o limite de usos — gostaria de receber um novo link.',
-                revoked:  'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). O link do currículo que recebi foi desativado — gostaria de receber um novo link.',
-                invalid:  'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). O link do currículo que recebi não está funcionando — gostaria de receber um novo link.',
-                ratelimit:'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app) e gostaria de receber seu currículo.',
-            };
-            const _waSuffixes = {
-                new:      'Gostaria de receber seu currículo.',
-                expired:  'O link que recebi expirou — gostaria de receber um novo link.',
-                maxuses:  'O link que recebi atingiu o limite de usos — gostaria de receber um novo link.',
-                revoked:  'O link que recebi foi desativado — gostaria de receber um novo link.',
-                invalid:  'O link que recebi não está funcionando — gostaria de receber um novo link.',
-                ratelimit:'Gostaria de receber seu currículo.',
-            };
 
             function renderRequestButtons(showMetaNote = false, context = 'new') {
                 _waContext = context;
@@ -634,9 +635,9 @@
             const reRequest = ctx !== 'new' && ctx !== 'ratelimit';
             if (reRequest) {
                 const motivo = { expired: 'expirou', maxuses: 'atingiu o limite de usos', revoked: 'foi desativado', invalid: 'não está funcionando' }[ctx] || 'expirou';
-                return `Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). Estou recrutando para a vaga de ${cargo} na empresa ${empresa}. O link que recebi ${motivo} — gostaria de receber um novo link.`;
+                return `Olá Bruno, vim do seu portfólio (https://artacho.dev). Estou recrutando para a vaga de ${cargo} na empresa ${empresa}. O link que recebi ${motivo} — gostaria de receber um novo link.`;
             }
-            return `Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app) e gostaria de receber seu currículo. Estou recrutando para a vaga de ${cargo} na empresa ${empresa} e gostaria de avaliar seu perfil.`;
+            return `Olá Bruno, vim do seu portfólio (https://artacho.dev) e gostaria de receber seu currículo. Estou recrutando para a vaga de ${cargo} na empresa ${empresa} e gostaria de avaliar seu perfil.`;
         }
 
         function syncMsgFromInputs() {
@@ -697,14 +698,14 @@
             const suffix  = (typeof _waContext !== 'undefined' && _waSuffixes?.[_waContext]) || 'Gostaria de receber seu currículo.';
             let msg;
             if (!nome && !empresa && !cargo) {
-                msg = (typeof _waContext !== 'undefined' && _waBaseMsgs?.[_waContext]) || 'Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app) e gostaria de receber seu currículo.';
+                msg = (typeof _waContext !== 'undefined' && _waBaseMsgs?.[_waContext]) || 'Olá Bruno, vim do seu portfólio (https://artacho.dev) e gostaria de receber seu currículo.';
             } else {
                 const id = [
                     nome    && `Sou ${nome}`,
                     empresa && `da empresa ${empresa}`,
                     cargo   && `estou recrutando para a vaga de ${cargo}`,
                 ].filter(Boolean).join(', ');
-                msg = `Olá Bruno, vim do seu portfólio (https://bruno-artacho.vercel.app). ${id}. ${suffix}`;
+                msg = `Olá Bruno, vim do seu portfólio (https://artacho.dev). ${id}. ${suffix}`;
             }
             const btn = document.getElementById('waBtn');
             if (btn) btn.href = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
