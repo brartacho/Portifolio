@@ -2089,6 +2089,112 @@ function setVagasFilter(filter, btn) {
     renderApplicationsTable();
 }
 
+function openDrawer(id) {
+    _openAppId = id;
+    const app = _applications.find(a => a.id === id);
+    if (!app) return;
+
+    document.getElementById('drawerEmpresa').textContent = app.empresa || '—';
+    document.getElementById('drawerVaga').textContent    = app.vaga || '';
+    const srcBadge = app.source === 'cv_send' ? '📧 via envio' : '✎ manual';
+    const dt = app.data_envio ? fmtDate(app.data_envio) : '—';
+    document.getElementById('drawerMeta').textContent = `${dt} · ${srcBadge}`;
+
+    renderDrawerBody(app);
+
+    document.getElementById('vagasDrawer').classList.add('open');
+    document.getElementById('vagasOverlay').classList.add('open');
+    renderApplicationsTable();
+}
+
+function closeDrawer() {
+    _openAppId = null;
+    document.getElementById('vagasDrawer').classList.remove('open');
+    document.getElementById('vagasOverlay').classList.remove('open');
+    renderApplicationsTable();
+}
+
+function renderDrawerBody(app) {
+    const body = document.getElementById('drawerBody');
+
+    const gestor = app.gestor_nome
+        ? `<div style="font-size:0.75rem;color:var(--text-soft)">
+               <i class="fa-solid fa-user" style="color:var(--text-dim);margin-right:4px"></i>
+               ${esc(app.gestor_nome)}
+               ${app.gestor_email ? ` &lt;<a href="mailto:${esc(app.gestor_email)}" style="color:var(--cyan)">${esc(app.gestor_email)}</a>&gt;` : ''}
+           </div>` : '';
+
+    const links = [
+        app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-brands fa-linkedin"></i> LinkedIn empresa</a>` : '',
+        app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-solid fa-link"></i> Link da vaga</a>` : '',
+    ].filter(Boolean).join(' · ');
+
+    const obs = app.observacoes
+        ? `<div style="font-size:0.72rem;color:var(--text-soft);background:var(--bg-surface);padding:8px 10px;border-radius:6px">${esc(app.observacoes)}</div>`
+        : '';
+
+    body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px">
+            ${gestor}
+            ${links ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${links}</div>` : ''}
+            ${obs}
+        </div>
+
+        <div>
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Processo seletivo</div>
+            <div class="stage-timeline" id="drawerTimeline">
+                ${renderTimeline(app.stages || [])}
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border-soft)">
+            <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
+            <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
+            <button class="btn btn-sm" style="margin-left:auto;color:var(--danger);border-color:var(--danger-soft)"
+                onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i> Deletar</button>
+        </div>
+
+        <div id="stageManagerSection" hidden></div>
+        <div id="editVagaSection" hidden></div>
+    `;
+}
+
+function renderTimeline(stages) {
+    return stages.map((s, i) => {
+        const isLast = i === stages.length - 1;
+        let circleClass, lineClass, labelClass, content = '';
+        if (!s.active) {
+            circleClass = 'inactive'; lineClass = 'other'; labelClass = 'inactive';
+        } else if (s.done) {
+            circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
+            content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
+        } else if (s.current) {
+            circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
+        } else {
+            circleClass = 'pending'; lineClass = 'other'; labelClass = 'pending';
+        }
+        return `<div class="stage-row">
+            <div class="stage-icon-col">
+                <div class="stage-circle ${circleClass}">${content}</div>
+                ${!isLast ? `<div class="stage-line ${lineClass}"></div>` : ''}
+            </div>
+            <div class="stage-label ${labelClass}">${esc(s.name)}</div>
+        </div>`;
+    }).join('');
+}
+
+async function deleteApplication(id) {
+    if (!confirm('Deletar esta candidatura? Esta ação não pode ser desfeita.')) return;
+    try {
+        await api('DELETE', `/api/admin/applications?id=${id}`);
+        closeDrawer();
+        await loadApplications();
+        showToast('Candidatura removida.');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
+}
+
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name, btn) {
     _activeTab = name;
