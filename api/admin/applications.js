@@ -37,6 +37,10 @@ export default async function handler(req, res) {
         const emp = clean(empresa, TEXT_MAX.empresa);
         if (!emp) return res.status(400).json({ error: 'empresa obrigatório' });
 
+        if (data_envio && isNaN(new Date(data_envio).getTime())) {
+            return res.status(400).json({ error: 'data_envio inválido' });
+        }
+
         const { data, error } = await supabase
             .from('job_applications')
             .insert({
@@ -66,14 +70,23 @@ export default async function handler(req, res) {
         const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, stages } = req.body || {};
 
         const patch = {};
-        if (empresa          !== undefined) patch.empresa          = clean(empresa, TEXT_MAX.empresa);
+        if (empresa !== undefined) {
+            const val = clean(empresa, TEXT_MAX.empresa);
+            if (val === null) return res.status(400).json({ error: 'empresa não pode ser vazio' });
+            patch.empresa = val;
+        }
         if (vaga             !== undefined) patch.vaga             = clean(vaga, TEXT_MAX.vaga);
         if (linkedin_empresa !== undefined) patch.linkedin_empresa = clean(linkedin_empresa, TEXT_MAX.linkedin_empresa);
         if (link_vaga        !== undefined) patch.link_vaga        = clean(link_vaga, TEXT_MAX.link_vaga);
         if (observacoes      !== undefined) patch.observacoes      = clean(observacoes, TEXT_MAX.observacoes);
         if (gestor_nome      !== undefined) patch.gestor_nome      = clean(gestor_nome, TEXT_MAX.gestor_nome);
         if (gestor_email     !== undefined) patch.gestor_email     = clean(gestor_email, TEXT_MAX.gestor_email);
-        if (data_envio       !== undefined) patch.data_envio       = data_envio;
+        if (data_envio !== undefined) {
+            if (data_envio !== null && data_envio !== '' && isNaN(new Date(data_envio).getTime())) {
+                return res.status(400).json({ error: 'data_envio inválido' });
+            }
+            patch.data_envio = data_envio || null;
+        }
         if (stages           !== undefined) {
             if (!Array.isArray(stages) || stages.some(s => typeof s.name !== 'string')) {
                 return res.status(400).json({ error: 'stages deve ser array de objetos com name (string)' });
@@ -102,12 +115,14 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id obrigatório' });
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('job_applications')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .select()
+            .single();
 
-        if (error) return res.status(500).json({ error: error.message });
+        if (error) return res.status(error.code === 'PGRST116' ? 404 : 500).json({ error: error.message });
         return res.status(200).json({ ok: true });
     }
 
