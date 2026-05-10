@@ -214,10 +214,10 @@
 
             btn.disabled = true;
             try {
-                const r = await fetch('/api/admin/reset-password', {
+                const r = await fetch('/api/admin/password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token, password: pw }),
+                    body: JSON.stringify({ action: 'reset', token, password: pw }),
                 });
                 const data = await r.json().catch(() => ({}));
                 if (!r.ok) throw new Error(data.error || 'Falha ao redefinir senha');

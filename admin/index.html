@@ -1660,7 +1660,7 @@ async function sendRecovery() {
 
     try {
         await withLoading(btn, async () => {
-            const r = await fetch('/api/admin/forgot-password', { method: 'POST' });
+            const r = await fetch('/api/admin/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot' }) });
             const data = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error(data.error || 'Falha ao gerar link');
 
@@ -2744,7 +2744,7 @@ function openLogDetail(logData) {
     document.getElementById('ldTitle').textContent = 'Carregando…';
     document.getElementById('ldBody').innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:56px"><i class="fa-solid fa-circle-notch fa-spin fa-lg"></i></div>';
 
-    api('GET', `/api/admin/log-detail?id=${logData.id}`)
+    api('GET', `/api/admin/logs?id=${logData.id}`)
         .then(data => renderLogDetail(data))
         .catch(e => { document.getElementById('ldBody').innerHTML = `<p style="color:var(--danger);padding:20px">${esc(e.message)}</p>`; });
 }

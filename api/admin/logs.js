@@ -13,6 +13,35 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
+    // Detalhe de um log específico (absorve log-detail.js)
+    if (req.query.id) {
+        const { id } = req.query;
+        const supabase = getSupabase();
+        const { data: log, error: logErr } = await supabase
+            .from('download_logs')
+            .select(`
+                id, downloaded_at, ip_address, user_agent,
+                cv_name_snapshot, cv_id_snapshot, token_id,
+                empresa, vaga, notas, contato,
+                download_tokens(id, label, empresa, vaga, notas, contato, expires_at, max_uses, use_count, revoked, created_at),
+                cv_versions(id, name, description, file_name)
+            `)
+            .eq('id', id)
+            .single();
+        if (logErr || !log) return res.status(404).json({ error: 'Log não encontrado' });
+        let accesses = [];
+        if (log.token_id) {
+            const { data: acc } = await supabase
+                .from('download_logs')
+                .select('id, downloaded_at, ip_address, user_agent')
+                .eq('token_id', log.token_id)
+                .not('ip_address', 'like', 'admin-%')
+                .order('downloaded_at', { ascending: true });
+            accesses = acc || [];
+        }
+        return res.status(200).json({ log, accesses });
+    }
+
     const {
         search = '',
         tipo   = '',
