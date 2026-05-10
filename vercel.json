@@ -1,7 +1,8 @@
 {
   "rewrites": [
-    { "source": "/cv",    "destination": "/cv.html" },
-    { "source": "/admin", "destination": "/admin/index.html" }
+    { "source": "/cv",          "destination": "/cv.html" },
+    { "source": "/admin",       "destination": "/admin/index.html" },
+    { "source": "/admin/reset", "destination": "/admin/reset.html" }
   ],
   "headers": [
     {
