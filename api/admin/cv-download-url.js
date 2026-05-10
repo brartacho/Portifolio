@@ -33,6 +33,7 @@ export default async function handler(req, res) {
             await supabase.from('download_logs').insert({
                 cv_version_id: id,
                 cv_name_snapshot: cv.name,
+                cv_id_snapshot: id,
                 ip_address: `admin-send-${cleanChannel}`,
                 user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
             }).then(() => {}, () => {});  // silent — log não pode quebrar o envio

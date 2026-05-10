@@ -520,6 +520,41 @@
 
         .panel-title i { color: var(--cyan); }
 
+        /* ─── FILTER BAR ─────────────────────────────── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 0 0 16px;
+        }
+
+        .filter-input, .filter-select {
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-elevated);
+            color: var(--text);
+            font-size: 0.82rem;
+            font-family: var(--font-display);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .filter-input { min-width: 200px; flex: 1; }
+        .filter-date  { min-width: 140px; flex: 0 0 auto; }
+        .filter-input:focus, .filter-select:focus { border-color: var(--cyan); }
+        .filter-input::-webkit-search-cancel-button { cursor: pointer; }
+
+        .filter-count {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-left: auto;
+            white-space: nowrap;
+            font-family: var(--font-mono);
+        }
+
         /* ─── TABLE ──────────────────────────────────── */
         .tbl-wrap { overflow-x: auto; }
 
@@ -957,6 +992,16 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
+                <div class="filter-bar">
+                    <input class="filter-input" id="cvSearch" type="search" placeholder="Buscar por nome ou arquivo…" oninput="renderCVs()">
+                    <select class="filter-select" id="cvStatusFilter" onchange="renderCVs()">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                    <span class="filter-count" id="cvCount"></span>
+                    <button class="btn btn-sm" onclick="clearCvFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1021,6 +1066,18 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                <div class="filter-bar">
+                    <input class="filter-input" id="tokenSearch" type="search" placeholder="Buscar por label ou currículo…" oninput="renderTokens()">
+                    <select class="filter-select" id="tokenStatusFilter" onchange="renderTokens()">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="expirado">Expirado</option>
+                        <option value="revogado">Revogado</option>
+                        <option value="esgotado">Esgotado</option>
+                    </select>
+                    <span class="filter-count" id="tokenCount"></span>
+                    <button class="btn btn-sm" onclick="clearTokenFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1043,6 +1100,13 @@
         <div class="tab-panel" id="tab-logs">
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
+                <div class="filter-bar">
+                    <input class="filter-input" id="logSearch" type="search" placeholder="Buscar (label, IP, currículo…)" oninput="renderLogs()">
+                    <input class="filter-input filter-date" id="logFrom" type="date" title="Data inicial" onchange="renderLogs()">
+                    <input class="filter-input filter-date" id="logTo" type="date" title="Data final" onchange="renderLogs()">
+                    <span class="filter-count" id="logCount"></span>
+                    <button class="btn btn-sm" onclick="clearLogFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1462,6 +1526,11 @@ async function downloadCV(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+// ─── DATA STORES (filter-aware rendering) ─────────────────
+let _cvData     = [];
+let _tokenData  = [];
+let _logData    = [];
+
 // ─── AUTO-REFRESH ─────────────────────────────────────────
 let _activeTab      = 'cvs';
 let _refreshTimer   = null;
@@ -1634,37 +1703,60 @@ function startReply() {
 // ─── CVS ──────────────────────────────────────────────────
 async function loadCVs() {
     try {
-        const data = await api('GET', '/api/admin/cv-versions');
-        const tbody = document.getElementById('cvTable');
-        if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum currículo cadastrado</td></tr>';
-            return;
-        }
-        tbody.innerHTML = data.map(cv => `
-            <tr>
-                <td><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</td>
-                <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
-                <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
-                <td>${fmtDate(cv.created_at)}</td>
-                <td style="white-space:nowrap">
-                    <button class="btn btn-sm" style="margin-right:6px" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
-                    <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
-                    <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-
-        // Populate token CV select
+        _cvData = await api('GET', '/api/admin/cv-versions');
+        renderCVs();
         const sel = document.getElementById('tokenCV');
         const cur = sel.value;
-        sel.innerHTML = '<option value="">Selecione…</option>' + data.filter(c => c.active).map(cv =>
+        sel.innerHTML = '<option value="">Selecione…</option>' + _cvData.filter(c => c.active).map(cv =>
             `<option value="${cv.id}">${esc(cv.name)}</option>`
         ).join('');
         if (cur) sel.value = cur;
     } catch (e) {
         showToast(e.message, 'error');
     }
+}
+
+function renderCVs() {
+    const q = (document.getElementById('cvSearch')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('cvStatusFilter')?.value || '';
+    let data = _cvData;
+    if (q) data = data.filter(cv =>
+        cv.name.toLowerCase().includes(q) ||
+        (cv.description || '').toLowerCase().includes(q) ||
+        cv.file_name.toLowerCase().includes(q)
+    );
+    if (statusFilter) data = data.filter(cv => (cv.active ? 'ativo' : 'inativo') === statusFilter);
+
+    const tbody = document.getElementById('cvTable');
+    const countEl = document.getElementById('cvCount');
+    if (countEl) countEl.textContent = data.length !== _cvData.length ? `${data.length} de ${_cvData.length}` : `${_cvData.length} registros`;
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">${_cvData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum currículo cadastrado'}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map(cv => `
+        <tr>
+            <td><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</td>
+            <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
+            <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
+            <td>${fmtDate(cv.created_at)}</td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-sm" style="margin-right:6px" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
+                <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
+                <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function clearCvFilters() {
+    const s = document.getElementById('cvSearch');
+    const f = document.getElementById('cvStatusFilter');
+    if (s) s.value = '';
+    if (f) f.value = '';
+    renderCVs();
 }
 
 async function deleteCV(id, name) {
@@ -1826,30 +1918,54 @@ async function createToken() {
 
 async function loadTokens() {
     try {
-        const data = await api('GET', '/api/admin/tokens');
-        const tbody = document.getElementById('tokenTable');
-        if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token criado</td></tr>';
-            return;
-        }
-        tbody.innerHTML = data.map(t => {
-            const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
-            const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
-            return `
-                <tr>
-                    <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
-                    <td>${esc(t.cv_versions?.name || '—')}</td>
-                    <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
-                    <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
-                    <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
-                    <td style="white-space:nowrap">
-                        ${t.status === 'ativo' ? `<button class="btn btn-sm" style="margin-right:6px" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                        <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        _tokenData = await api('GET', '/api/admin/tokens');
+        renderTokens();
     } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderTokens() {
+    const q = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('tokenStatusFilter')?.value || '';
+    let data = _tokenData;
+    if (q) data = data.filter(t =>
+        (t.label || '').toLowerCase().includes(q) ||
+        (t.cv_versions?.name || '').toLowerCase().includes(q)
+    );
+    if (statusFilter) data = data.filter(t => t.status === statusFilter);
+
+    const tbody = document.getElementById('tokenTable');
+    const countEl = document.getElementById('tokenCount');
+    if (countEl) countEl.textContent = data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`;
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">${_tokenData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum token criado'}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map(t => {
+        const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
+        const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
+        return `
+            <tr>
+                <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
+                <td>${esc(t.cv_versions?.name || '—')}</td>
+                <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
+                <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
+                <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
+                <td style="white-space:nowrap">
+                    ${t.status === 'ativo' ? `<button class="btn btn-sm" style="margin-right:6px" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function clearTokenFilters() {
+    const s = document.getElementById('tokenSearch');
+    const f = document.getElementById('tokenStatusFilter');
+    if (s) s.value = '';
+    if (f) f.value = '';
+    renderTokens();
 }
 
 async function revokeToken(id) {
@@ -2185,35 +2301,72 @@ function smartLogLabel(l) {
     return '<span style="color:var(--text-dim)">(sem label)</span>';
 }
 
-// Renderiza o nome do CV:
-// - CV ativo → nome simples
-// - CV excluído mas snapshot salvo → nome + badge "(excluído)"
-// - Sem info → "—"
 function smartCvName(l) {
     const live = l.cv_versions?.name;
     const snap = l.cv_name_snapshot;
+    const idSnap = l.cv_id_snapshot;
     if (live) return esc(live);
-    if (snap) return `${esc(snap)} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--danger);background:var(--danger-soft);border:1px solid rgba(239,68,68,0.2);padding:1px 6px;border-radius:4px;margin-left:4px">excluído</span>`;
+    if (snap) {
+        const shortId = idSnap ? idSnap.replace(/-/g, '').slice(0, 8) : '';
+        const idPart = shortId ? ` <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-dim)" title="${esc(idSnap || '')}">· id:${shortId}</span>` : '';
+        return `${esc(snap)}${idPart} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--danger);background:var(--danger-soft);border:1px solid rgba(239,68,68,0.2);padding:1px 6px;border-radius:4px;margin-left:4px">excluído</span>`;
+    }
     return '<span style="color:var(--text-dim)">—</span>';
 }
 
 async function loadLogs() {
     try {
-        const data = await api('GET', '/api/admin/logs');
-        const tbody = document.getElementById('logTable');
-        if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum download registrado</td></tr>';
-            return;
-        }
-        tbody.innerHTML = data.map(l => `
-            <tr>
-                <td>${smartLogLabel(l)}</td>
-                <td>${smartCvName(l)}</td>
-                <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
-                <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
-            </tr>
-        `).join('');
+        _logData = await api('GET', '/api/admin/logs');
+        renderLogs();
     } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderLogs() {
+    const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
+    const from = document.getElementById('logFrom')?.value || '';
+    const to = document.getElementById('logTo')?.value || '';
+    let data = _logData;
+    if (q) data = data.filter(l => {
+        const label = (l.download_tokens?.label || l.user_agent || '').toLowerCase();
+        const cv = (l.cv_versions?.name || l.cv_name_snapshot || '').toLowerCase();
+        const ip = (l.ip_address || '').toLowerCase();
+        return label.includes(q) || cv.includes(q) || ip.includes(q);
+    });
+    if (from) {
+        const fromDate = new Date(from + 'T00:00:00');
+        data = data.filter(l => new Date(l.downloaded_at) >= fromDate);
+    }
+    if (to) {
+        const toDate = new Date(to + 'T23:59:59.999');
+        data = data.filter(l => new Date(l.downloaded_at) <= toDate);
+    }
+
+    const tbody = document.getElementById('logTable');
+    const countEl = document.getElementById('logCount');
+    if (countEl) countEl.textContent = data.length !== _logData.length ? `${data.length} de ${_logData.length}` : `${_logData.length} registros`;
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">${_logData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum download registrado'}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map(l => `
+        <tr>
+            <td>${smartLogLabel(l)}</td>
+            <td>${smartCvName(l)}</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
+            <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
+        </tr>
+    `).join('');
+}
+
+function clearLogFilters() {
+    const s = document.getElementById('logSearch');
+    const f = document.getElementById('logFrom');
+    const t = document.getElementById('logTo');
+    if (s) s.value = '';
+    if (f) f.value = '';
+    if (t) t.value = '';
+    renderLogs();
 }
 
 // ─── SHARE MODAL ──────────────────────────────────────────

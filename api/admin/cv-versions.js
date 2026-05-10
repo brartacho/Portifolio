@@ -25,12 +25,20 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Campos obrigatórios: name, file_path, file_name' });
         }
 
+        const trimmedName = name.trim();
+        const { data: dup } = await supabase
+            .from('cv_versions')
+            .select('id')
+            .ilike('name', trimmedName)
+            .maybeSingle();
+        if (dup) return res.status(409).json({ error: `Já existe um currículo com o nome "${trimmedName}". Use um nome diferente.` });
+
         // Padroniza file_name antes de salvar — todo download fica consistente
         const cleanFileName = normalizeFileName(file_name);
 
         const { data, error } = await supabase
             .from('cv_versions')
-            .insert({ name, description, file_path, file_name: cleanFileName, active: true })
+            .insert({ name: trimmedName, description, file_path, file_name: cleanFileName, active: true })
             .select()
             .single();
 
@@ -47,6 +55,13 @@ export default async function handler(req, res) {
         if (typeof name === 'string') {
             const trimmed = name.trim();
             if (!trimmed) return res.status(400).json({ error: 'Nome não pode ser vazio' });
+            const { data: dup } = await supabase
+                .from('cv_versions')
+                .select('id')
+                .ilike('name', trimmed)
+                .neq('id', id)
+                .maybeSingle();
+            if (dup) return res.status(409).json({ error: `Já existe um currículo com o nome "${trimmed}". Use um nome diferente.` });
             patch.name = trimmed;
         }
         if (typeof description === 'string') patch.description = description.trim() || null;

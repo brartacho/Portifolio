@@ -38,6 +38,7 @@ create table if not exists download_logs (
     token_id          uuid references download_tokens(id) on delete set null,
     cv_version_id     uuid references cv_versions(id) on delete set null,
     cv_name_snapshot  text,        -- nome do CV gravado na hora do log (imutável)
+    cv_id_snapshot    text,        -- UUID do CV como texto — nunca vira NULL como a FK
     ip_address        text,
     user_agent        text,
     downloaded_at     timestamptz not null default now()
