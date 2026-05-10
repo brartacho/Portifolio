@@ -73,7 +73,7 @@ export default async function handler(req, res) {
         return res.status(429).json({ error: `Limite atingido. Aguarde ${Math.ceil(rl.retryAfterSec / 60)} min.` });
     }
 
-    const { cv_version_id, recipient_name, recipient_email, message } = req.body || {};
+    const { cv_version_id, recipient_name, recipient_email, message, empresa, vaga, notas, contato } = req.body || {};
 
     const name = clean(recipient_name);
     const email = clean(recipient_email).toLowerCase();
@@ -137,13 +137,17 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: e.message || 'Falha no envio.' });
     }
 
-    // Log de envio (reaproveita download_logs com token_id null pra distinguir de download real)
+    // Log de envio
     await supabase.from('download_logs').insert({
         cv_version_id: cv.id,
         cv_name_snapshot: cv.name,
         cv_id_snapshot: cv.id,
         ip_address: 'admin-send-email',
         user_agent: `Send to ${name} <${email}>`,
+        empresa: empresa ? clean(empresa).slice(0, 200) : null,
+        vaga:    vaga    ? clean(vaga).slice(0, 200)    : null,
+        notas:   notas   ? clean(notas).slice(0, 500)   : null,
+        contato: contato ? clean(contato).slice(0, 300) : null,
     }).then(() => {}, () => {});
 
     return res.status(200).json({

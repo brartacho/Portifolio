@@ -13,20 +13,26 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { cv_version_id, cv_name_snapshot, cv_id_snapshot, ip_address, user_agent, token_id } = req.body || {};
+    const { cv_version_id, cv_name_snapshot, cv_id_snapshot, ip_address, user_agent, token_id,
+            empresa, vaga, notas, contato } = req.body || {};
 
     if (!cv_version_id || !ip_address || !ALLOWED_IP.has(ip_address)) {
         return res.status(400).json({ error: 'cv_version_id e ip_address válidos são obrigatórios' });
     }
 
+    const s = v => v ? String(v).replace(/[\r\n\t]/g, '').trim() : null;
     const supabase = getSupabase();
     const { error } = await supabase.from('download_logs').insert({
         cv_version_id,
         cv_name_snapshot: cv_name_snapshot || null,
         cv_id_snapshot:   cv_id_snapshot   || null,
         ip_address,
-        user_agent: user_agent ? String(user_agent).replace(/[\r\n\t]/g, '').trim().slice(0, 500) : null,
-        token_id: token_id || null,
+        user_agent: s(user_agent)?.slice(0, 500) || null,
+        token_id:   token_id || null,
+        empresa:    s(empresa)?.slice(0, 200) || null,
+        vaga:       s(vaga)?.slice(0, 200)    || null,
+        notas:      s(notas)?.slice(0, 500)   || null,
+        contato:    s(contato)?.slice(0, 300) || null,
     });
 
     if (error) return res.status(500).json({ error: error.message });

@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { id, recipient, channel } = req.query;
+    const { id, recipient, channel, empresa, vaga, notas, contato } = req.query;
     if (!id) return res.status(400).json({ error: 'ID obrigatório' });
 
     const supabase = getSupabase();
@@ -30,12 +30,17 @@ export default async function handler(req, res) {
         const cleanRecipient = String(recipient).replace(/[\r\n\t]/g, '').trim().slice(0, 200);
         const cleanChannel = String(channel).replace(/[^a-z-]/gi, '').toLowerCase().slice(0, 50);
         if (cleanRecipient && cleanChannel) {
+            const s = v => v ? String(v).replace(/[\r\n\t]/g, '').trim() : null;
             await supabase.from('download_logs').insert({
                 cv_version_id: id,
                 cv_name_snapshot: cv.name,
                 cv_id_snapshot: id,
                 ip_address: `admin-send-${cleanChannel}`,
                 user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
+                empresa: s(empresa)?.slice(0, 200) || null,
+                vaga:    s(vaga)?.slice(0, 200)    || null,
+                notas:   s(notas)?.slice(0, 500)   || null,
+                contato: s(contato)?.slice(0, 300) || null,
             }).then(() => {}, () => {});  // silent — log não pode quebrar o envio
         }
     }

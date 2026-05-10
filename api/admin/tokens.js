@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const { cv_version_id, label, expires_in_hours, expires_at_date, max_uses } = req.body || {};
+        const { cv_version_id, label, expires_in_hours, expires_at_date, max_uses, empresa, vaga, notas, contato } = req.body || {};
 
         if (!cv_version_id) return res.status(400).json({ error: 'cv_version_id obrigatório' });
         if (!expires_in_hours && !expires_at_date) {
@@ -58,7 +58,11 @@ export default async function handler(req, res) {
             .insert({
                 token_hash: tokenHash,
                 cv_version_id,
-                label: label || null,
+                label:   label   || null,
+                empresa: empresa ? String(empresa).trim().slice(0, 200) : null,
+                vaga:    vaga    ? String(vaga).trim().slice(0, 200)    : null,
+                notas:   notas   ? String(notas).trim().slice(0, 500)   : null,
+                contato: contato ? String(contato).trim().slice(0, 300) : null,
                 expires_at: expiresAt.toISOString(),
                 max_uses: max_uses || null,
                 use_count: 0,

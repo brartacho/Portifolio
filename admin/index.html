@@ -562,6 +562,102 @@
             flex-shrink: 0;
         }
 
+        /* ─── LOG DETAIL DRAWER ─────────────────────── */
+        .log-drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 200;
+            backdrop-filter: blur(2px);
+        }
+        .log-drawer-overlay.open { display: block; }
+
+        .log-drawer {
+            position: fixed;
+            top: 0;
+            right: -540px;
+            width: min(520px, 100vw);
+            height: 100vh;
+            background: var(--card-bg);
+            border-left: 1px solid var(--border);
+            z-index: 201;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.26s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+        .log-drawer.open { right: 0; }
+
+        .log-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .log-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .ld-section { margin-bottom: 22px; }
+
+        .ld-section-title {
+            font-size: 0.67rem;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(34,211,238,0.14);
+        }
+
+        .ld-row {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 3px 10px;
+            margin-bottom: 7px;
+            font-size: 0.83rem;
+            align-items: baseline;
+        }
+
+        .ld-label { color: var(--text-dim); font-size: 0.74rem; }
+
+        .ld-value { color: var(--text); word-break: break-word; }
+
+        .ld-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .ld-badge.green  { background:rgba(74,222,128,0.1);  color:var(--success); border:1px solid rgba(74,222,128,0.2); }
+        .ld-badge.red    { background:var(--danger-soft);     color:var(--danger);  border:1px solid rgba(239,68,68,0.2); }
+        .ld-badge.dim    { background:rgba(255,255,255,0.04); color:var(--text-dim);border:1px solid rgba(255,255,255,0.08); }
+
+        .ld-access-entry {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            font-size: 0.81rem;
+        }
+
+        /* Linhas da tabela de logs clicáveis */
+        #logTable tr { cursor: pointer; }
+        #logTable tr:hover td { background: rgba(255,255,255,0.03); }
+
         /* ─── PAGINAÇÃO ──────────────────────────────── */
         .pagination {
             display: flex;
@@ -1252,6 +1348,18 @@
     </div>
 </div>
 
+<!-- ─── LOG DETAIL DRAWER ────────────────────────── -->
+<div class="log-drawer-overlay" id="logDrawerOverlay" onclick="closeLogDetail()"></div>
+<div class="log-drawer" id="logDrawer">
+    <div class="log-drawer-header">
+        <span id="ldTitle">Detalhes do evento</span>
+        <button class="th-filter-clear" onclick="closeLogDetail()" style="font-size:0.85rem"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="log-drawer-body" id="ldBody">
+        <div style="text-align:center;color:var(--text-dim);padding:48px"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+    </div>
+</div>
+
 <!-- ─── SHARE MODAL ──────────────────────────────── -->
 <div class="modal-overlay" id="shareModal">
     <div class="modal">
@@ -1358,6 +1466,29 @@
             <label for="sendPhone">Telefone (com DDI, só números)</label>
             <input type="tel" id="sendPhone" name="cv-recipient-phone" maxlength="20" placeholder="5544999999999" inputmode="numeric" autocomplete="tel" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
             <small style="color:var(--text-dim);font-size:0.78rem">Ex: 5544999999999 (Brasil + DDD + número, sem espaços ou parênteses)</small>
+        </div>
+
+        <!-- Contexto da vaga — campos opcionais de rastreio -->
+        <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 10px;padding-top:12px">
+            <p style="font-size:0.68rem;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px">Contexto da vaga <span style="text-transform:none;letter-spacing:0">(opcional)</span></p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div class="form-group" style="margin:0">
+                    <label for="sendEmpresa" style="font-size:0.78rem">Empresa</label>
+                    <input type="text" id="sendEmpresa" placeholder="Nubank, iFood…" maxlength="200" autocomplete="off" data-form-type="other">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label for="sendVaga" style="font-size:0.78rem">Vaga</label>
+                    <input type="text" id="sendVaga" placeholder="Sr QA, Tech Lead…" maxlength="200" autocomplete="off" data-form-type="other">
+                </div>
+            </div>
+            <div class="form-group" style="margin:0 0 10px">
+                <label for="sendContato" style="font-size:0.78rem">Contato (email ou LinkedIn)</label>
+                <input type="text" id="sendContato" placeholder="recrutador@empresa.com ou linkedin.com/in/…" maxlength="300" autocomplete="off" data-form-type="other">
+            </div>
+            <div class="form-group" style="margin:0">
+                <label for="sendNotas" style="font-size:0.78rem">Notas</label>
+                <input type="text" id="sendNotas" placeholder="headhunter, urgência alta, via LinkedIn…" maxlength="500" autocomplete="off" data-form-type="other">
+            </div>
         </div>
 
         <div class="form-group">
@@ -2168,10 +2299,14 @@ function openSendCV(cv) {
     document.getElementById('sendCvSubtitle').textContent = `Versão: ${cv.name} (${cv.file_name})`;
 
     // Pré-preenche se houver dados do banner de reply
-    document.getElementById('sendName').value = _pendingReply?.name || '';
-    document.getElementById('sendEmail').value = _pendingReply?.email || '';
-    document.getElementById('sendPhone').value = '';
+    document.getElementById('sendName').value    = _pendingReply?.name || '';
+    document.getElementById('sendEmail').value   = _pendingReply?.email || '';
+    document.getElementById('sendPhone').value   = '';
     document.getElementById('sendMessage').value = '';
+    document.getElementById('sendEmpresa').value = '';
+    document.getElementById('sendVaga').value    = '';
+    document.getElementById('sendContato').value = '';
+    document.getElementById('sendNotas').value   = '';
     document.getElementById('sendMsg').hidden = true;
 
     // Reset da área pós-processamento (waReadyArea) — começa fechada
@@ -2278,7 +2413,11 @@ async function sendCV() {
     msgEl.hidden = true;
     msgEl.className = 'forgot-msg';
 
-    const name = document.getElementById('sendName').value.trim();
+    const name    = document.getElementById('sendName').value.trim();
+    const empresa = document.getElementById('sendEmpresa').value.trim();
+    const vaga    = document.getElementById('sendVaga').value.trim();
+    const contato = document.getElementById('sendContato').value.trim();
+    const notas   = document.getElementById('sendNotas').value.trim();
     const rawMessage = document.getElementById('sendMessage').value.trim();
 
     if (name.length < 2) return showSendError('Informe o nome do destinatário (pelo menos 2 chars).');
@@ -2315,6 +2454,10 @@ async function sendCV() {
                     recipient_name: name,
                     recipient_email: email,
                     message: message || null,
+                    empresa: empresa || null,
+                    vaga:    vaga    || null,
+                    contato: contato || null,
+                    notas:   notas   || null,
                 });
                 msgEl.className = 'forgot-msg success';
                 msgEl.textContent = r.message || 'Enviado!';
@@ -2347,6 +2490,10 @@ async function sendCV() {
                     label: `WhatsApp · ${name}`,
                     expires_in_hours: expiresHours,
                     max_uses: maxUses,
+                    empresa: empresa || null,
+                    vaga:    vaga    || null,
+                    contato: contato || null,
+                    notas:   notas   || null,
                 });
 
                 // Loga o envio do link (fire & forget — não bloqueia o fluxo)
@@ -2357,6 +2504,10 @@ async function sendCV() {
                     ip_address:       'admin-send-whatsapp-link',
                     user_agent:       `Send to ${name} via whatsapp-link`,
                     token_id:         tk.id,
+                    empresa: empresa || null,
+                    vaga:    vaga    || null,
+                    contato: contato || null,
+                    notas:   notas   || null,
                 }).catch(() => {});
 
                 const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
@@ -2376,7 +2527,11 @@ async function sendCV() {
                 // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
                 finalMsg = message.replace(/\[link\]\s*\n*/g, '');
                 const dlUrl = `/api/admin/cv-download-url?id=${_sendCv.id}`
-                    + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`;
+                    + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`
+                    + (empresa ? `&empresa=${encodeURIComponent(empresa)}` : '')
+                    + (vaga    ? `&vaga=${encodeURIComponent(vaga)}`       : '')
+                    + (contato ? `&contato=${encodeURIComponent(contato)}` : '')
+                    + (notas   ? `&notas=${encodeURIComponent(notas)}`     : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
@@ -2565,7 +2720,7 @@ function renderLogs() {
         return;
     }
     tbody.innerHTML = _logData.map(l => `
-        <tr>
+        <tr onclick="openLogDetail(${JSON.stringify(l).replace(/"/g,'&quot;')})">
             <td>${smartLogLabel(l)}</td>
             <td>${smartCvName(l)}</td>
             <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
@@ -2579,6 +2734,132 @@ function clearLogFilters() {
     _logSort = { col: 'downloaded_at', dir: 'desc' };
     _logPage = 1;
     loadLogs();
+}
+
+// ─── LOG DETAIL DRAWER ────────────────────────────────────
+
+function openLogDetail(logData) {
+    document.getElementById('logDrawer').classList.add('open');
+    document.getElementById('logDrawerOverlay').classList.add('open');
+    document.getElementById('ldTitle').textContent = 'Carregando…';
+    document.getElementById('ldBody').innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:56px"><i class="fa-solid fa-circle-notch fa-spin fa-lg"></i></div>';
+
+    api('GET', `/api/admin/log-detail?id=${logData.id}`)
+        .then(data => renderLogDetail(data))
+        .catch(e => { document.getElementById('ldBody').innerHTML = `<p style="color:var(--danger);padding:20px">${esc(e.message)}</p>`; });
+}
+
+function closeLogDetail() {
+    document.getElementById('logDrawer').classList.remove('open');
+    document.getElementById('logDrawerOverlay').classList.remove('open');
+}
+
+function _parseUA(ua) {
+    if (!ua) return null;
+    const browser = ua.match(/(Edg|Chrome|Firefox|Safari|OPR|Opera)\/[\d.]+/)?.[1] || null;
+    const os = ua.includes('Windows') ? 'Windows'
+             : ua.includes('Mac')     ? 'macOS'
+             : ua.includes('iPhone')  ? 'iPhone'
+             : ua.includes('Android') ? 'Android'
+             : ua.includes('Linux')   ? 'Linux'
+             : null;
+    return [browser, os].filter(Boolean).join(' · ') || ua.slice(0, 80);
+}
+
+function renderLogDetail({ log, accesses }) {
+    const ip = log.ip_address || '';
+    const ua = log.user_agent || '';
+    const isAdminSend = ip.startsWith('admin-send-');
+
+    let channelIcon, channelLabel;
+    if      (ip === 'admin-send-email')          { channelIcon = '✉️';  channelLabel = 'Email (anexo)'; }
+    else if (ip === 'admin-send-whatsapp-link')  { channelIcon = '🔗';  channelLabel = 'WhatsApp · link rastreado'; }
+    else if (ip === 'admin-send-whatsapp')       { channelIcon = '📎';  channelLabel = 'WhatsApp · arquivo manual'; }
+    else                                          { channelIcon = '⬇️'; channelLabel = 'Acesso do recrutador'; }
+
+    document.getElementById('ldTitle').textContent = channelLabel;
+
+    const recName = isAdminSend
+        ? (ua.match(/^Send to ([^<(]+?)(?:\s*<|\s+via|\s*$)/)?.[1]?.trim() || '')
+        : '';
+    const tk   = log.download_tokens;
+    const cv   = log.cv_versions;
+    const meta = {
+        empresa: tk?.empresa || log.empresa || null,
+        vaga:    tk?.vaga    || log.vaga    || null,
+        notas:   tk?.notas   || log.notas   || null,
+        contato: tk?.contato || log.contato || null,
+    };
+
+    const row = (label, val, mono) => val
+        ? `<div class="ld-row"><span class="ld-label">${label}</span><span class="ld-value${mono ? ' ' : ''}" style="${mono ? 'font-family:var(--font-mono);font-size:0.8rem' : ''}">${val}</span></div>`
+        : '';
+
+    let html = '';
+
+    // ── Envio ──
+    html += `<div class="ld-section"><div class="ld-section-title">Envio</div>
+        ${row('Canal', `${channelIcon} ${esc(channelLabel)}`)}
+        ${row('Data/hora', esc(fmtDate(log.downloaded_at, true)))}
+        ${recName ? row('Destinatário', `<strong>${esc(recName)}</strong>`) : ''}
+    </div>`;
+
+    // ── Contexto da vaga ──
+    if (meta.empresa || meta.vaga || meta.contato || meta.notas) {
+        html += `<div class="ld-section"><div class="ld-section-title">Contexto da vaga</div>
+            ${row('Empresa', meta.empresa ? esc(meta.empresa) : null)}
+            ${row('Vaga',    meta.vaga    ? esc(meta.vaga)    : null)}
+            ${meta.contato ? `<div class="ld-row"><span class="ld-label">Contato</span><span class="ld-value"><a href="${meta.contato.startsWith('http') ? esc(meta.contato) : 'mailto:' + esc(meta.contato)}" target="_blank" style="color:var(--cyan)">${esc(meta.contato)}</a></span></div>` : ''}
+            ${row('Notas',   meta.notas   ? `<em style="color:var(--text-soft)">${esc(meta.notas)}</em>` : null)}
+        </div>`;
+    }
+
+    // ── Currículo ──
+    html += `<div class="ld-section"><div class="ld-section-title">Currículo</div>
+        ${row('Versão',    esc(cv?.name || log.cv_name_snapshot || '—'))}
+        ${cv?.description ? row('Descrição', `<span style="color:var(--text-soft)">${esc(cv.description)}</span>`) : ''}
+    </div>`;
+
+    // ── Token ──
+    if (tk) {
+        const tkStatus = tk.revoked ? '<span class="ld-badge red">revogado</span>'
+            : new Date(tk.expires_at) < new Date() ? '<span class="ld-badge dim">expirado</span>'
+            : '<span class="ld-badge green">ativo</span>';
+        html += `<div class="ld-section"><div class="ld-section-title">Token</div>
+            ${row('Label',  `<span style="font-family:var(--font-mono)">${esc(tk.label || '—')}</span>`)}
+            ${row('Status', tkStatus)}
+            ${row('Expira', esc(fmtDate(tk.expires_at, true)))}
+            ${row('Usos',   `${tk.use_count ?? 0} / ${tk.max_uses ?? '∞'}`)}
+        </div>`;
+    }
+
+    // ── Acesso do recrutador (para envios de link) ──
+    if (ip === 'admin-send-whatsapp-link' || (isAdminSend && log.token_id)) {
+        html += `<div class="ld-section"><div class="ld-section-title">Recrutador abriu?</div>`;
+        if (!accesses?.length) {
+            html += '<span class="ld-badge red"><i class="fa-solid fa-clock"></i> Ainda não visualizou</span>';
+        } else {
+            html += `<span class="ld-badge green"><i class="fa-solid fa-check"></i> Visualizou ${accesses.length}×</span>`;
+            accesses.forEach((acc, i) => {
+                html += `<div class="ld-access-entry">
+                    <div style="font-weight:600;color:var(--cyan);margin-bottom:5px">Acesso ${i + 1}</div>
+                    <div style="color:var(--text-dim);font-size:0.78rem">📅 ${esc(fmtDate(acc.downloaded_at, true))}</div>
+                    <div style="color:var(--text-dim);font-size:0.78rem;font-family:var(--font-mono)">🌐 ${esc(acc.ip_address)}</div>
+                    ${_parseUA(acc.user_agent) ? `<div style="color:var(--text-dim);font-size:0.78rem">💻 ${esc(_parseUA(acc.user_agent))}</div>` : ''}
+                </div>`;
+            });
+        }
+        html += '</div>';
+    } else if (!isAdminSend) {
+        // É um acesso direto do recrutador — mostra IP + UA
+        html += `<div class="ld-section"><div class="ld-section-title">Detalhes do acesso</div>
+            ${row('IP', `<span style="font-family:var(--font-mono)">${esc(log.ip_address)}</span>`)}
+            ${_parseUA(ua) ? row('Dispositivo', esc(_parseUA(ua))) : ''}
+            ${ua ? `<div class="ld-row" style="align-items:start"><span class="ld-label">User-Agent</span><span class="ld-value" style="font-size:0.68rem;font-family:var(--font-mono);color:var(--text-dim);word-break:break-all">${esc(ua)}</span></div>` : ''}
+        </div>`;
+    }
+
+    document.getElementById('ldBody').innerHTML = html;
 }
 
 // ─── SHARE MODAL ──────────────────────────────────────────
