@@ -1032,8 +1032,8 @@
                         <thead>
                             <tr>
                                 <th class="sortable" data-sort="name" onclick="toggleSort('cvs','name')">Nome<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="file_name" onclick="toggleSort('cvs','file_name')">Arquivo para download<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="active" onclick="toggleSort('cvs','active')">Status<span class="sort-arrow">↕</span></th>
+                                <th>Arquivo para download</th>
+                                <th>Status</th>
                                 <th class="sortable sort-active" data-sort="created_at" onclick="toggleSort('cvs','created_at')">Adicionado<span class="sort-arrow">▼</span></th>
                                 <th></th>
                             </tr>
@@ -1112,7 +1112,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
+                                <th>Label</th>
                                 <th class="sortable" data-sort="cv_versions.name" onclick="toggleSort('tokens','cv_versions.name')">Currículo<span class="sort-arrow">↕</span></th>
                                 <th class="sortable" data-sort="status" onclick="toggleSort('tokens','status')">Status<span class="sort-arrow">↕</span></th>
                                 <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
@@ -1161,9 +1161,17 @@
                             <tr class="filter-row">
                                 <th colspan="3">
                                     <div class="th-filter-wrap">
-                                        <input class="th-filter-input" type="search" id="logSearch" placeholder="🔍  label, currículo, IP…" oninput="renderLogs()">
+                                        <input class="th-filter-input" type="search" id="logSearch" placeholder="🔍  label, destinatário, currículo, IP…" oninput="renderLogs()">
                                         <span class="th-filter-count" id="logCount"></span>
                                         <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                    <div class="th-filter-wrap" style="margin-top:3px">
+                                        <select class="th-filter-select" id="logTipoFilter" onchange="renderLogs()" style="flex:1">
+                                            <option value="">Todos os tipos</option>
+                                            <option value="download">Download real (recrutador)</option>
+                                            <option value="email">Envio por email</option>
+                                            <option value="whatsapp">Envio por WhatsApp</option>
+                                        </select>
                                     </div>
                                 </th>
                                 <th>
@@ -2425,12 +2433,21 @@ function renderLogs() {
     const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
     const from = document.getElementById('logFrom')?.value || '';
     const to = document.getElementById('logTo')?.value || '';
+    const tipo = document.getElementById('logTipoFilter')?.value || '';
     let data = _logData;
     if (q) data = data.filter(l => {
-        const label = (l.download_tokens?.label || l.user_agent || '').toLowerCase();
+        const label = (l.download_tokens?.label || '').toLowerCase();
+        const agent = (l.user_agent || '').toLowerCase();
         const cv = (l.cv_versions?.name || l.cv_name_snapshot || '').toLowerCase();
         const ip = (l.ip_address || '').toLowerCase();
-        return label.includes(q) || cv.includes(q) || ip.includes(q);
+        return label.includes(q) || agent.includes(q) || cv.includes(q) || ip.includes(q);
+    });
+    if (tipo) data = data.filter(l => {
+        const ip = l.ip_address || '';
+        if (tipo === 'download')  return !ip.startsWith('admin-');
+        if (tipo === 'email')     return ip === 'admin-send-email';
+        if (tipo === 'whatsapp')  return ip.startsWith('admin-send-') && ip !== 'admin-send-email';
+        return true;
     });
     if (from) {
         const fromDate = new Date(from + 'T00:00:00');
@@ -2471,7 +2488,7 @@ function renderLogs() {
 }
 
 function clearLogFilters() {
-    ['logSearch', 'logFrom', 'logTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['logSearch', 'logFrom', 'logTo', 'logTipoFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _logSort = { col: 'downloaded_at', dir: 'desc' };
     renderLogs();
 }
