@@ -520,40 +520,58 @@
 
         .panel-title i { color: var(--cyan); }
 
-        /* ─── FILTER BAR ─────────────────────────────── */
-        .filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 0 0 16px;
+        /* ─── FILTER ROW (in-table, Google Sheets style) ─ */
+        .filter-row th {
+            padding: 4px 8px 6px;
+            background: var(--bg-soft);
+            border-bottom: 2px solid var(--border);
         }
 
-        .filter-input, .filter-select {
-            height: 34px;
-            padding: 0 10px;
+        .th-filter-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .th-filter-input, .th-filter-select {
+            width: 100%;
+            height: 26px;
+            padding: 0 7px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 4px;
             background: var(--bg-elevated);
             color: var(--text);
-            font-size: 0.82rem;
+            font-size: 0.76rem;
             font-family: var(--font-display);
             outline: none;
             transition: border-color 0.15s;
         }
 
-        .filter-input { min-width: 200px; flex: 1; }
-        .filter-date  { min-width: 140px; flex: 0 0 auto; }
-        .filter-input:focus, .filter-select:focus { border-color: var(--cyan); }
-        .filter-input::-webkit-search-cancel-button { cursor: pointer; }
+        .th-filter-input:focus, .th-filter-select:focus { border-color: var(--cyan); }
+        .th-filter-input::-webkit-search-cancel-button { cursor: pointer; }
 
-        .filter-count {
-            font-size: 0.78rem;
+        .th-filter-count {
+            font-size: 0.68rem;
             color: var(--text-dim);
-            margin-left: auto;
-            white-space: nowrap;
             font-family: var(--font-mono);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
+
+        .th-filter-clear {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 2px 3px;
+            border-radius: 3px;
+            font-size: 0.72rem;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+
+        .th-filter-clear:hover { color: var(--danger); }
 
         /* ─── TABLE ──────────────────────────────────── */
         .tbl-wrap { overflow-x: auto; }
@@ -992,16 +1010,6 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
-                <div class="filter-bar">
-                    <input class="filter-input" id="cvSearch" type="search" placeholder="Buscar por nome ou arquivo…" oninput="renderCVs()">
-                    <select class="filter-select" id="cvStatusFilter" onchange="renderCVs()">
-                        <option value="">Todos</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="inativo">Inativo</option>
-                    </select>
-                    <span class="filter-count" id="cvCount"></span>
-                    <button class="btn btn-sm" onclick="clearCvFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
-                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1011,6 +1019,23 @@
                                 <th>Status</th>
                                 <th>Adicionado</th>
                                 <th></th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th colspan="2">
+                                    <div class="th-filter-wrap">
+                                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="🔍  nome, arquivo…" oninput="renderCVs()">
+                                        <span class="th-filter-count" id="cvCount"></span>
+                                        <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </th>
+                                <th>
+                                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()">
+                                        <option value="">Todos</option>
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                    </select>
+                                </th>
+                                <th colspan="2"></th>
                             </tr>
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1066,18 +1091,6 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
-                <div class="filter-bar">
-                    <input class="filter-input" id="tokenSearch" type="search" placeholder="Buscar por label ou currículo…" oninput="renderTokens()">
-                    <select class="filter-select" id="tokenStatusFilter" onchange="renderTokens()">
-                        <option value="">Todos os status</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="expirado">Expirado</option>
-                        <option value="revogado">Revogado</option>
-                        <option value="esgotado">Esgotado</option>
-                    </select>
-                    <span class="filter-count" id="tokenCount"></span>
-                    <button class="btn btn-sm" onclick="clearTokenFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
-                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1088,6 +1101,25 @@
                                 <th>Usos</th>
                                 <th>Expira</th>
                                 <th></th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th colspan="2">
+                                    <div class="th-filter-wrap">
+                                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="🔍  label, currículo…" oninput="renderTokens()">
+                                        <span class="th-filter-count" id="tokenCount"></span>
+                                        <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </th>
+                                <th>
+                                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()">
+                                        <option value="">Todos</option>
+                                        <option value="ativo">Ativo</option>
+                                        <option value="expirado">Expirado</option>
+                                        <option value="revogado">Revogado</option>
+                                        <option value="esgotado">Esgotado</option>
+                                    </select>
+                                </th>
+                                <th colspan="3"></th>
                             </tr>
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1100,13 +1132,6 @@
         <div class="tab-panel" id="tab-logs">
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
-                <div class="filter-bar">
-                    <input class="filter-input" id="logSearch" type="search" placeholder="Buscar (label, IP, currículo…)" oninput="renderLogs()">
-                    <input class="filter-input filter-date" id="logFrom" type="date" title="Data inicial" onchange="renderLogs()">
-                    <input class="filter-input filter-date" id="logTo" type="date" title="Data final" onchange="renderLogs()">
-                    <span class="filter-count" id="logCount"></span>
-                    <button class="btn btn-sm" onclick="clearLogFilters()" title="Limpar filtros"><i class="fa-solid fa-filter-circle-xmark"></i></button>
-                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1115,6 +1140,21 @@
                                 <th>Currículo</th>
                                 <th>IP</th>
                                 <th>Data/hora</th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th colspan="3">
+                                    <div class="th-filter-wrap">
+                                        <input class="th-filter-input" type="search" id="logSearch" placeholder="🔍  label, currículo, IP…" oninput="renderLogs()">
+                                        <span class="th-filter-count" id="logCount"></span>
+                                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="th-filter-wrap">
+                                        <input class="th-filter-input" type="date" id="logFrom" title="Data inicial" onchange="renderLogs()" style="flex:1;min-width:0">
+                                        <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="renderLogs()" style="flex:1;min-width:0">
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="logTable"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
