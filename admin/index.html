@@ -533,6 +533,8 @@
             gap: 4px;
         }
 
+        .th-filter-wrap + .th-filter-wrap { margin-top: 3px; }
+
         .th-filter-input, .th-filter-select {
             width: 100%;
             height: 26px;
@@ -1027,6 +1029,16 @@
                                         <span class="th-filter-count" id="cvCount"></span>
                                         <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
+                                    <div class="th-filter-wrap">
+                                        <select class="th-filter-select" id="cvSort" onchange="renderCVs()" style="flex:1">
+                                            <option value="created_at:desc">↓ Mais recente</option>
+                                            <option value="created_at:asc">↑ Mais antigo</option>
+                                            <option value="name:asc">↑ Nome A→Z</option>
+                                            <option value="name:desc">↓ Nome Z→A</option>
+                                            <option value="active:desc">Ativo primeiro</option>
+                                            <option value="active:asc">Inativo primeiro</option>
+                                        </select>
+                                    </div>
                                 </th>
                                 <th>
                                     <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()">
@@ -1109,6 +1121,17 @@
                                         <span class="th-filter-count" id="tokenCount"></span>
                                         <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
+                                    <div class="th-filter-wrap">
+                                        <select class="th-filter-select" id="tokenSort" onchange="renderTokens()" style="flex:1">
+                                            <option value="expires_at:asc">↑ Expira em breve</option>
+                                            <option value="expires_at:desc">↓ Expira mais tarde</option>
+                                            <option value="label:asc">↑ Label A→Z</option>
+                                            <option value="label:desc">↓ Label Z→A</option>
+                                            <option value="use_count:desc">↓ Mais usado</option>
+                                            <option value="use_count:asc">↑ Menos usado</option>
+                                            <option value="status:asc">Status</option>
+                                        </select>
+                                    </div>
                                 </th>
                                 <th>
                                     <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()">
@@ -1147,6 +1170,16 @@
                                         <input class="th-filter-input" type="search" id="logSearch" placeholder="🔍  label, currículo, IP…" oninput="renderLogs()">
                                         <span class="th-filter-count" id="logCount"></span>
                                         <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                    <div class="th-filter-wrap">
+                                        <select class="th-filter-select" id="logSort" onchange="renderLogs()" style="flex:1">
+                                            <option value="downloaded_at:desc">↓ Mais recente</option>
+                                            <option value="downloaded_at:asc">↑ Mais antigo</option>
+                                            <option value="cv:asc">↑ Currículo A→Z</option>
+                                            <option value="cv:desc">↓ Currículo Z→A</option>
+                                            <option value="ip_address:asc">↑ IP A→Z</option>
+                                            <option value="ip_address:desc">↓ IP Z→A</option>
+                                        </select>
                                     </div>
                                 </th>
                                 <th>
@@ -1571,6 +1604,20 @@ let _cvData     = [];
 let _tokenData  = [];
 let _logData    = [];
 
+// ─── SORT HELPERS ─────────────────────────────────────────
+function _getVal(obj, col) {
+    return col.split('.').reduce((o, k) => o?.[k], obj) ?? '';
+}
+
+function _sortData(data, col, dir) {
+    return [...data].sort((a, b) => {
+        const va = String(_getVal(a, col));
+        const vb = String(_getVal(b, col));
+        const cmp = va.localeCompare(vb, 'pt-BR', { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? cmp : -cmp;
+    });
+}
+
 // ─── AUTO-REFRESH ─────────────────────────────────────────
 let _activeTab      = 'cvs';
 let _refreshTimer   = null;
@@ -1759,6 +1806,7 @@ async function loadCVs() {
 function renderCVs() {
     const q = (document.getElementById('cvSearch')?.value || '').toLowerCase();
     const statusFilter = document.getElementById('cvStatusFilter')?.value || '';
+    const [sortCol, sortDir] = (document.getElementById('cvSort')?.value || 'created_at:desc').split(':');
     let data = _cvData;
     if (q) data = data.filter(cv =>
         cv.name.toLowerCase().includes(q) ||
@@ -1766,6 +1814,7 @@ function renderCVs() {
         cv.file_name.toLowerCase().includes(q)
     );
     if (statusFilter) data = data.filter(cv => (cv.active ? 'ativo' : 'inativo') === statusFilter);
+    data = _sortData(data, sortCol, sortDir);
 
     const tbody = document.getElementById('cvTable');
     const countEl = document.getElementById('cvCount');
@@ -1792,10 +1841,8 @@ function renderCVs() {
 }
 
 function clearCvFilters() {
-    const s = document.getElementById('cvSearch');
-    const f = document.getElementById('cvStatusFilter');
-    if (s) s.value = '';
-    if (f) f.value = '';
+    ['cvSearch', 'cvStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const sort = document.getElementById('cvSort'); if (sort) sort.value = 'created_at:desc';
     renderCVs();
 }
 
@@ -1966,12 +2013,14 @@ async function loadTokens() {
 function renderTokens() {
     const q = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
     const statusFilter = document.getElementById('tokenStatusFilter')?.value || '';
+    const [sortCol, sortDir] = (document.getElementById('tokenSort')?.value || 'expires_at:asc').split(':');
     let data = _tokenData;
     if (q) data = data.filter(t =>
         (t.label || '').toLowerCase().includes(q) ||
         (t.cv_versions?.name || '').toLowerCase().includes(q)
     );
     if (statusFilter) data = data.filter(t => t.status === statusFilter);
+    data = _sortData(data, sortCol, sortDir);
 
     const tbody = document.getElementById('tokenTable');
     const countEl = document.getElementById('tokenCount');
@@ -2001,10 +2050,8 @@ function renderTokens() {
 }
 
 function clearTokenFilters() {
-    const s = document.getElementById('tokenSearch');
-    const f = document.getElementById('tokenStatusFilter');
-    if (s) s.value = '';
-    if (f) f.value = '';
+    ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const sort = document.getElementById('tokenSort'); if (sort) sort.value = 'expires_at:asc';
     renderTokens();
 }
 
@@ -2366,6 +2413,7 @@ function renderLogs() {
     const q = (document.getElementById('logSearch')?.value || '').toLowerCase();
     const from = document.getElementById('logFrom')?.value || '';
     const to = document.getElementById('logTo')?.value || '';
+    const [sortCol, sortDir] = (document.getElementById('logSort')?.value || 'downloaded_at:desc').split(':');
     let data = _logData;
     if (q) data = data.filter(l => {
         const label = (l.download_tokens?.label || l.user_agent || '').toLowerCase();
@@ -2380,6 +2428,17 @@ function renderLogs() {
     if (to) {
         const toDate = new Date(to + 'T23:59:59.999');
         data = data.filter(l => new Date(l.downloaded_at) <= toDate);
+    }
+    // 'cv' é campo virtual — resolve nome do CV antes de ordenar
+    if (sortCol === 'cv') {
+        data = [...data].sort((a, b) => {
+            const va = (a.cv_versions?.name || a.cv_name_snapshot || '').toLowerCase();
+            const vb = (b.cv_versions?.name || b.cv_name_snapshot || '').toLowerCase();
+            const cmp = va.localeCompare(vb, 'pt-BR', { sensitivity: 'base' });
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+    } else {
+        data = _sortData(data, sortCol, sortDir);
     }
 
     const tbody = document.getElementById('logTable');
@@ -2401,12 +2460,8 @@ function renderLogs() {
 }
 
 function clearLogFilters() {
-    const s = document.getElementById('logSearch');
-    const f = document.getElementById('logFrom');
-    const t = document.getElementById('logTo');
-    if (s) s.value = '';
-    if (f) f.value = '';
-    if (t) t.value = '';
+    ['logSearch', 'logFrom', 'logTo'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const sort = document.getElementById('logSort'); if (sort) sort.value = 'downloaded_at:desc';
     renderLogs();
 }
 
