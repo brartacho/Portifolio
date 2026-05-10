@@ -140,6 +140,7 @@ export default async function handler(req, res) {
     // Log de envio (reaproveita download_logs com token_id null pra distinguir de download real)
     await supabase.from('download_logs').insert({
         cv_version_id: cv.id,
+        cv_name_snapshot: cv.name,
         ip_address: 'admin-send-email',
         user_agent: `Send to ${name} <${email}>`,
     }).then(() => {}, () => {});

@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('download_logs')
-        .select('id, downloaded_at, ip_address, user_agent, download_tokens(label), cv_versions(name)')
+        .select('id, downloaded_at, ip_address, user_agent, cv_name_snapshot, download_tokens(label), cv_versions(name)')
         .order('downloaded_at', { ascending: false })
         .limit(200);
 

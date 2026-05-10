@@ -34,12 +34,13 @@ create table if not exists download_tokens (
 
 -- Log de downloads realizados
 create table if not exists download_logs (
-    id             uuid primary key default gen_random_uuid(),
-    token_id       uuid references download_tokens(id) on delete set null,
-    cv_version_id  uuid references cv_versions(id) on delete set null,
-    ip_address     text,
-    user_agent     text,
-    downloaded_at  timestamptz not null default now()
+    id                uuid primary key default gen_random_uuid(),
+    token_id          uuid references download_tokens(id) on delete set null,
+    cv_version_id     uuid references cv_versions(id) on delete set null,
+    cv_name_snapshot  text,        -- nome do CV gravado na hora do log (imutável)
+    ip_address        text,
+    user_agent        text,
+    downloaded_at     timestamptz not null default now()
 );
 
 -- Rate limiting por IP

@@ -84,10 +84,11 @@ export default async function handler(req, res) {
         return res.status(410).json({ error: 'Este link já atingiu o número máximo de usos.' });
     }
 
-    // Log the download
+    // Log the download — cv_name_snapshot preserva o nome mesmo após exclusão do CV
     await supabase.from('download_logs').insert({
         token_id: token.id,
         cv_version_id: token.cv_version_id,
+        cv_name_snapshot: cv.name,
         ip_address: ip,
         user_agent: req.headers['user-agent'] || '',
     });

@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
     const { data: cv, error: cvErr } = await supabase
         .from('cv_versions')
-        .select('file_path, file_name')
+        .select('name, file_path, file_name')
         .eq('id', id)
         .single();
 
@@ -32,6 +32,7 @@ export default async function handler(req, res) {
         if (cleanRecipient && cleanChannel) {
             await supabase.from('download_logs').insert({
                 cv_version_id: id,
+                cv_name_snapshot: cv.name,
                 ip_address: `admin-send-${cleanChannel}`,
                 user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
             }).then(() => {}, () => {});  // silent — log não pode quebrar o envio

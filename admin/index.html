@@ -2185,6 +2185,18 @@ function smartLogLabel(l) {
     return '<span style="color:var(--text-dim)">(sem label)</span>';
 }
 
+// Renderiza o nome do CV:
+// - CV ativo → nome simples
+// - CV excluído mas snapshot salvo → nome + badge "(excluído)"
+// - Sem info → "—"
+function smartCvName(l) {
+    const live = l.cv_versions?.name;
+    const snap = l.cv_name_snapshot;
+    if (live) return esc(live);
+    if (snap) return `${esc(snap)} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--danger);background:var(--danger-soft);border:1px solid rgba(239,68,68,0.2);padding:1px 6px;border-radius:4px;margin-left:4px">excluído</span>`;
+    return '<span style="color:var(--text-dim)">—</span>';
+}
+
 async function loadLogs() {
     try {
         const data = await api('GET', '/api/admin/logs');
@@ -2196,7 +2208,7 @@ async function loadLogs() {
         tbody.innerHTML = data.map(l => `
             <tr>
                 <td>${smartLogLabel(l)}</td>
-                <td>${esc(l.cv_versions?.name || '—')}</td>
+                <td>${smartCvName(l)}</td>
                 <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
                 <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
             </tr>

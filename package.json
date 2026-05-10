@@ -6,8 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "playwright test",
-    "dev": "vercel dev"
+    "test": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.0",
