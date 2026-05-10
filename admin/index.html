@@ -520,19 +520,38 @@
 
         .panel-title i { color: var(--cyan); }
 
-        /* ─── FILTER ROW ─────────────────────────────── */
-        .filter-row th {
-            padding: 6px 10px 8px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.018) 0%, transparent 100%), var(--bg-soft);
-            border-top: 1px solid rgba(255,255,255,0.04);
-            border-bottom: 2px solid rgba(34,211,238,0.12);
+        /* ─── FILTER BAR (above table) ───────────────── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 9px 12px;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-bottom-color: rgba(34,211,238,0.15);
+            border-radius: 8px;
+            margin-bottom: 14px;
         }
 
-        .th-filter-wrap {
+        .filter-search {
+            flex: 1;
+            min-width: 140px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
+
+        .filter-search .th-filter-input { flex: 1; min-width: 0; }
+
+        .filter-date-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .filter-date-group .th-filter-input[type="date"] { width: 126px; }
 
         .th-filter-label {
             font-size: 0.62rem;
@@ -1076,6 +1095,18 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
+                        <span class="th-filter-count" id="cvCount"></span>
+                        <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1085,23 +1116,6 @@
                                 <th>Status</th>
                                 <th class="sortable sort-active" data-sort="created_at" onclick="toggleSort('cvs','created_at')">Adicionado<span class="sort-arrow">▼</span></th>
                                 <th></th>
-                            </tr>
-                            <tr class="filter-row">
-                                <th colspan="2">
-                                    <div class="th-filter-wrap">
-                                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
-                                        <span class="th-filter-count" id="cvCount"></span>
-                                        <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                </th>
-                                <th>
-                                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()">
-                                        <option value="">Todos os status</option>
-                                        <option value="ativo">Ativo</option>
-                                        <option value="inativo">Inativo</option>
-                                    </select>
-                                </th>
-                                <th colspan="2"></th>
                             </tr>
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1157,6 +1171,20 @@
 
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
+                        <span class="th-filter-count" id="tokenCount"></span>
+                        <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="expirado">Expirado</option>
+                        <option value="revogado">Revogado</option>
+                        <option value="esgotado">Esgotado</option>
+                    </select>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1167,25 +1195,6 @@
                                 <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
                                 <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
                                 <th></th>
-                            </tr>
-                            <tr class="filter-row">
-                                <th colspan="2">
-                                    <div class="th-filter-wrap">
-                                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
-                                        <span class="th-filter-count" id="tokenCount"></span>
-                                        <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                </th>
-                                <th>
-                                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()">
-                                        <option value="">Todos os status</option>
-                                        <option value="ativo">Ativo</option>
-                                        <option value="expirado">Expirado</option>
-                                        <option value="revogado">Revogado</option>
-                                        <option value="esgotado">Esgotado</option>
-                                    </select>
-                                </th>
-                                <th colspan="3"></th>
                             </tr>
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1198,6 +1207,25 @@
         <div class="tab-panel" id="tab-logs">
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar label, destinatário, currículo, IP…" oninput="_debouncedLogLoad()">
+                        <span class="th-filter-count" id="logCount"></span>
+                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:200px;flex-shrink:0">
+                        <option value="">Todos os eventos</option>
+                        <option value="download">Acesso do recrutador</option>
+                        <option value="email">Log de envio — email</option>
+                        <option value="whatsapp">Log de envio — WhatsApp</option>
+                    </select>
+                    <div class="filter-date-group">
+                        <span class="th-filter-label">De</span>
+                        <input class="th-filter-input" type="date" id="logFrom" title="Data inicial" onchange="_resetAndLoadLogs()">
+                        <span class="th-filter-label">Até</span>
+                        <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()">
+                    </div>
+                </div>
                 <div class="tbl-wrap">
                     <table>
                         <thead>
@@ -1206,33 +1234,6 @@
                                 <th class="sortable" data-sort="cv" onclick="toggleSort('logs','cv')">Currículo<span class="sort-arrow">↕</span></th>
                                 <th class="sortable" data-sort="ip_address" onclick="toggleSort('logs','ip_address')">IP<span class="sort-arrow">↕</span></th>
                                 <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
-                            </tr>
-                            <tr class="filter-row">
-                                <th colspan="3">
-                                    <div class="th-filter-wrap">
-                                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar label, destinatário, currículo, IP…" oninput="_debouncedLogLoad()">
-                                        <span class="th-filter-count" id="logCount"></span>
-                                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                    <div class="th-filter-wrap" style="margin-top:5px">
-                                        <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="flex:1">
-                                            <option value="">Todos os tipos</option>
-                                            <option value="download">Download direto</option>
-                                            <option value="email">Envio por email</option>
-                                            <option value="whatsapp">Envio por WhatsApp</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="th-filter-wrap">
-                                        <span class="th-filter-label">De</span>
-                                        <input class="th-filter-input" type="date" id="logFrom" title="Data inicial" onchange="_resetAndLoadLogs()" style="flex:1">
-                                    </div>
-                                    <div class="th-filter-wrap" style="margin-top:5px">
-                                        <span class="th-filter-label">Até</span>
-                                        <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()" style="flex:1">
-                                    </div>
-                                </th>
                             </tr>
                         </thead>
                         <tbody id="logTable"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
