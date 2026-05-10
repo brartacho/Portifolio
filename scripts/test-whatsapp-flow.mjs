@@ -77,7 +77,7 @@ async function cleanup() {
     const cv = await ensureCv();
 
     const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const page = await context.newPage();
 
     try {
@@ -157,8 +157,10 @@ async function cleanup() {
         createdTokenIds = (newTokens || []).map(t => t.id);
 
         // 11. Clica no anchor — deve abrir nova aba SEM bloqueio
+        // Modal pode ter overflow interno; força scroll do anchor pra dentro do viewport antes
+        await page.locator('#waOpenLink').scrollIntoViewIfNeeded();
         const popupPromise = context.waitForEvent('page', { timeout: 5000 }).catch(() => null);
-        await page.click('#waOpenLink');
+        await page.click('#waOpenLink', { force: true });
         const popup = await popupPromise;
         if (popup) {
             const popupUrl = popup.url();

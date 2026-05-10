@@ -1071,7 +1071,7 @@
             <div style="display:flex;gap:8px;margin-top:6px">
                 <button type="button" id="waSubLink" class="btn btn-sm" style="flex:1"
                     onclick="setWaSubmode('link')"
-                    title="Link rastreado: 1 uso, válido por 1h. Histórico de abertura no painel Logs.">
+                    title="Link rastreado: você define validade e nº de usos. Histórico de abertura no painel Logs.">
                     <i class="fa-solid fa-link"></i> Link rastreado
                 </button>
                 <button type="button" id="waSubAttach" class="btn btn-sm" style="flex:1"
@@ -1081,6 +1081,35 @@
                 </button>
             </div>
             <small id="waSubmodeHint" style="color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px"></small>
+        </div>
+
+        <div class="form-group" id="waLinkParamsGroup" style="display:none">
+            <div style="display:flex;gap:10px">
+                <div style="flex:1">
+                    <label for="waLinkExpires">Validade do link</label>
+                    <select id="waLinkExpires">
+                        <option value="1">1 hora</option>
+                        <option value="6">6 horas</option>
+                        <option value="24" selected>24 horas</option>
+                        <option value="72">3 dias</option>
+                        <option value="168">7 dias</option>
+                        <option value="720">30 dias</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label for="waLinkUses">Máximo de usos</label>
+                    <select id="waLinkUses">
+                        <option value="1">1 uso</option>
+                        <option value="3" selected>3 usos</option>
+                        <option value="5">5 usos</option>
+                        <option value="10">10 usos</option>
+                        <option value="0">Ilimitado</option>
+                    </select>
+                </div>
+            </div>
+            <small style="color:var(--text-dim);font-size:0.75rem;display:block;margin-top:6px">
+                Última escolha fica salva pra próxima vez.
+            </small>
         </div>
 
         <div class="form-group">
@@ -1766,6 +1795,13 @@ function openSendCV(cv) {
 
     _waSubmode = 'link';    // padrão: link rastreado (anexo manual é exceção)
     _lastDefaultMsg = '';   // reset: textarea vazio é "default", próxima atualização escreve
+
+    // Restaura últimas escolhas de parametrização do link (sticky via localStorage)
+    const savedExpires = localStorage.getItem('waLinkExpires');
+    const savedUses = localStorage.getItem('waLinkUses');
+    if (savedExpires) document.getElementById('waLinkExpires').value = savedExpires;
+    if (savedUses !== null) document.getElementById('waLinkUses').value = savedUses;
+
     setSendMode('email');
     document.getElementById('sendCvModal').hidden = false;
     // Foca no campo certo: mensagem se já tem nome+email, senão nome
@@ -1774,14 +1810,13 @@ function openSendCV(cv) {
 }
 function closeSendCV() { document.getElementById('sendCvModal').hidden = true; }
 
-// Templates puros — placeholder [nome] é substituído ao digitar nome do destinatário.
-// WhatsApp tem 2 sub-modos:
-//   - 'attach': PDF baixa local + WhatsApp abre sem link (evita receio de clicar em link)
-//   - 'link':   gera token tracked + link na mensagem (rastreia abertura do recrutador)
+// Templates aprovados pelo usuário — placeholder [nome] substituído ao digitar.
+// Email: corpo enxuto, contatos vão na assinatura visual injetada pelo backend.
+// WhatsApp: tom informal de abertura ("tudo bem?") com fechamento formal ("Atenciosamente").
 const _msgTemplates = {
-    email: `Olá [nome],\n\nConforme combinado, segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt,\nBruno Artacho\nartacho.dev`,
-    whatsapp_attach: `Olá [nome], conforme combinado segue meu currículo em anexo.\nDisponível para conversarmos.\n\nAtt, Bruno`,
-    whatsapp_link: `Olá [nome], conforme combinado segue meu currículo:\n\n[link]\n\nAtt, Bruno`,
+    email: `Olá [nome],\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
+    whatsapp_attach: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
+    whatsapp_link: `Olá [nome], tudo bem? Aqui é o Bruno.\n\nConforme combinado, segue o link para download do meu currículo:\n\n[link]\n\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,\nBruno Artacho`,
 };
 let _waSubmode = 'link';     // sub-modo do WhatsApp ('link' = padrão | 'attach' = exceção)
 let _pendingWaUrl = null;    // URL final do wa.me a abrir quando user clicar
@@ -1823,6 +1858,8 @@ function setWaSubmode(mode) {
         ? 'Baixar PDF + preparar WhatsApp'
         : 'Gerar link + preparar WhatsApp';
     document.getElementById('sendBtnIcon').className = 'fa-brands fa-whatsapp';
+    // Selects de parametrização do link visíveis só no modo link
+    document.getElementById('waLinkParamsGroup').style.display = isAttach ? 'none' : 'block';
     refreshDefaultMessage();
 }
 
@@ -1908,17 +1945,32 @@ async function sendCV() {
             let waUrl, finalMsg, titleText, detailHtml;
 
             if (_waSubmode === 'link') {
-                // LINK RASTREADO (padrão): gera token (1 uso, 1h) + link na mensagem
+                // LINK RASTREADO (padrão): valores parametrizáveis pelo usuário (sticky)
+                const expiresHours = Number(document.getElementById('waLinkExpires').value) || 24;
+                const maxUsesRaw = Number(document.getElementById('waLinkUses').value);
+                const maxUses = maxUsesRaw === 0 ? null : maxUsesRaw;   // 0 = ilimitado
+
+                // Persiste escolhas pra próxima vez
+                localStorage.setItem('waLinkExpires', String(expiresHours));
+                localStorage.setItem('waLinkUses', String(maxUsesRaw));
+
                 const tk = await api('POST', '/api/admin/tokens', {
                     cv_version_id: _sendCv.id,
                     label: `WhatsApp · ${name}`,
-                    expires_in_hours: 1,
-                    max_uses: 1,
+                    expires_in_hours: expiresHours,
+                    max_uses: maxUses,
                 });
                 finalMsg = message.replace(/\[link\]/g, tk.shareUrl);
                 waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(finalMsg)}`;
+
+                // Texto humano da validade pra o detail
+                const validityText = expiresHours < 24
+                    ? `${expiresHours}h`
+                    : (expiresHours === 24 ? '24h' : `${Math.round(expiresHours / 24)} dia(s)`);
+                const usesText = maxUses === null ? 'usos ilimitados' : `${maxUses} uso(s)`;
+
                 titleText = '✓ Link gerado!';
-                detailHtml = `Token válido por 1h, 1 uso (já visível na aba Tokens com label "WhatsApp · ${esc(name)}"). Clique abaixo pra abrir o WhatsApp.`;
+                detailHtml = `Validade: <strong>${validityText}</strong> · <strong>${usesText}</strong>. Token "WhatsApp · ${esc(name)}" disponível na aba Tokens. Clique abaixo pra abrir o WhatsApp.`;
                 loadTokens();
             } else {
                 // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
@@ -2008,6 +2060,31 @@ document.getElementById('editCvModal')?.addEventListener('click', e => {
 });
 
 // ─── LOGS ─────────────────────────────────────────────────
+
+// Renderiza label inteligente: usa o token.label se houver, senão deduz do
+// ip_address + user_agent (envios admin têm padrão "admin-send-X" + "Send to Y via X")
+function smartLogLabel(l) {
+    if (l.download_tokens?.label) return esc(l.download_tokens.label);
+    const ip = l.ip_address || '';
+    const ua = l.user_agent || '';
+
+    if (ip.startsWith('admin-send-')) {
+        const channel = ip.replace('admin-send-', '');
+        // Captura nome do recrutador: "Send to Maria <..." ou "Send to Maria via..."
+        const m = ua.match(/^Send to ([^<\(]+?)(?:\s*<|\s+via|\s*$)/);
+        const recipient = m ? m[1].trim() : '?';
+        const channelLabel = channel === 'whatsapp' ? 'WhatsApp anexo' : (channel === 'email' ? 'Email' : channel);
+        return `<span title="${esc(ua)}">${esc(channelLabel)} · <strong>${esc(recipient)}</strong></span>`;
+    }
+
+    // Download real do recrutador (token deletado mas log preservado)
+    if (ua && !ua.startsWith('Send to')) {
+        return '<span style="color:var(--text-dim)" title="Download direto via token (token deletado da base)">(download direto)</span>';
+    }
+
+    return '<span style="color:var(--text-dim)">(sem label)</span>';
+}
+
 async function loadLogs() {
     try {
         const data = await api('GET', '/api/admin/logs');
@@ -2018,7 +2095,7 @@ async function loadLogs() {
         }
         tbody.innerHTML = data.map(l => `
             <tr>
-                <td>${esc(l.download_tokens?.label || '(sem label)')}</td>
+                <td>${smartLogLabel(l)}</td>
                 <td>${esc(l.cv_versions?.name || '—')}</td>
                 <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
                 <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>

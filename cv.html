@@ -463,12 +463,33 @@
                 return `<a href="/" class="cv-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao portfólio</a>`;
             }
 
-            function setError(iconClass, iconHtml, t, s) {
+            // Botões de re-solicitação reaproveitados do fluxo "sem token" (linhas ~484-499)
+            function renderRequestButtons() {
+                const msg = 'Olá Bruno, vim do seu portfólio (artacho.dev) e gostaria de receber um novo link do seu currículo. O link anterior expirou ou já foi usado.';
+                const waUrl = `https://wa.me/5544984366533?text=${encodeURIComponent(msg)}`;
+                return `
+                    <p style="color:var(--text-soft);font-size:0.86rem;margin:18px 0 12px">
+                        Solicite um novo link diretamente — leva poucos minutos:
+                    </p>
+                    <div class="cv-request-actions">
+                        <a href="${waUrl}" target="_blank" rel="noopener" class="cv-btn cv-btn--whatsapp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            Solicitar via WhatsApp
+                        </a>
+                        <button type="button" class="cv-btn cv-btn--email" onclick="openReq()">
+                            <i class="fa-solid fa-envelope"></i>
+                            Solicitar por email
+                        </button>
+                    </div>
+                `;
+            }
+
+            function setError(iconClass, iconHtml, t, s, withRequest = false) {
                 icon.className = `cv-icon ${iconClass}`;
                 icon.innerHTML = iconHtml;
                 title.textContent = t;
                 subtitle.textContent = s;
-                actions.innerHTML = backLink();
+                actions.innerHTML = withRequest ? renderRequestButtons() : backLink();
             }
 
             if (!token) {
@@ -537,15 +558,15 @@
                     if (isExpired) {
                         setError('cv-icon--warning', '<i class="fa-solid fa-clock"></i>',
                             'Link expirado',
-                            'Este link de acesso já passou da data de validade. Solicite um novo link ao remetente.');
+                            'Esse link já passou da validade. Solicite um novo abaixo.', true);
                     } else if (isRevoked) {
                         setError('cv-icon--error', '<i class="fa-solid fa-ban"></i>',
                             'Link revogado',
-                            'Este link foi desativado. Solicite um novo link ao remetente.');
+                            'Esse link foi desativado. Solicite um novo abaixo.', true);
                     } else {
                         setError('cv-icon--warning', '<i class="fa-solid fa-circle-xmark"></i>',
                             'Limite de usos atingido',
-                            'Este link já foi utilizado o número máximo de vezes permitido.');
+                            'Esse link já foi usado o máximo de vezes. Solicite um novo abaixo.', true);
                     }
                 } else if (response.status === 429) {
                     setError('cv-icon--warning', '<i class="fa-solid fa-shield-halved"></i>',
