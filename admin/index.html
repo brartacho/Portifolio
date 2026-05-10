@@ -224,7 +224,7 @@
         }
 
         .app-logout {
-            margin-left: auto;
+            margin-left: 0;
             background: none;
             border: 1px solid var(--border-soft);
             color: var(--text-dim);
@@ -237,6 +237,40 @@
         }
 
         .app-logout:hover { color: var(--danger); border-color: rgba(239,68,68,0.3); }
+
+        .app-refresh-group {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-refresh-ts {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        .app-refresh-btn {
+            background: none;
+            border: 1px solid var(--border-soft);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .app-refresh-btn:hover { color: var(--cyan); border-color: rgba(34,211,238,0.3); }
+
+        @keyframes spin-refresh { to { transform: rotate(360deg); } }
+        .app-refresh-btn.spinning i { animation: spin-refresh 0.7s linear infinite; }
 
         .app-tabs {
             display: flex;
@@ -822,6 +856,12 @@
     <header class="app-header">
         <span class="app-brand">ARTACHO<span>.</span>dev</span>
         <span class="app-badge">admin</span>
+        <div class="app-refresh-group">
+            <span class="app-refresh-ts" id="refreshTs"></span>
+            <button class="app-refresh-btn" id="refreshBtn" onclick="manualRefresh()" title="Atualizar dados da aba">
+                <i class="fa-solid fa-rotate" id="refreshIcon"></i> Atualizar
+            </button>
+        </div>
         <button class="app-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
     </header>
 
@@ -1207,6 +1247,10 @@ function setJwt(t) {
 }
 
 function logout() {
+    clearTimeout(_refreshTimer);
+    _lastRefreshAt = null;
+    const tsEl = document.getElementById('refreshTs');
+    if (tsEl) tsEl.textContent = '';
     jwtToken = null;
     sessionStorage.removeItem('admin_jwt');
     document.getElementById('appScreen').style.display = 'none';
@@ -1418,8 +1462,51 @@ async function downloadCV(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+// ─── AUTO-REFRESH ─────────────────────────────────────────
+let _activeTab      = 'cvs';
+let _refreshTimer   = null;
+let _lastRefreshAt  = null;
+const AUTO_REFRESH_MS = 60_000;
+
+function _getTabLoader() {
+    if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
+    if (_activeTab === 'tokens') return () => Promise.all([loadCVs(), loadTokens()]);
+    if (_activeTab === 'logs')   return loadLogs;
+    return () => Promise.all([loadCVs(), loadTokens(), loadStorageStats()]);
+}
+
+function _updateRefreshTs() {
+    const el = document.getElementById('refreshTs');
+    if (!el || !_lastRefreshAt) return;
+    const sec = Math.round((Date.now() - _lastRefreshAt) / 1000);
+    if (sec < 5)         el.textContent = 'atualizado agora';
+    else if (sec < 60)   el.textContent = `há ${sec}s`;
+    else                 el.textContent = `há ${Math.floor(sec / 60)}min`;
+}
+
+function _scheduleRefresh() {
+    clearTimeout(_refreshTimer);
+    _refreshTimer = setTimeout(doRefresh, AUTO_REFRESH_MS);
+}
+
+function doRefresh() {
+    const btn  = document.getElementById('refreshBtn');
+    if (btn) btn.classList.add('spinning');
+    Promise.resolve(_getTabLoader()()).finally(() => {
+        _lastRefreshAt = Date.now();
+        _updateRefreshTs();
+        if (btn) btn.classList.remove('spinning');
+        _scheduleRefresh();
+    });
+}
+
+function manualRefresh() { doRefresh(); }
+
+setInterval(_updateRefreshTs, 5000);
+
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name, btn) {
+    _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${name}`).classList.add('active');
@@ -1428,6 +1515,7 @@ function switchTab(name, btn) {
     if (name === 'cvs') loadCVs();
     if (name === 'tokens') { loadCVs(); loadTokens(); }
     if (name === 'logs') loadLogs();
+    _scheduleRefresh();
 }
 
 // ─── LOAD ALL ─────────────────────────────────────────────
@@ -1436,6 +1524,8 @@ function loadAll() {
     loadTokens();
     loadStorageStats();
     detectReplyContext();
+    _lastRefreshAt = Date.now();
+    _scheduleRefresh();
 }
 
 // ─── STORAGE STATS ────────────────────────────────────────
