@@ -36,7 +36,7 @@ const EMAIL_SIGNATURE_HTML = `
         </td>
         <td style="padding:6px 20px 6px 0;vertical-align:top;border-right:3px solid #22d3ee">
             <div style="font-weight:800;font-size:18px;color:#0f172a;letter-spacing:-0.4px;line-height:1.15">Bruno Artacho</div>
-            <div style="color:#64748b;font-size:11px;margin-top:5px;font-weight:600;letter-spacing:1px;text-transform:uppercase">QA Engineer · Test Automation</div>
+            <div style="color:#64748b;font-size:11px;margin-top:5px;font-weight:600;letter-spacing:1px;text-transform:uppercase">QA Analyst · Test Automation</div>
             <div style="color:#94a3b8;font-size:11px;margin-top:8px;font-weight:500">Playwright · Postman · Cursor + MCP</div>
         </td>
         <td style="padding:6px 0 6px 20px;vertical-align:top;font-size:13px;line-height:1.7;color:#475569">
