@@ -880,15 +880,15 @@
 
                 <div class="form-group">
                     <label>Nome da versão</label>
-                    <input type="text" id="cvName" placeholder="Ex: QA Padrão 2026, Nubank Senior QA">
+                    <input type="text" id="cvName" name="cv-version-name" placeholder="Ex: QA Padrão 2026, Nubank Senior QA" autocomplete="off" data-form-type="other">
                 </div>
                 <div class="form-group">
                     <label>Descrição (opcional)</label>
-                    <input type="text" id="cvDesc" placeholder="Adaptado para vagas de automação senior">
+                    <input type="text" id="cvDesc" name="cv-version-desc" placeholder="Adaptado para vagas de automação senior" autocomplete="off" data-form-type="other">
                 </div>
                 <div class="form-group">
                     <label>Nome do arquivo para download</label>
-                    <input type="text" id="cvFileName" placeholder="Curriculo-Bruno-Artacho-QA-2026.pdf">
+                    <input type="text" id="cvFileName" name="cv-file-name" placeholder="Curriculo-Bruno-Artacho-QA-2026.pdf" autocomplete="off" data-form-type="other">
                     <small id="cvFileNamePreview" style="color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px;font-family:var(--font-mono)"></small>
                 </div>
 
@@ -945,7 +945,7 @@
                     </div>
                     <div class="form-group">
                         <label>Label (identificação)</label>
-                        <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA">
+                        <input type="text" id="tokenLabel" name="cv-token-label" placeholder="Nubank · Ana · Sr QA" autocomplete="off" data-form-type="other">
                     </div>
                 </div>
 
@@ -1114,17 +1114,17 @@
 
         <div class="form-group">
             <label for="sendName">Nome do destinatário</label>
-            <input type="text" id="sendName" maxlength="100" placeholder="Ex: Maria Silva">
+            <input type="text" id="sendName" name="cv-recipient-name" maxlength="100" placeholder="Ex: Maria Silva" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
         </div>
 
         <div class="form-group" id="sendEmailField">
             <label for="sendEmail">Email do destinatário</label>
-            <input type="email" id="sendEmail" maxlength="120" placeholder="recrutador@empresa.com">
+            <input type="email" id="sendEmail" name="cv-recipient-email" maxlength="120" placeholder="recrutador@empresa.com" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
         </div>
 
         <div class="form-group" id="sendPhoneField" style="display:none">
             <label for="sendPhone">Telefone (com DDI, só números)</label>
-            <input type="tel" id="sendPhone" maxlength="20" placeholder="5544999999999" inputmode="numeric">
+            <input type="tel" id="sendPhone" name="cv-recipient-phone" maxlength="20" placeholder="5544999999999" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
             <small style="color:var(--text-dim);font-size:0.78rem">Ex: 5544999999999 (Brasil + DDD + número, sem espaços ou parênteses)</small>
         </div>
 
@@ -1169,11 +1169,11 @@
         <input type="hidden" id="editCvId">
         <div class="form-group">
             <label for="editCvName">Nome da versão</label>
-            <input type="text" id="editCvName">
+            <input type="text" id="editCvName" name="cv-edit-name" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-group">
             <label for="editCvDesc">Descrição</label>
-            <input type="text" id="editCvDesc" placeholder="(opcional)">
+            <input type="text" id="editCvDesc" name="cv-edit-desc" placeholder="(opcional)" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-group" style="display:flex;align-items:center;gap:10px">
             <input type="checkbox" id="editCvActive" style="width:18px;height:18px;cursor:pointer">
