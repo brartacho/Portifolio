@@ -1036,6 +1036,99 @@
             .app-tabs { padding: 12px 16px 0; gap: 0; }
             .tab-btn { padding: 8px 12px; font-size: 0.82rem; }
         }
+
+        /* ─── GESTÃO DE VAGAS ───────────────────────── */
+        .vagas-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+        .vagas-filter-chip {
+            font-size:0.75rem; padding:5px 14px; border-radius:20px; border:1px solid var(--border-soft);
+            background:transparent; color:var(--text-soft); cursor:pointer; transition:all 0.15s;
+        }
+        .vagas-filter-chip.active { background:var(--cyan-soft); border-color:var(--cyan); color:var(--cyan); }
+
+        .vagas-table { width:100%; border-collapse:collapse; }
+        .vagas-table th {
+            text-align:left; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em;
+            color:var(--text-dim); padding:8px 10px; border-bottom:1px solid var(--border-soft);
+        }
+        .vagas-table td { padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:middle; }
+        .vagas-table tr { cursor:pointer; transition:background 0.1s; }
+        .vagas-table tr:hover td { background:rgba(255,255,255,0.02); }
+        .vagas-table tr.selected td { background:rgba(34,211,238,0.04); }
+
+        .stage-badge {
+            display:inline-block; font-size:0.65rem; padding:2px 8px; border-radius:4px; font-weight:500;
+        }
+        .stage-badge.status-em-processo { background:rgba(234,179,8,0.12); color:#eab308; }
+        .stage-badge.status-aprovado    { background:rgba(74,222,128,0.12); color:#4ade80; }
+        .stage-badge.status-recusado    { background:rgba(239,68,68,0.12); color:#f87171; }
+        .stage-badge.status-enviado     { background:rgba(99,102,241,0.12); color:#818cf8; }
+
+        /* Drawer */
+        .vagas-drawer-overlay {
+            position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
+            opacity:0; pointer-events:none; transition:opacity 0.2s;
+        }
+        .vagas-drawer-overlay.open { opacity:1; pointer-events:all; }
+
+        .vagas-drawer {
+            position:fixed; top:0; right:0; bottom:0; width:420px; max-width:95vw;
+            background:var(--bg-elevated); border-left:1px solid var(--border);
+            z-index:201; display:flex; flex-direction:column;
+            transform:translateX(100%); transition:transform 0.25s ease;
+            overflow:hidden;
+        }
+        .vagas-drawer.open { transform:translateX(0); }
+
+        .drawer-header {
+            padding:20px 20px 14px; border-bottom:1px solid var(--border-soft);
+            display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+            flex-shrink:0;
+        }
+        .drawer-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:16px; }
+        .drawer-close { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.1rem; padding:2px; }
+        .drawer-close:hover { color:var(--text); }
+
+        /* Timeline de etapas */
+        .stage-timeline { display:flex; flex-direction:column; gap:0; }
+        .stage-row { display:flex; gap:12px; align-items:flex-start; }
+        .stage-row:last-child .stage-line { display:none; }
+        .stage-icon-col { display:flex; flex-direction:column; align-items:center; width:20px; flex-shrink:0; }
+        .stage-circle {
+            width:20px; height:20px; border-radius:50%; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; font-size:0.6rem;
+        }
+        .stage-circle.done    { background:#22c55e; color:#fff; }
+        .stage-circle.current { background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.4); }
+        .stage-circle.inactive{ border:1px dashed #334155; background:transparent; }
+        .stage-circle.pending { border:1px solid #334155; background:transparent; }
+        .stage-line { width:1px; flex:1; min-height:12px; margin:2px 0; }
+        .stage-line.done    { background:#22c55e; }
+        .stage-line.current { background:linear-gradient(#eab308, #334155); }
+        .stage-line.other   { background:#1e2030; }
+        .stage-label {
+            font-size:0.72rem; padding:1px 0 12px; line-height:1.3;
+            transition:opacity 0.15s;
+        }
+        .stage-label.inactive { opacity:0.3; }
+        .stage-label.done     { color:#22c55e; }
+        .stage-label.current  { color:#eab308; font-weight:600; }
+        .stage-label.pending  { color:var(--text-dim); }
+
+        /* Gerenciador de etapas */
+        .stage-manager { display:flex; flex-direction:column; gap:6px; }
+        .stage-manager-row {
+            display:flex; align-items:center; gap:8px; padding:8px 10px;
+            border:1px solid var(--border-soft); border-radius:8px;
+            background:var(--bg-surface); transition:opacity 0.15s;
+        }
+        .stage-manager-row.inactive { opacity:0.45; }
+        .stage-toggle { cursor:pointer; color:var(--text-dim); font-size:0.85rem; }
+        .stage-toggle.active { color:var(--cyan); }
+        .stage-name-input {
+            flex:1; background:transparent; border:none; color:var(--text); font-size:0.78rem;
+            font-family:var(--font-display); outline:none;
+        }
+        .stage-name-input:focus { color:var(--cyan); }
     </style>
 </head>
 <body>
@@ -1105,6 +1198,7 @@
         <button class="tab-btn active" onclick="switchTab('cvs', this)"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
         <button class="tab-btn" onclick="switchTab('tokens', this)"><i class="fa-solid fa-key"></i> Tokens</button>
         <button class="tab-btn" onclick="switchTab('logs', this)"><i class="fa-solid fa-chart-bar"></i> Logs</button>
+        <button class="tab-btn" onclick="switchTab('vagas', this)"><i class="fa-solid fa-briefcase"></i> Gestão de Vagas</button>
     </nav>
 
     <div class="app-content">
@@ -1344,6 +1438,52 @@
                     <span id="logPageInfo"></span>
                     <button class="btn btn-sm" id="logNextBtn" onclick="setLogPage(_logPage + 1)">Próxima ›</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
+        <div id="tab-vagas" class="tab-panel">
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+                <div class="vagas-filters" id="vagasFilters">
+                    <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
+                    <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
+                    <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
+                    <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                </div>
+                <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+            </div>
+
+            <div id="vagasTableWrap" style="overflow-x:auto">
+                <table class="vagas-table">
+                    <thead>
+                        <tr>
+                            <th>Empresa / Vaga</th>
+                            <th>Gestor</th>
+                            <th>Enviado em</th>
+                            <th>Etapa atual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vagasTableBody">
+                        <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ─── DRAWER: DETALHE DA CANDIDATURA ──────────────────────── -->
+        <div class="vagas-drawer-overlay" id="vagasOverlay" onclick="closeDrawer()"></div>
+        <div class="vagas-drawer" id="vagasDrawer">
+            <div class="drawer-header">
+                <div id="drawerTitle" style="flex:1">
+                    <div id="drawerEmpresa" style="font-size:1rem;font-weight:700;color:var(--cyan)">—</div>
+                    <div id="drawerVaga" style="font-size:0.78rem;color:var(--text-soft);margin-top:2px">—</div>
+                    <div id="drawerMeta" style="font-size:0.68rem;color:var(--text-dim);margin-top:6px">—</div>
+                </div>
+                <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drawer-body" id="drawerBody">
+                <!-- Preenchido por renderDrawer() -->
             </div>
         </div>
 
@@ -1880,6 +2020,75 @@ function manualRefresh() { doRefresh(); }
 
 setInterval(_updateRefreshTs, 5000);
 
+// ─── GESTÃO DE VAGAS ──────────────────────────────────────
+let _applications = [];
+let _vagasFilter  = 'all';
+let _openAppId    = null;
+
+function getAppStatus(app) {
+    const curr = (app.stages || []).find(s => s.current && s.active !== false);
+    if (!curr) return 'em-processo';
+    const n = curr.name;
+    if (n === 'Aprovado')  return 'aprovado';
+    if (n === 'Recusado')  return 'recusado';
+    if (n === 'Enviado')   return 'enviado';
+    return 'em-processo';
+}
+
+function getAppCurrentStageName(app) {
+    const curr = (app.stages || []).find(s => s.current && s.active !== false);
+    return curr ? curr.name : '—';
+}
+
+async function loadApplications() {
+    const tbody = document.getElementById('vagasTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
+    try {
+        _applications = await api('GET', '/api/admin/applications');
+        renderApplicationsTable();
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:32px">${esc(e.message)}</td></tr>`;
+    }
+}
+
+function renderApplicationsTable() {
+    const tbody = document.getElementById('vagasTableBody');
+    const filtered = _vagasFilter === 'all'
+        ? _applications
+        : _applications.filter(a => getAppStatus(a) === _vagasFilter);
+
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(app => {
+        const status  = getAppStatus(app);
+        const stage   = esc(getAppCurrentStageName(app));
+        const empresa = esc(app.empresa || '—');
+        const vaga    = esc(app.vaga || '');
+        const gestor  = esc(app.gestor_nome || '—');
+        const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
+        const selected = _openAppId === app.id ? ' selected' : '';
+        return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
+            <td>
+                <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
+                ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+            </td>
+            <td style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
+            <td style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
+            <td><span class="stage-badge status-${status}">${stage}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function setVagasFilter(filter, btn) {
+    _vagasFilter = filter;
+    document.querySelectorAll('.vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderApplicationsTable();
+}
+
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name, btn) {
     _activeTab = name;
@@ -1891,6 +2100,7 @@ function switchTab(name, btn) {
     if (name === 'cvs') loadCVs();
     if (name === 'tokens') { loadCVs(); loadTokens(); }
     if (name === 'logs') loadLogs();
+    if (name === 'vagas') loadApplications();
     _scheduleRefresh();
 }
 
