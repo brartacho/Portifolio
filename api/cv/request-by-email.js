@@ -3,7 +3,8 @@ import { checkRateLimit, clientIp } from '../_lib/rate-limit.js';
 
 const LIMITS = {
     name:    { min: 2,  max: 100 },
-    company: { min: 0,  max: 100 },
+    company: { min: 2,  max: 100 },
+    role:    { min: 2,  max: 100 },
     email:   { min: 5,  max: 120 },
     message: { min: 10, max: 1000 },
 };
@@ -55,15 +56,17 @@ export default async function handler(req, res) {
 
     const name    = sanitizeText(body.name);
     const company = sanitizeText(body.company);
+    const role    = sanitizeText(body.role);
     const email   = sanitizeText(body.email).toLowerCase();
     const message = sanitizeText(body.message);
 
     const errors = [];
     if (name.length < LIMITS.name.min || name.length > LIMITS.name.max) errors.push(`Nome inválido (${LIMITS.name.min}-${LIMITS.name.max} chars).`);
-    if (company.length > LIMITS.company.max) errors.push(`Empresa muito longa (máx ${LIMITS.company.max}).`);
+    if (company.length < LIMITS.company.min || company.length > LIMITS.company.max) errors.push('Informe o nome da empresa.');
+    if (role.length < LIMITS.role.min || role.length > LIMITS.role.max) errors.push('Informe o cargo da vaga.');
     if (email.length < LIMITS.email.min || email.length > LIMITS.email.max || !EMAIL_RE.test(email)) errors.push('Email inválido.');
     if (message.length < LIMITS.message.min || message.length > LIMITS.message.max) errors.push(`Mensagem inválida (${LIMITS.message.min}-${LIMITS.message.max} chars).`);
-    if (/[\r\n]/.test(email) || /[\r\n]/.test(name) || /[\r\n]/.test(company)) errors.push('Caracteres inválidos.');
+    if (/[\r\n]/.test(email) || /[\r\n]/.test(name) || /[\r\n]/.test(company) || /[\r\n]/.test(role)) errors.push('Caracteres inválidos.');
 
     if (errors.length) return res.status(400).json({ error: errors.join(' ') });
 
@@ -78,6 +81,7 @@ export default async function handler(req, res) {
         to_name: name,
         to_email: email,
         ...(company ? { to_company: company } : {}),
+        ...(role    ? { to_role: role }       : {}),
     }).toString();
     const adminReplyUrl = `${baseUrl}/admin?${adminParams}`;
 
@@ -86,6 +90,7 @@ export default async function handler(req, res) {
         '',
         `Nome:    ${name}`,
         `Empresa: ${company || '—'}`,
+        `Cargo:   ${role || '—'}`,
         `Email:   ${email}`,
         '',
         'Mensagem:',
@@ -106,6 +111,7 @@ export default async function handler(req, res) {
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr><td style="padding: 6px 0; color: #64748b; width: 90px;">Nome</td><td style="padding: 6px 0; color: #0f172a;"><strong>${escHtml(name)}</strong></td></tr>
                 <tr><td style="padding: 6px 0; color: #64748b;">Empresa</td><td style="padding: 6px 0; color: #0f172a;">${escHtml(company || '—')}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b;">Cargo</td><td style="padding: 6px 0; color: #0f172a;">${escHtml(role || '—')}</td></tr>
                 <tr><td style="padding: 6px 0; color: #64748b;">Email</td><td style="padding: 6px 0;"><a href="mailto:${escHtml(email)}" style="color: #0891b2;">${escHtml(email)}</a></td></tr>
             </table>
             <h3 style="color: #0f172a; margin: 24px 0 8px; font-size: 14px;">Mensagem</h3>
@@ -132,7 +138,7 @@ export default async function handler(req, res) {
     try {
         await sendEmail({
             to: process.env.NOTIFY_EMAIL,
-            subject: `[CV] ${name}${company ? ' · ' + company : ''}`,
+            subject: `[CV] ${name}${company ? ' · ' + company : ''}${role ? ' · ' + role : ''}`,
             text,
             html,
         });
