@@ -13,34 +13,28 @@ function init() {
 function initTicker() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    function measure() {
+    function applyOffsets() {
         document.querySelectorAll('.ticker-track').forEach(track => {
             const inner = track.querySelector('.ticker-inner');
             if (!inner) return;
 
-            const ghost = document.createElement('div');
-            ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;display:flex;white-space:nowrap;';
-            ghost.appendChild(inner.cloneNode(true));
-            document.body.appendChild(ghost);
-            const w = ghost.firstElementChild.getBoundingClientRect().width;
-            document.body.removeChild(ghost);
+            // Pausa a animação para medir sem transform ativo
+            track.style.animation = 'none';
+            void track.offsetWidth;
 
-            if (w > 0) {
-                track.style.setProperty('--ticker-offset', `-${w}px`);
-                // Reinicia a animação para que o novo offset entre em vigor desde o frame 0
-                track.style.animation = 'none';
-                void track.offsetWidth;
-                track.style.animation = '';
-            }
+            const w = inner.getBoundingClientRect().width;
+            if (w > 0) track.style.setProperty('--ticker-offset', `-${w}px`);
+
+            // Reinicia do zero com o offset correto já definido
+            void track.offsetWidth;
+            track.style.animation = '';
         });
     }
 
-    // Aguarda window.load para garantir que icon fonts (Devicons, FA) já aplicaram
-    // seus glifos antes de medir — evita offset errado e o pulo no loop
     if (document.readyState === 'complete') {
-        requestAnimationFrame(measure);
+        requestAnimationFrame(applyOffsets);
     } else {
-        window.addEventListener('load', () => requestAnimationFrame(measure), { once: true });
+        window.addEventListener('load', () => requestAnimationFrame(applyOffsets), { once: true });
     }
 }
 
