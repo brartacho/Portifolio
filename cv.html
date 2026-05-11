@@ -676,10 +676,10 @@
             closeReq();
         }
         document.getElementById('reqModal').addEventListener('click', e => {
-            if (e.target.id === 'reqModal') safeCloseReq();
+            if (e.target.id === 'reqModal') closeReq();
         });
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && !document.getElementById('reqModal').hidden) safeCloseReq();
+            if (e.key === 'Escape' && !document.getElementById('reqModal').hidden) closeReq();
         });
 
         const msgField = document.getElementById('reqMessage');
