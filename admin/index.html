@@ -1131,6 +1131,43 @@
         .stage-badge.status-recusado    { background:rgba(239,68,68,0.12); color:#f87171; }
         .stage-badge.status-enviado     { background:rgba(99,102,241,0.12); color:#818cf8; }
 
+        /* ─── BADGE DE CANAL NO DRAWER ────────────────── */
+        .vaga-source-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.65rem; font-weight: 600; padding: 2px 7px;
+            border-radius: 10px; vertical-align: middle;
+        }
+        .vaga-source-badge.email  { background:rgba(34,211,238,0.1); color:var(--cyan); border:1px solid rgba(34,211,238,0.2); }
+        .vaga-source-badge.manual { background:rgba(255,255,255,0.05); color:var(--text-dim); border:1px solid var(--border); }
+
+        /* ─── INFO SECTIONS DO DRAWER ──────────────────── */
+        .dinfo-section {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .dinfo-label {
+            font-size: 0.62rem; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--text-dim); font-weight: 600;
+        }
+        .dinfo-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-soft); }
+        .dinfo-icon { color: var(--text-dim); font-size: 0.72rem; width: 14px; text-align: center; flex-shrink: 0; }
+        .dinfo-link { color: var(--cyan); text-decoration: none; }
+        .dinfo-link:hover { text-decoration: underline; }
+        .dinfo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .dinfo-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px;
+            border: 1px solid var(--border); font-size: 0.72rem;
+            color: var(--cyan); text-decoration: none;
+            background: rgba(34,211,238,0.04);
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .dinfo-chip:hover { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.3); }
+        .dinfo-obs { font-size: 0.75rem; color: var(--text-soft); line-height: 1.5; white-space: pre-wrap; }
+
         /* Drawer */
         .vagas-drawer-overlay {
             position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
@@ -2169,9 +2206,11 @@ function openDrawer(id) {
 
     document.getElementById('drawerEmpresa').textContent = app.empresa || '—';
     document.getElementById('drawerVaga').textContent    = app.vaga || '';
-    const srcBadge = app.source === 'cv_send' ? '📧 via envio' : '✎ manual';
+    const srcBadge = app.source === 'cv_send'
+        ? '<span class="vaga-source-badge email"><i class="fa-solid fa-envelope"></i> via email</span>'
+        : '<span class="vaga-source-badge manual"><i class="fa-solid fa-pen"></i> manual</span>';
     const dt = app.data_envio ? fmtDate(app.data_envio) : '—';
-    document.getElementById('drawerMeta').textContent = `${dt} · ${srcBadge}`;
+    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}`;
 
     renderDrawerBody(app);
 
@@ -2190,27 +2229,40 @@ function closeDrawer() {
 function renderDrawerBody(app) {
     const body = document.getElementById('drawerBody');
 
-    const gestor = app.gestor_nome
-        ? `<div style="font-size:0.75rem;color:var(--text-soft)">
-               <i class="fa-solid fa-user" style="color:var(--text-dim);margin-right:4px"></i>
-               ${esc(app.gestor_nome)}
-               ${app.gestor_email ? ` &lt;<a href="mailto:${esc(app.gestor_email)}" style="color:var(--cyan)">${esc(app.gestor_email)}</a>&gt;` : ''}
-           </div>` : '';
+    const recruiterRows = [];
+    if (app.gestor_nome) {
+        recruiterRows.push(`<div class="dinfo-row"><i class="fa-solid fa-user dinfo-icon"></i>${esc(app.gestor_nome)}</div>`);
+    }
+    if (app.gestor_email) {
+        recruiterRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
+    }
 
-    const links = [
-        app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-brands fa-linkedin"></i> LinkedIn empresa</a>` : '',
-        app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-solid fa-link"></i> Link da vaga</a>` : '',
-    ].filter(Boolean).join(' · ');
+    const chips = [
+        app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>` : '',
+        app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>` : '',
+    ].filter(Boolean);
 
-    const obs = app.observacoes
-        ? `<div style="font-size:0.72rem;color:var(--text-soft);background:var(--bg-surface);padding:8px 10px;border-radius:6px">${esc(app.observacoes)}</div>`
-        : '';
+    const hasRecruiter = recruiterRows.length > 0;
+    const hasChips     = chips.length > 0;
+    const hasObs       = !!app.observacoes;
+
+    const recruiterSection = hasRecruiter || hasChips ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Recrutador</div>
+            ${recruiterRows.join('')}
+            ${hasChips ? `<div class="dinfo-chips">${chips.join('')}</div>` : ''}
+        </div>` : '';
+
+    const obsSection = hasObs ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Observações</div>
+            <div class="dinfo-obs">${esc(app.observacoes)}</div>
+        </div>` : '';
 
     body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:6px">
-            ${gestor}
-            ${links ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${links}</div>` : ''}
-            ${obs}
+        <div style="display:flex;flex-direction:column;gap:10px">
+            ${recruiterSection}
+            ${obsSection}
         </div>
 
         <div>
