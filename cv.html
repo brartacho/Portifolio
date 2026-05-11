@@ -665,16 +665,6 @@
             document.getElementById('reqModal').hidden = true;
             document.body.style.overflow = '';
         }
-        function reqHasData() {
-            const m = document.getElementById('reqModal');
-            const inputs = m.querySelectorAll('input:not([name="website"]), textarea');
-            for (const el of inputs) if (el.value && el.value.trim()) return true;
-            return false;
-        }
-        function safeCloseReq() {
-            if (reqHasData() && !confirm('Você tem dados não enviados nesse formulário. Fechar mesmo assim?')) return;
-            closeReq();
-        }
         document.getElementById('reqModal').addEventListener('click', e => {
             if (e.target.id === 'reqModal') closeReq();
         });
