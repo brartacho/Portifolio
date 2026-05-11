@@ -15,17 +15,27 @@ function initTicker() {
 
     function applyOffsets() {
         document.querySelectorAll('.ticker-track').forEach(track => {
-            const inner = track.querySelector('.ticker-inner');
-            if (!inner) return;
+            const firstInner = track.querySelector('.ticker-inner');
+            if (!firstInner) return;
 
-            // Pausa a animação para medir sem transform ativo
             track.style.animation = 'none';
             void track.offsetWidth;
 
-            const w = inner.getBoundingClientRect().width;
-            if (w > 0) track.style.setProperty('--ticker-offset', `-${w}px`);
+            const containerWidth = track.parentElement.offsetWidth;
+            const innerWidth = firstInner.getBoundingClientRect().width;
+            if (innerWidth <= 0) return;
 
-            // Reinicia do zero com o offset correto já definido
+            // Garante cópias suficientes para cobrir o container em qualquer
+            // posição da animação: precisa de (N-1) × innerWidth ≥ containerWidth
+            const needed = Math.ceil(containerWidth / innerWidth) + 1;
+            const existing = track.querySelectorAll('.ticker-inner').length;
+            for (let i = existing; i < needed; i++) {
+                const clone = firstInner.cloneNode(true);
+                clone.setAttribute('aria-hidden', 'true');
+                track.appendChild(clone);
+            }
+
+            track.style.setProperty('--ticker-offset', `-${innerWidth}px`);
             void track.offsetWidth;
             track.style.animation = '';
         });
