@@ -13,22 +13,35 @@ function init() {
 function initTicker() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    document.querySelectorAll('.ticker-track').forEach(track => {
-        const inner = track.querySelector('.ticker-inner');
-        if (!inner) return;
+    function measure() {
+        document.querySelectorAll('.ticker-track').forEach(track => {
+            const inner = track.querySelector('.ticker-inner');
+            if (!inner) return;
 
-        // Clone fora do contexto de overflow para medir a largura real do conteúdo
-        const ghost = document.createElement('div');
-        ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;display:flex;white-space:nowrap;';
-        ghost.appendChild(inner.cloneNode(true));
-        document.body.appendChild(ghost);
-        const w = ghost.firstElementChild.getBoundingClientRect().width;
-        document.body.removeChild(ghost);
+            const ghost = document.createElement('div');
+            ghost.style.cssText = 'position:fixed;top:-9999px;left:-9999px;visibility:hidden;display:flex;white-space:nowrap;';
+            ghost.appendChild(inner.cloneNode(true));
+            document.body.appendChild(ghost);
+            const w = ghost.firstElementChild.getBoundingClientRect().width;
+            document.body.removeChild(ghost);
 
-        if (w > 0) {
-            track.style.setProperty('--ticker-offset', `-${w}px`);
-        }
-    });
+            if (w > 0) {
+                track.style.setProperty('--ticker-offset', `-${w}px`);
+                // Reinicia a animação para que o novo offset entre em vigor desde o frame 0
+                track.style.animation = 'none';
+                void track.offsetWidth;
+                track.style.animation = '';
+            }
+        });
+    }
+
+    // Aguarda window.load para garantir que icon fonts (Devicons, FA) já aplicaram
+    // seus glifos antes de medir — evita offset errado e o pulo no loop
+    if (document.readyState === 'complete') {
+        requestAnimationFrame(measure);
+    } else {
+        window.addEventListener('load', () => requestAnimationFrame(measure), { once: true });
+    }
 }
 
 function handleImageLoad() {
