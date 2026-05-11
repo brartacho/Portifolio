@@ -15,17 +15,18 @@ test.describe('ROTA /cv', () => {
   test('tem conteúdo relevante', async ({ page }) => {
     await page.goto('/cv', { waitUntil: 'networkidle' });
     const body = page.locator('body');
-    await expect(body).toContainText('Artacho');
+    // Sem token: página mostra estado de "enviado sob solicitação"
+    await expect(body).toContainText('Currículo');
     await expect(body).not.toContainText('404');
     await expect(body).not.toContainText('NOT_FOUND');
   });
 
   test('página dinâmica carrega e mostra conteúdo de CV', async ({ page }) => {
-    await page.goto('/cv', { waitUntil: 'domcontentloaded' });
-    // A página é dinâmica — sem token mostra opções de contato/WhatsApp
+    await page.goto('/cv', { waitUntil: 'networkidle' });
+    // Sem token: exibe estado "enviado sob solicitação" com opções de contato
     await expect(page.locator('body')).not.toContainText('NOT_FOUND');
     await expect(page.locator('body')).not.toContainText('Error: Forbidden');
-    await expect(page.locator('body')).toContainText('Artacho');
+    await expect(page.locator('body')).toContainText('solicitação');
   });
 
   test('sem token mostra link de volta ao portfólio', async ({ page }) => {

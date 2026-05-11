@@ -16,7 +16,12 @@ export function clientIp(req) {
 export async function checkRateLimit({ req, scope, max, windowMs }) {
     const ip = clientIp(req);
     const key = `${scope}:${ip}`;
-    const supabase = getSupabase();
+    let supabase;
+    try {
+        supabase = getSupabase();
+    } catch {
+        return { allowed: true, remaining: max, retryAfterSec: 0 };
+    }
 
     const { data: rl } = await supabase
         .from('rate_limits')

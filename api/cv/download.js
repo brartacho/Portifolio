@@ -21,7 +21,12 @@ export default async function handler(req, res) {
     }
 
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-    const supabase = getSupabase();
+    let supabase;
+    try {
+        supabase = getSupabase();
+    } catch {
+        return res.status(503).json({ error: 'Serviço temporariamente indisponível.' });
+    }
 
     // Rate limit check
     const { data: rl } = await supabase

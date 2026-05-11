@@ -52,8 +52,7 @@ test.describe('ADMIN /admin — login', () => {
   test('modal "esqueci a senha" fecha', async ({ page }) => {
     await page.locator('button.forgot-link').click();
     await expect(page.locator('#forgotModal')).toBeVisible({ timeout: 5000 });
-    // Botão fechar usa aria-label="Fechar" e classe .forgot-close
-    await page.locator('.forgot-close').click();
+    await page.locator('#forgotModal .forgot-close').click();
     await expect(page.locator('#forgotModal')).toBeHidden({ timeout: 5000 });
   });
 });

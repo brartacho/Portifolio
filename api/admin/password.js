@@ -78,7 +78,10 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: `A senha precisa ter pelo menos ${MIN_LEN} caracteres.` });
         }
 
-        const supabase = getSupabase();
+        let supabase;
+        try { supabase = getSupabase(); } catch {
+            return res.status(503).json({ error: 'Serviço temporariamente indisponível.' });
+        }
         const tokenHash = createHash('sha256').update(token).digest('hex');
 
         const { data: reset, error: lookupErr } = await supabase
