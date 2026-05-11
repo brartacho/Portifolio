@@ -7,6 +7,7 @@ const BASE_URL = process.env.BASE_URL || 'https://artacho.dev';
 module.exports = defineConfig({
   testDir: './tests',
   fullyParallel: false,
+  workers: 2,
   timeout: 30_000,
   retries: 1,
   reporter: [
