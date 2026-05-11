@@ -759,6 +759,15 @@
         /* ─── TABLE ──────────────────────────────────── */
         .tbl-wrap { overflow-x: auto; position: relative; }
 
+        /* Coluna de ações: sempre alinhada à direita, sem pulo */
+        .row-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        th.col-actions { width: 1%; text-align: right; white-space: nowrap; }
+
         /* Overlay de loading sobre a tabela — não substitui linhas, evita jump */
         .tbl-overlay {
             position: absolute;
@@ -1357,7 +1366,7 @@
                                 <th>Arquivo para download</th>
                                 <th>Status</th>
                                 <th class="sortable sort-active" data-sort="created_at" onclick="toggleSort('cvs','created_at')">Adicionado<span class="sort-arrow">▼</span></th>
-                                <th></th>
+                                <th class="col-actions"></th>
                             </tr>
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1436,7 +1445,7 @@
                                 <th class="sortable" data-sort="status" onclick="toggleSort('tokens','status')">Status<span class="sort-arrow">↕</span></th>
                                 <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
                                 <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
-                                <th></th>
+                                <th class="col-actions"></th>
                             </tr>
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -2651,11 +2660,13 @@ function renderCVs() {
             <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
             <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
             <td>${fmtDate(cv.created_at)}</td>
-            <td style="white-space:nowrap">
-                <button class="btn btn-sm" style="margin-right:6px" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
-                <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
-                <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            <td>
+                <div class="row-actions">
+                    <button class="btn btn-sm" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
+                    <button class="btn btn-cyan btn-sm" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
+                    <button class="btn btn-sm" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -2861,9 +2872,11 @@ function renderTokens() {
                 <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
                 <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
                 <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
-                <td style="white-space:nowrap">
-                    ${t.status === 'ativo' ? `<button class="btn btn-sm" style="margin-right:6px" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                <td>
+                    <div class="row-actions">
+                        ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </td>
             </tr>
         `;
