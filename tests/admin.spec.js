@@ -76,8 +76,8 @@ test.describe('ADMIN — painel autenticado', () => {
     await expect(page.locator('.tab-btn').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('3 abas principais visíveis', async ({ page }) => {
-    await expect(page.locator('.tab-btn')).toHaveCount(3);
+  test('4 abas principais visíveis', async ({ page }) => {
+    await expect(page.locator('.tab-btn')).toHaveCount(4);
   });
 
   test('aba Currículos ativa por padrão e tem formulário de upload', async ({ page }) => {
@@ -94,6 +94,25 @@ test.describe('ADMIN — painel autenticado', () => {
     const logsTab = page.locator('.tab-btn').filter({ hasText: /log/i }).first();
     await logsTab.click();
     await expect(page.locator('table, .logs-table').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('aba Gestão de Vagas abre e exibe tabela de candidaturas', async ({ page }) => {
+    const vagasTab = page.locator('.tab-btn').filter({ hasText: /vaga/i }).first();
+    await vagasTab.click();
+    await expect(page.locator('.vagas-table')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('botão Nova vaga abre formulário inline', async ({ page }) => {
+    const vagasTab = page.locator('.tab-btn').filter({ hasText: /vaga/i }).first();
+    await vagasTab.click();
+    await page.locator('button', { hasText: /nova vaga/i }).click();
+    await expect(page.locator('#novaVagaForm')).toBeVisible({ timeout: 3000 });
+  });
+
+  test('filtros de status estão presentes na aba Gestão de Vagas', async ({ page }) => {
+    const vagasTab = page.locator('.tab-btn').filter({ hasText: /vaga/i }).first();
+    await vagasTab.click();
+    await expect(page.locator('.vagas-filter-chip')).toHaveCount(4);
   });
 
   test('botão de logout presente', async ({ page }) => {
