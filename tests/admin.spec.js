@@ -58,17 +58,30 @@ test.describe('ADMIN /admin — login', () => {
 });
 
 // ─── /admin — PAINEL AUTENTICADO ──────────────────────────────────────────
+// JWT capturado uma única vez para evitar rate limiting (5 tentativas / 15 min)
+let _adminJwt = null;
+
 test.describe('ADMIN — painel autenticado', () => {
   test.skip(!HAS_CREDS, 'Defina ADMIN_EMAIL e ADMIN_PASSWORD para rodar estes testes');
 
+  test.beforeAll(async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const pg  = await ctx.newPage();
+    await pg.goto('/admin', { waitUntil: 'networkidle' });
+    await pg.locator('#loginUsername').fill(ADMIN_EMAIL);
+    await pg.locator('#loginPassword').fill(ADMIN_PASS);
+    await pg.locator('#loginBtn').click();
+    // Aguarda logout button (só aparece após login bem-sucedido)
+    await pg.waitForSelector('.app-logout', { state: 'visible', timeout: 12000 }).catch(() => {});
+    _adminJwt = await pg.evaluate(() => sessionStorage.getItem('admin_jwt'));
+    await ctx.close();
+  });
+
   test.beforeEach(async ({ page }) => {
+    if (_adminJwt) {
+      await page.addInitScript((jwt) => sessionStorage.setItem('admin_jwt', jwt), _adminJwt);
+    }
     await page.goto('/admin', { waitUntil: 'networkidle' });
-    // Campo de login usa id="loginUsername" (type="text")
-    await page.locator('#loginUsername').fill(ADMIN_EMAIL);
-    await page.locator('#loginPassword').fill(ADMIN_PASS);
-    // Botão de submit é #loginBtn (onclick="doLogin()")
-    await page.locator('#loginBtn').click();
-    await page.waitForTimeout(2000);
   });
 
   test('login bem-sucedido exibe painel', async ({ page }) => {
