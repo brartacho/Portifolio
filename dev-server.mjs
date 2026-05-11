@@ -65,6 +65,7 @@ async function serveStatic(req, res, urlPath) {
     if (filePath === '/') filePath = '/index.html';
     if (filePath === '/cv') filePath = '/cv.html';
     if (filePath === '/admin' || filePath === '/admin/') filePath = '/admin/index.html';
+    if (filePath === '/admin/reset') filePath = '/admin/reset.html';
 
     const full = join(ROOT, filePath);
     if (!full.startsWith(ROOT)) {
@@ -132,7 +133,16 @@ async function handleApi(req, res, urlPath) {
 
 createServer(async (req, res) => {
     const url = req.url || '/';
-    if (url.startsWith('/api/')) return handleApi(req, res, url);
+    if (url.startsWith('/api/')) {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        return handleApi(req, res, url);
+    }
+    if (url.startsWith('/admin')) {
+        res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+        res.setHeader('X-Frame-Options', 'DENY');
+    }
     return serveStatic(req, res, url);
 }).listen(PORT, () => {
     console.log(`\n  Portfolio dev server: http://localhost:${PORT}`);

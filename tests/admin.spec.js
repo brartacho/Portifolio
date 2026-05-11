@@ -82,6 +82,9 @@ test.describe('ADMIN — painel autenticado', () => {
       await page.addInitScript((jwt) => sessionStorage.setItem('admin_jwt', jwt), _adminJwt);
     }
     await page.goto('/admin', { waitUntil: 'networkidle' });
+    if (_adminJwt) {
+      await page.waitForSelector('.app-logout', { state: 'visible', timeout: 10000 }).catch(() => {});
+    }
   });
 
   test('login bem-sucedido exibe painel', async ({ page }) => {
@@ -99,13 +102,13 @@ test.describe('ADMIN — painel autenticado', () => {
   test('aba Tokens abre e tem formulário de criação', async ({ page }) => {
     const tokenTab = page.locator('.tab-btn').filter({ hasText: /token/i }).first();
     await tokenTab.click();
-    await expect(page.locator('select, [name="cv"], [data-field="cv"]').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#tokenCV')).toBeVisible({ timeout: 5000 });
   });
 
   test('aba Logs abre e tem tabela', async ({ page }) => {
     const logsTab = page.locator('.tab-btn').filter({ hasText: /log/i }).first();
     await logsTab.click();
-    await expect(page.locator('table, .logs-table').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#tab-logs table')).toBeVisible({ timeout: 5000 });
   });
 
   test('aba Gestão de Vagas abre e exibe tabela de candidaturas', async ({ page }) => {
