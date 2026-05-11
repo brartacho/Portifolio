@@ -757,7 +757,57 @@
         }
 
         /* ─── TABLE ──────────────────────────────────── */
-        .tbl-wrap { overflow-x: auto; }
+        .tbl-wrap { overflow-x: auto; position: relative; }
+
+        /* Overlay de loading sobre a tabela — não substitui linhas, evita jump */
+        .tbl-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 10, 15, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 20;
+            pointer-events: none;
+        }
+        .tbl-overlay.visible {
+            display: flex;
+            pointer-events: all;
+        }
+        .tbl-overlay-spinner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cyan);
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            background: rgba(10,10,20,0.75);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(34,211,238,0.18);
+        }
+
+        /* Skeleton shimmer para primeira carga */
+        @keyframes skel-shimmer {
+            0%   { background-position: -400% center; }
+            100% { background-position: 400% center; }
+        }
+        .skel-cell {
+            display: inline-block;
+            height: 12px;
+            border-radius: 4px;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.04) 25%,
+                rgba(255,255,255,0.1)  50%,
+                rgba(255,255,255,0.04) 75%
+            );
+            background-size: 400% 100%;
+            animation: skel-shimmer 1.6s ease-in-out infinite;
+        }
+        #logTable tr.skel-row td { padding: 14px 14px; border-bottom: 1px solid var(--border); }
 
         table {
             width: 100%;
@@ -1420,7 +1470,12 @@
                         <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()">
                     </div>
                 </div>
-                <div class="tbl-wrap">
+                <div class="tbl-wrap" id="logTblWrap">
+                    <div class="tbl-overlay" id="logOverlay">
+                        <span class="tbl-overlay-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando…
+                        </span>
+                    </div>
                     <table>
                         <thead>
                             <tr>
@@ -1430,7 +1485,7 @@
                                 <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
                             </tr>
                         </thead>
-                        <tbody id="logTable"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                        <tbody id="logTable"></tbody>
                     </table>
                 </div>
                 <div class="pagination" id="logPagination" style="display:none">
@@ -3203,6 +3258,32 @@ function smartCvName(l) {
     return '<span style="color:var(--text-dim)">—</span>';
 }
 
+function _showLogOverlay() {
+    document.getElementById('logOverlay')?.classList.add('visible');
+}
+function _hideLogOverlay() {
+    document.getElementById('logOverlay')?.classList.remove('visible');
+}
+
+function _renderLogSkeletons(n = 10) {
+    const widths = [
+        ['58%','65%','72%','40%'],['45%','75%','55%','50%'],
+        ['70%','45%','68%','55%'],['52%','60%','78%','45%'],
+        ['65%','52%','50%','60%'],['42%','70%','62%','65%'],
+        ['75%','58%','45%','52%'],['55%','48%','70%','62%'],
+        ['48%','68%','55%','48%'],['68%','55%','65%','55%'],
+    ];
+    document.getElementById('logTable').innerHTML = Array.from({ length: n }, (_, i) => {
+        const w = widths[i % widths.length];
+        return `<tr class="skel-row">
+            <td><span class="skel-cell" style="width:${w[0]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[1]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[2]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[3]}"></span></td>
+        </tr>`;
+    }).join('');
+}
+
 async function loadLogs() {
     const search = document.getElementById('logSearch')?.value || '';
     const tipo   = document.getElementById('logTipoFilter')?.value || '';
@@ -3215,8 +3296,9 @@ async function loadLogs() {
     if (from)   params.set('from', from);
     if (to)     params.set('to', to);
 
-    document.getElementById('logTable').innerHTML =
-        '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px"><i class="fa-solid fa-circle-notch fa-spin"></i></td></tr>';
+    // Primeira carga: tbody vazio → skeleton para reservar altura
+    if (!document.getElementById('logTable').children.length) _renderLogSkeletons();
+    _showLogOverlay();
 
     try {
         const result = await api('GET', `/api/admin/logs?${params}`);
@@ -3225,11 +3307,16 @@ async function loadLogs() {
         _logPages = result.pages;
         renderLogs();
         _updateLogPagination();
-    } catch (e) { showToast(e.message, 'error'); }
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        _hideLogOverlay();
+    }
 }
 
 function _debouncedLogLoad() {
     _logPage = 1;
+    _showLogOverlay(); // feedback imediato antes do debounce disparar
     clearTimeout(_logSearchTimer);
     _logSearchTimer = setTimeout(loadLogs, 300);
 }
