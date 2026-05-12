@@ -2370,10 +2370,12 @@ async function patchStages(appId, stages) {
     const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { stages });
     const idx = _applications.findIndex(a => a.id === appId);
     if (idx !== -1) _applications[idx] = updated;
-    renderDrawerBody(updated);
+    // Atualiza timeline in place (preserva scroll do drawer)
+    const timeline = document.getElementById('drawerTimeline');
+    if (timeline) timeline.innerHTML = renderTimeline(updated.stages || []);
+    // Re-renderiza manager sem fechar/abrir (evita jump)
+    if (_stageManagerOpen) renderStageManager(updated);
     renderApplicationsTable();
-    toggleStageManager(appId); // reabrir manager após update
-    toggleStageManager(appId);
     return updated;
 }
 
