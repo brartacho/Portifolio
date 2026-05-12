@@ -2321,15 +2321,13 @@ function renderTimeline(stages) {
         let circleClass, lineClass, labelClass, content = '';
 
         if (st === 'done') {
-            if (s.name === 'Aprovado') {
-                circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
-            } else if (s.name === 'Recusado') {
+            if (s.name === 'Recusado') {
                 circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
                 content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
             } else {
-                circleClass = 'done-step'; lineClass = 'done-step'; labelClass = 'done-step';
+                circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
+                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
             }
-            if (!content) content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
         } else if (st === 'rejected') {
             circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
             content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
