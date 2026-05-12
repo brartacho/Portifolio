@@ -2,6 +2,9 @@ import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { normalizeFileName } from '../_lib/filename.js';
 
+const ALLOWED_SORT = new Set(['name', 'created_at', 'active', 'file_name']);
+const MAX_LIMIT = 100;
+
 export default async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -10,13 +13,41 @@ export default async function handler(req, res) {
     const supabase = getSupabase();
 
     if (req.method === 'GET') {
-        const { data, error } = await supabase
-            .from('cv_versions')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const {
+            search = '',
+            status = '',
+            sort   = 'created_at',
+            dir    = 'desc',
+            page   = '1',
+            limit: limitParam = '25',
+        } = req.query;
 
+        const pageNum  = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(MAX_LIMIT, Math.max(1, parseInt(limitParam) || 25));
+        const offset   = (pageNum - 1) * limitNum;
+        const ascending = dir === 'asc';
+        const sortCol  = ALLOWED_SORT.has(sort) ? sort : 'created_at';
+
+        let query = supabase.from('cv_versions').select('*', { count: 'exact' });
+
+        if (search) {
+            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+            query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,file_name.ilike.%${s}%`);
+        }
+        if (status === 'ativo')   query = query.eq('active', true);
+        if (status === 'inativo') query = query.eq('active', false);
+
+        query = query.order(sortCol, { ascending }).range(offset, offset + limitNum - 1);
+
+        const { data, error, count } = await query;
         if (error) return res.status(500).json({ error: error.message });
-        return res.status(200).json(data);
+        return res.status(200).json({
+            data:  data ?? [],
+            total: count ?? 0,
+            page:  pageNum,
+            limit: limitNum,
+            pages: Math.ceil((count ?? 0) / limitNum),
+        });
     }
 
     if (req.method === 'POST') {
@@ -33,7 +64,6 @@ export default async function handler(req, res) {
             .maybeSingle();
         if (dup) return res.status(409).json({ error: `Já existe um currículo com o nome "${trimmedName}". Use um nome diferente.` });
 
-        // Padroniza file_name antes de salvar — todo download fica consistente
         const cleanFileName = normalizeFileName(file_name);
 
         const { data, error } = await supabase
@@ -94,10 +124,8 @@ export default async function handler(req, res) {
 
         if (!cv) return res.status(404).json({ error: 'Versão não encontrada' });
 
-        // Remove o arquivo do Storage primeiro
         await supabase.storage.from(BUCKET()).remove([cv.file_path]);
 
-        // Remove do banco (cascade apaga tokens associados via FK on delete cascade)
         const { error } = await supabase.from('cv_versions').delete().eq('id', id);
         if (error) return res.status(500).json({ error: error.message });
 

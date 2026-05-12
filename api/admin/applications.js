@@ -21,16 +21,57 @@ export default async function handler(req, res) {
 
     const supabase = getSupabase();
 
-    // GET — lista todas as candidaturas
+    // GET — lista candidaturas com paginação, busca e filtro
     if (req.method === 'GET') {
-        const { data, error } = await supabase
-            .from('job_applications')
-            .select('*')
-            .order('data_envio', { ascending: false, nullsFirst: false })
-            .order('created_at', { ascending: false });
+        // Detalhe de uma candidatura específica (?id=)
+        if (req.query.id) {
+            const { data, error } = await supabase
+                .from('job_applications')
+                .select('*')
+                .eq('id', req.query.id)
+                .single();
+            if (error || !data) return res.status(404).json({ error: 'Candidatura não encontrada' });
+            return res.status(200).json(data);
+        }
 
+        const {
+            search = '',
+            result = '',
+            page   = '1',
+            limit: limitParam = '25',
+        } = req.query;
+
+        const pageNum  = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limitParam) || 25));
+        const offset   = (pageNum - 1) * limitNum;
+
+        let query = supabase
+            .from('job_applications')
+            .select('*', { count: 'exact' });
+
+        if (search) {
+            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+            query = query.or(`empresa.ilike.%${s}%,vaga.ilike.%${s}%,gestor_nome.ilike.%${s}%`);
+        }
+
+        if (VALID_RESULTS.has(result)) {
+            query = query.eq('result', result);
+        }
+
+        query = query
+            .order('data_envio', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limitNum - 1);
+
+        const { data, error, count } = await query;
         if (error) return res.status(500).json({ error: error.message });
-        return res.status(200).json(data);
+        return res.status(200).json({
+            data:  data ?? [],
+            total: count ?? 0,
+            page:  pageNum,
+            limit: limitNum,
+            pages: Math.ceil((count ?? 0) / limitNum),
+        });
     }
 
     // POST — cria candidatura manual

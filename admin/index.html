@@ -713,14 +713,24 @@
         .th-filter-input::placeholder { color: rgba(255,255,255,0.22); }
         .th-filter-input::-webkit-search-cancel-button { cursor: pointer; opacity: 0.5; }
 
+        /* Scrollbar discreta para o tema escuro */
+        * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+        *::-webkit-scrollbar { width: 4px; height: 4px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+        *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
         /* Calendar icon light in dark background */
-        .th-filter-input[type="date"] { color-scheme: dark; padding-right: 2px; }
-        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator {
+        .th-filter-input[type="date"],
+        .mock-input[type="date"] { color-scheme: dark; padding-right: 2px; }
+        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator,
+        .mock-input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             opacity: 0.55;
             transition: opacity 0.15s;
         }
-        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        .mock-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         .th-filter-count {
             display: inline-flex;
@@ -1098,13 +1108,223 @@
         }
 
         /* ─── RESPONSIVE ─────────────────────────────── */
+        .vaga-meta-mobile { display: none; }
+        .col-gestor, .col-date { }
+        .cv-btn-lbl { display: none; }
+
         @media (max-width: 600px) {
-            .app-content { padding: 16px; }
-            .panel { padding: 18px; }
+            /* Geral */
+            .app-content { padding: 12px; }
+            .panel { padding: 14px 12px; }
             .row-2, .row-3 { grid-template-columns: 1fr; }
             .share-actions { grid-template-columns: 1fr; }
-            .app-tabs { padding: 12px 16px 0; gap: 0; }
-            .tab-btn { padding: 8px 12px; font-size: 0.82rem; }
+            .app-tabs { padding: 10px 12px 0; gap: 0; overflow-x: auto; flex-wrap: nowrap; }
+            .tab-btn { padding: 8px 10px; font-size: 0.78rem; flex-shrink: 0; white-space: nowrap; }
+            .app-header { padding: 0 12px; }
+
+            /* Filtros com scroll horizontal */
+            .vagas-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+            .vagas-filter-chip { flex-shrink: 0; }
+
+            /* ── Vagas table: card 2-col ── */
+            #vagasTableWrap { overflow: visible; }
+            .vagas-table { display: block; }
+            .vagas-table thead { display: none; }
+            .vagas-table tbody { display: flex; flex-direction: column; gap: 6px; }
+            .vagas-table tbody tr {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                align-items: center;
+                padding: 12px 14px;
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                cursor: pointer;
+                transition: background 0.1s;
+            }
+            .vagas-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+            .vagas-table tbody tr.selected { background: rgba(34,211,238,0.04); border-color: rgba(34,211,238,0.2); }
+            .vagas-table tbody tr td { border: none !important; padding: 0; background: transparent !important; }
+            .vagas-table tr td:nth-child(1) { grid-column: 1; }
+            .vagas-table tr td:nth-child(4) { grid-column: 2; padding-left: 10px; }
+            .col-gestor, .col-date { display: none; }
+            .vaga-meta-mobile { display: block; font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+            .stage-badge { white-space: normal; text-align: center; line-height: 1.3; max-width: 88px; font-size: 0.68rem; }
+
+            /* ── tbl-wrap tables (CVs, tokens, logs) → card list ── */
+            .tbl-wrap { overflow: visible; }
+            .tbl-wrap table { display: block; width: 100%; }
+            .tbl-wrap thead { display: none; }
+            .tbl-wrap tbody { display: flex; flex-direction: column; gap: 8px; }
+            .tbl-wrap tbody tr {
+                display: flex;
+                flex-direction: column;
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                padding: 12px 14px;
+                gap: 6px;
+                background: var(--bg-soft);
+            }
+            /* Skeleton: mostra só 1 barra */
+            .tbl-wrap tbody tr.skel-row { flex-direction: row; height: 52px; overflow: hidden; gap: 0; }
+            .tbl-wrap tbody tr.skel-row td { display: none; border: none; }
+            .tbl-wrap tbody tr.skel-row td:first-child { display: block; flex: 1; height: 100%; }
+            /* Células de dados */
+            .tbl-wrap tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 0;
+                border: none;
+                font-size: 0.84rem;
+                gap: 10px;
+            }
+            .tbl-wrap tbody td::before {
+                content: attr(data-label);
+                font-size: 0.68rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-dim);
+                flex-shrink: 0;
+                min-width: 74px;
+                padding-top: 2px;
+            }
+            .tbl-wrap tbody td:not([data-label])::before { display: none; }
+            /* Célula de ações (sem data-label) */
+            .tbl-wrap tbody td:not([data-label]) {
+                justify-content: flex-end;
+                border-top: 1px solid var(--border-soft);
+                padding-top: 10px;
+                margin-top: 2px;
+            }
+            /* Botões de ação mais fáceis de tocar */
+            .row-actions { gap: 8px; }
+            .btn.btn-sm { min-height: 34px; min-width: 34px; padding: 0 10px; }
+
+            /* ── App header: compacto ── */
+            .app-header { gap: 8px; padding: 0 12px; }
+            .app-refresh-ts { display: none; }
+            .app-logout { padding: 5px 8px; font-size: 0; }
+            .app-logout i { font-size: 0.85rem; }
+
+            /* ── Filter bar: empilhado ── */
+            .filter-bar { flex-direction: column; gap: 8px; }
+            .filter-search { width: 100%; }
+            .th-filter-select { width: 100% !important; }
+            .filter-date-group { width: 100%; flex-wrap: wrap; gap: 6px; }
+            .filter-date-group .th-filter-input[type="date"] { flex: 1; width: auto !important; min-width: 110px; }
+
+            /* ── Drawer: full-screen ── */
+            .vagas-drawer { width: 100vw; max-width: 100vw; }
+            .drawer-body { padding: 14px 16px; }
+            .drawer-header { padding: 16px 16px 12px; }
+
+            /* ── Botões do drawer (Editar / Gerenciar / Deletar) ── */
+            .drawer-actions { flex-wrap: wrap; }
+            .drawer-actions .btn-sm:not(.btn-danger) { flex: 1; justify-content: center; text-align: center; }
+
+            /* ── Resultado segmentado: cabe em 1 linha ── */
+            .result-seg { padding: 6px 4px; font-size: 0.72rem; gap: 4px; }
+
+            /* ── Stage manager no drawer ── */
+            .stage-manager-row { gap: 4px; }
+            .sm-status-btns { gap: 3px; }
+            .sm-status-btn { padding: 2px 5px; font-size: 0.66rem; }
+
+            /* ── CV table: card redesenhado (sem labels, hierarquia visual) ── */
+            #cvTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto auto;
+                gap: 0;
+                padding: 0 !important;
+                background: var(--bg-soft) !important;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            #cvTable td {
+                display: block !important;
+                border: none !important;
+                margin: 0 !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            #cvTable td::before { display: none !important; }
+
+            /* Linha 1 col 1: nome + descrição */
+            #cvTable td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                padding: 14px 0 4px 14px !important;
+            }
+            #cvTable td:nth-child(1) strong { font-size: 0.9rem; }
+            #cvTable td:nth-child(1) small { font-size: 0.72rem; display: block; margin-top: 2px; }
+
+            /* Linha 1 col 2: badge de status */
+            #cvTable td:nth-child(3) {
+                grid-column: 2;
+                grid-row: 1;
+                display: flex !important;
+                align-items: flex-start;
+                padding: 14px 14px 4px 8px !important;
+            }
+
+            /* Linha 2: arquivo (largura total) */
+            #cvTable td:nth-child(2) {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                padding: 6px 14px 2px !important;
+                font-size: 0.72rem !important;
+                color: var(--text-dim) !important;
+                word-break: break-all;
+            }
+            #cvTable td:nth-child(2) span { font-size: 0.72rem !important; }
+
+            /* Linha 3: data de adição */
+            #cvTable td:nth-child(4) {
+                grid-column: 1 / -1;
+                grid-row: 3;
+                padding: 2px 14px 10px !important;
+                font-size: 0.68rem !important;
+                color: var(--text-dim) !important;
+            }
+
+            /* Linha 4: toolbar de ações */
+            #cvTable td:nth-child(5) {
+                grid-column: 1 / -1;
+                grid-row: 4;
+                display: flex !important;
+                justify-content: stretch !important;
+                border-top: 1px solid var(--border-soft) !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: rgba(255,255,255,0.02) !important;
+            }
+            #cvTable td:nth-child(5) .row-actions {
+                flex: 1;
+                gap: 0;
+                border-radius: 0;
+            }
+            #cvTable .cv-action-btn {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                border-radius: 0;
+                border: none;
+                border-right: 1px solid var(--border-soft);
+                min-height: 40px;
+                padding: 0 8px;
+                font-size: 0.75rem;
+            }
+            #cvTable .btn-danger {
+                border-radius: 0;
+                border: none;
+                min-height: 40px;
+                min-width: 44px;
+                padding: 0;
+            }
+            .cv-btn-lbl { display: inline; font-size: 0.72rem; }
         }
 
         /* ─── GESTÃO DE VAGAS ───────────────────────── */
@@ -1255,7 +1475,7 @@
             transition:all 0.15s;
         }
         .result-seg:hover { border-color:var(--text-dim); color:var(--text); }
-        .result-seg.active.r-em_processo { border-color:var(--cyan);   background:rgba(34,211,238,0.12);  color:var(--cyan); }
+        .result-seg.active.r-em_processo { border-color:#eab308;       background:rgba(234,179,8,0.12);   color:#eab308; }
         .result-seg.active.r-aprovado    { border-color:#22c55e;       background:rgba(34,197,94,0.15);   color:#22c55e; }
         .result-seg.active.r-recusado    { border-color:#ef4444;       background:rgba(239,68,68,0.15);   color:#ef4444; }
 
@@ -1316,13 +1536,16 @@
             transition:all 0.12s; flex-shrink:0;
         }
         .sm-cancel-btn:hover { border-color:#ef4444; color:#ef4444; }
-        /* Link de reset — visível apenas no modo reordenação */
+        /* Botão de reset — visível apenas no modo reordenação */
         .sm-reset-link {
-            background:transparent; border:none; font-size:0.68rem;
-            color:var(--text-dim); cursor:pointer; text-decoration:underline;
-            padding:4px 0; display:none;
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; padding:3px 8px; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer; text-decoration:none;
+            display:none; align-items:center; gap:4px; transition:all 0.12s;
+            font-family:inherit;
         }
-        .sm-reset-link.visible { display:inline-block; }
+        .sm-reset-link:hover   { border-color:var(--text-dim); color:var(--text); }
+        .sm-reset-link.visible { display:inline-flex; }
         /* Ação no toast (↩ Desfazer) */
         .toast-action {
             background:transparent; border:1px solid currentColor;
@@ -1342,8 +1565,8 @@
         <p class="login-label">// painel administrativo</p>
 
         <div class="form-group">
-            <label for="loginUsername">Email ou telefone</label>
-            <input type="text" id="loginUsername" placeholder="seu@email.com ou +55..." autocomplete="username" inputmode="email">
+            <label for="loginUsername">Email</label>
+            <input type="email" id="loginUsername" placeholder="seu@email.com" autocomplete="username" inputmode="email">
         </div>
         <div class="form-group">
             <label for="loginPassword">Senha</label>
@@ -1489,11 +1712,11 @@
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
                 <div class="filter-bar">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
+                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="_debouncedCvLoad()">
                         <span class="th-filter-count" id="cvCount"></span>
                         <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
+                    <select class="th-filter-select" id="cvStatusFilter" onchange="_cvPage=1;loadCVs()" style="width:148px;flex-shrink:0">
                         <option value="">Todos os status</option>
                         <option value="ativo">Ativo</option>
                         <option value="inativo">Inativo</option>
@@ -1512,6 +1735,11 @@
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                     </table>
+                </div>
+                <div class="pagination" id="cvPagination" style="display:none">
+                    <button class="btn btn-sm" id="cvPrevBtn" onclick="setCvPage(_cvPage - 1)">‹ Anterior</button>
+                    <span id="cvPageInfo"></span>
+                    <button class="btn btn-sm" id="cvNextBtn" onclick="setCvPage(_cvPage + 1)">Próxima ›</button>
                 </div>
             </div>
         </div>
@@ -1565,11 +1793,11 @@
                 <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
                 <div class="filter-bar">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
+                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="_debouncedTokenLoad()">
                         <span class="th-filter-count" id="tokenCount"></span>
                         <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
+                    <select class="th-filter-select" id="tokenStatusFilter" onchange="_tokenPage=1;loadTokens()" style="width:152px;flex-shrink:0">
                         <option value="">Todos os status</option>
                         <option value="ativo">Ativo</option>
                         <option value="expirado">Expirado</option>
@@ -1581,9 +1809,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Label</th>
-                                <th class="sortable" data-sort="cv_versions.name" onclick="toggleSort('tokens','cv_versions.name')">Currículo<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="status" onclick="toggleSort('tokens','status')">Status<span class="sort-arrow">↕</span></th>
+                                <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
+                                <th>Currículo</th>
+                                <th>Status</th>
                                 <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
                                 <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
                                 <th class="col-actions"></th>
@@ -1591,6 +1819,11 @@
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                     </table>
+                </div>
+                <div class="pagination" id="tokenPagination" style="display:none">
+                    <button class="btn btn-sm" id="tokenPrevBtn" onclick="setTokenPage(_tokenPage - 1)">‹ Anterior</button>
+                    <span id="tokenPageInfo"></span>
+                    <button class="btn btn-sm" id="tokenNextBtn" onclick="setTokenPage(_tokenPage + 1)">Próxima ›</button>
                 </div>
             </div>
         </div>
@@ -1649,7 +1882,7 @@
         <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
         <div id="tab-vagas" class="tab-panel">
 
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
                 <div class="vagas-filters" id="vagasFilters">
                     <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
                     <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
@@ -1657,6 +1890,14 @@
                     <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
                 </div>
                 <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+            </div>
+
+            <div class="filter-bar" style="margin-bottom:12px">
+                <div class="filter-search">
+                    <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="_debouncedAppLoad()">
+                    <span class="th-filter-count" id="vagasCount"></span>
+                    <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
             <div id="vagasTableWrap" style="overflow-x:auto">
@@ -1673,6 +1914,11 @@
                         <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="pagination" id="appPagination" style="display:none">
+                <button class="btn btn-sm" id="appPrevBtn" onclick="setAppPage(_appPage - 1)">‹ Anterior</button>
+                <span id="appPageInfo"></span>
+                <button class="btn btn-sm" id="appNextBtn" onclick="setAppPage(_appPage + 1)">Próxima ›</button>
             </div>
         </div>
 
@@ -1901,6 +2147,23 @@
 <!-- ─── TOAST ────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
+<!-- ─── PDF PREVIEW MODAL ────────────────────────── -->
+<div id="pdfPreviewOverlay" hidden onclick="closePdfPreview()" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1100;display:flex;align-items:center;justify-content:center;padding:16px">
+    <div onclick="event.stopPropagation()" style="background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:12px;width:min(860px,100%);height:min(90vh,900px);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border-soft);flex-shrink:0">
+            <span id="pdfPreviewTitle" style="font-size:0.85rem;font-weight:500;color:var(--text)"></span>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" id="pdfDownloadBtn" onclick="downloadCV(_previewCvId)"><i class="fa-solid fa-download"></i> Baixar</button>
+                <button class="btn btn-sm" onclick="closePdfPreview()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div style="flex:1;overflow:hidden;position:relative">
+            <div id="pdfLoadingMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:0.85rem">Carregando PDF…</div>
+            <iframe id="pdfPreviewFrame" style="width:100%;height:100%;border:none;display:none" onload="document.getElementById('pdfLoadingMsg').style.display='none';this.style.display='block'"></iframe>
+        </div>
+    </div>
+</div>
+
 <script>
 // ─── STATE ───────────────────────────────────────────────
 let jwtToken = null;
@@ -1948,7 +2211,7 @@ async function doLogin() {
     errEl.style.display = 'none';
 
     if (!username) {
-        errEl.textContent = 'Informe seu email ou telefone.';
+        errEl.textContent = 'Informe seu email.';
         errEl.style.display = 'block';
         return;
     }
@@ -2132,14 +2395,57 @@ async function downloadCV(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+let _previewCvId = null;
+
+async function previewCV(id, name) {
+    _previewCvId = id;
+    const overlay = document.getElementById('pdfPreviewOverlay');
+    const frame   = document.getElementById('pdfPreviewFrame');
+    const loading = document.getElementById('pdfLoadingMsg');
+    const title   = document.getElementById('pdfPreviewTitle');
+    title.textContent = name;
+    frame.style.display = 'none';
+    frame.src = '';
+    loading.style.display = 'flex';
+    overlay.hidden = false;
+    try {
+        const dl = await api('GET', `/api/admin/cv-storage-url?id=${id}&preview=1`);
+        frame.src = dl.signedUrl;
+    } catch (e) {
+        loading.textContent = 'Erro ao carregar PDF: ' + e.message;
+    }
+}
+
+function closePdfPreview() {
+    const overlay = document.getElementById('pdfPreviewOverlay');
+    const frame   = document.getElementById('pdfPreviewFrame');
+    overlay.hidden = true;
+    frame.src = '';
+}
+
 // ─── DATA STORES (filter-aware rendering) ─────────────────
 let _cvData     = [];
+let _cvPage     = 1;
+let _cvTotal    = 0;
+let _cvPages    = 0;
+let _cvSearchTimer = null;
+
 let _tokenData  = [];
+let _tokenPage  = 1;
+let _tokenTotal = 0;
+let _tokenPages = 0;
+let _tokenSearchTimer = null;
+
 let _logData    = [];
 let _logPage    = 1;
 let _logTotal   = 0;
 let _logPages   = 0;
 let _logSearchTimer = null;
+
+let _appPage    = 1;
+let _appTotal   = 0;
+let _appPages   = 0;
+let _appSearchTimer = null;
 
 // ─── SORT ─────────────────────────────────────────────────
 let _cvSort    = { col: 'created_at', dir: 'desc' };
@@ -2163,9 +2469,9 @@ function toggleSort(table, col) {
     const state = { cvs: _cvSort, tokens: _tokenSort, logs: _logSort }[table];
     if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
     else { state.col = col; state.dir = 'asc'; }
-    if (table === 'cvs') renderCVs();
-    else if (table === 'tokens') renderTokens();
-    else { _logPage = 1; loadLogs(); }
+    if (table === 'cvs')    { _cvPage = 1;    loadCVs(); }
+    else if (table === 'tokens') { _tokenPage = 1; loadTokens(); }
+    else                    { _logPage = 1;   loadLogs(); }
 }
 
 function updateSortHeaders(table) {
@@ -2245,20 +2551,37 @@ function getAppStatus(app) {
     return r === 'em_processo' ? 'em-processo' : r;
 }
 
+function normalizeStageName(name) {
+    return (name || '').replace(/\s*\/\s*Oferta$/i, '');
+}
+
 function getAppCurrentStageName(app) {
     const active = (app.stages || []).filter(s => s.active !== false);
     const running = active.find(s => stageStatus(s) === 'running');
-    if (running) return running.name;
+    if (running) return normalizeStageName(running.name);
     const lastDone = [...active].reverse().find(s => ['done','rejected'].includes(stageStatus(s)));
-    return lastDone ? lastDone.name : '—';
+    return lastDone ? normalizeStageName(lastDone.name) : '—';
 }
 
 async function loadApplications() {
     const tbody = document.getElementById('vagasTableBody');
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
+    if (!_applications.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
+    }
+
+    const search = document.getElementById('vagasSearch')?.value || '';
+    const result = _vagasFilter === 'all' ? '' : _vagasFilter.replace('-', '_');
+    const params = new URLSearchParams({ page: _appPage, limit: 25 });
+    if (search) params.set('search', search);
+    if (result) params.set('result', result);
+
     try {
-        _applications = await api('GET', '/api/admin/applications');
+        const res = await api('GET', `/api/admin/applications?${params}`);
+        _applications = res.data;
+        _appTotal = res.total;
+        _appPages = res.pages;
         renderApplicationsTable();
+        _updateAppPagination();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:32px">${esc(e.message)}</td></tr>`;
     }
@@ -2266,16 +2589,15 @@ async function loadApplications() {
 
 function renderApplicationsTable() {
     const tbody = document.getElementById('vagasTableBody');
-    const filtered = _vagasFilter === 'all'
-        ? _applications
-        : _applications.filter(a => getAppStatus(a) === _vagasFilter);
+    const countEl = document.getElementById('vagasCount');
+    if (countEl) countEl.textContent = _appTotal ? `${_appTotal} registros` : '';
 
-    if (!filtered.length) {
+    if (!_applications.length) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = filtered.map(app => {
+    tbody.innerHTML = _applications.map(app => {
         const status  = getAppStatus(app);
         const stage   = esc(getAppCurrentStageName(app));
         const empresa = esc(app.empresa || '—');
@@ -2283,13 +2605,15 @@ function renderApplicationsTable() {
         const gestor  = esc(app.gestor_nome || '—');
         const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
         const selected = _openAppId === app.id ? ' selected' : '';
+        const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
         return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
             <td>
                 <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
                 ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
             </td>
-            <td style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
-            <td style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
+            <td class="col-gestor" style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
+            <td class="col-date" style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
             <td><span class="stage-badge status-${status}">${stage}</span></td>
         </tr>`;
     }).join('');
@@ -2297,9 +2621,40 @@ function renderApplicationsTable() {
 
 function setVagasFilter(filter, btn) {
     _vagasFilter = filter;
+    _appPage = 1;
     document.querySelectorAll('.vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    renderApplicationsTable();
+    loadApplications();
+}
+
+function clearVagasSearch() {
+    const el = document.getElementById('vagasSearch');
+    if (el) el.value = '';
+    _appPage = 1;
+    loadApplications();
+}
+
+function _debouncedAppLoad() {
+    _appPage = 1;
+    clearTimeout(_appSearchTimer);
+    _appSearchTimer = setTimeout(loadApplications, 300);
+}
+
+function setAppPage(p) {
+    const np = Math.max(1, Math.min(_appPages || 1, p));
+    if (np === _appPage) return;
+    _appPage = np;
+    loadApplications();
+}
+
+function _updateAppPagination() {
+    const el = document.getElementById('appPagination');
+    if (!el) return;
+    if (_appPages <= 1) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    document.getElementById('appPrevBtn').disabled = _appPage <= 1;
+    document.getElementById('appNextBtn').disabled = _appPage >= _appPages;
+    document.getElementById('appPageInfo').textContent = `Página ${_appPage} de ${_appPages}`;
 }
 
 function openDrawer(id) {
@@ -2380,10 +2735,10 @@ function renderDrawerBody(app) {
             </div>
         </div>
 
-        <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border-soft)">
+        <div class="drawer-actions" style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border-soft)">
             <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
             <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
-            <button class="btn btn-sm" style="margin-left:auto;color:var(--danger);border-color:var(--danger-soft);padding:6px 10px" title="Deletar candidatura"
+            <button class="btn btn-danger btn-sm" style="margin-left:auto;padding:6px 10px" title="Deletar candidatura"
                 onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
 
@@ -2416,7 +2771,7 @@ function renderTimeline(stages) {
                 <div class="stage-circle ${circleClass}">${content}</div>
                 ${!isLast ? `<div class="stage-line ${lineClass}"></div>` : ''}
             </div>
-            <div class="stage-label ${labelClass}">${esc(s.name)}</div>
+            <div class="stage-label ${labelClass}">${esc(normalizeStageName(s.name))}</div>
         </div>`;
     }).join('');
 }
@@ -2435,7 +2790,7 @@ async function deleteApplication(id) {
 
 const DEFAULT_STAGE_NAMES = [
     'Enviado', 'Triagem de CV', 'Entrevista RH', 'Teste Técnico',
-    'Entrevista Técnica', 'Entrevista Coordenador', 'Proposta / Oferta'
+    'Entrevista Técnica', 'Entrevista Coordenador', 'Proposta'
 ];
 
 let _stageManagerOpen       = false;
@@ -2455,6 +2810,9 @@ function toggleStageManager(appId) {
         _redoStack        = [];
         return;
     }
+    // Fecha o form de edição se estiver aberto
+    const editSection = document.getElementById('editVagaSection');
+    if (editSection && !editSection.hidden) editSection.hidden = true;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
     renderStageManager(app);
@@ -2707,12 +3065,16 @@ async function patchStages(appId, stages) {
 async function toggleStageActive(appId, stageIdx) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
+    const prevResult = app.result || 'em_processo';
     const stages = app.stages.map((s, i) => {
         const nextActive = i === stageIdx ? !s.active : s.active !== false;
         const nextStatus = i === stageIdx ? 'pending' : stageStatus(s);
         return { name: s.name, status: nextStatus, active: nextActive };
     });
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+    try {
+        await patchStages(appId, stages);
+        await autoUpdateResult(appId, prevResult);
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function renameStage(appId, stageIdx, newName) {
@@ -2728,15 +3090,61 @@ async function renameStage(appId, stageIdx, newName) {
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
+function deriveResult(stages, currentResult) {
+    const active = stages.filter(s => s.active !== false);
+    if (!active.length) return null;
+    if (active.some(s => stageStatus(s) === 'rejected'))  return 'recusado';
+    if (active.some(s => stageStatus(s) === 'running'))   return 'em_processo';
+    if (active.every(s => stageStatus(s) === 'done'))     return 'aprovado';
+    // Etapa pendente: reverte aprovação, mas não sobrescreve recusa manual
+    if (currentResult === 'aprovado') return 'em_processo';
+    return null;
+}
+
+async function autoUpdateResult(appId, prevResult) {
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const current = app.result || 'em_processo';
+    const derived = deriveResult(app.stages, current);
+    if (!derived || derived === current) return;
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result: derived });
+        const idx = _applications.findIndex(a => a.id === appId);
+        if (idx !== -1) _applications[idx] = updated;
+        const seg = document.getElementById('drawerResult');
+        if (seg) seg.innerHTML = renderResultSegmented(updated);
+        renderApplicationsTable();
+        const label  = derived === 'recusado' ? 'Vaga marcada como Recusada' : 'Vaga marcada como Aprovada';
+        const type   = derived === 'recusado' ? 'error' : 'success';
+        showToast(label, type, {
+            label: '↩ Desfazer',
+            callback: async () => {
+                try {
+                    const rev = await api('PUT', `/api/admin/applications?id=${appId}`, { result: prevResult });
+                    const i2 = _applications.findIndex(a => a.id === appId);
+                    if (i2 !== -1) _applications[i2] = rev;
+                    const s2 = document.getElementById('drawerResult');
+                    if (s2) s2.innerHTML = renderResultSegmented(rev);
+                    renderApplicationsTable();
+                } catch (e) { showToast(e.message, 'error'); }
+            }
+        });
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
 async function setStageStatus(appId, stageIdx, status) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
+    const prevResult = app.result || 'em_processo';
     // Atualiza apenas a etapa clicada — sem cascade nas demais
     const stages = app.stages.map((s, i) => i === stageIdx
         ? { name: s.name, status, active: s.active !== false }
         : { name: s.name, status: stageStatus(s), active: s.active !== false }
     );
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+    try {
+        await patchStages(appId, stages);
+        await autoUpdateResult(appId, prevResult);
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 function renderResultSegmented(app) {
@@ -2752,11 +3160,21 @@ function renderResultSegmented(app) {
 }
 
 async function setAppResult(appId, result) {
+    const app = _applications.find(a => a.id === appId);
+    if (result === 'aprovado' && app) {
+        const active = (app.stages || []).filter(s => s.active !== false);
+        const hasRunning  = active.some(s => stageStatus(s) === 'running');
+        const hasRejected = active.some(s => stageStatus(s) === 'rejected');
+        if (hasRunning || hasRejected) {
+            const reason = hasRejected ? 'Há etapas reprovadas' : 'Há etapas em execução';
+            showToast(`${reason} — não é possível aprovar.`, 'error');
+            return;
+        }
+    }
     try {
         const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result });
         const idx = _applications.findIndex(a => a.id === appId);
         if (idx !== -1) _applications[idx] = updated;
-        // Re-renderiza só o segmented (preserva scroll do drawer)
         const seg = document.getElementById('drawerResult');
         if (seg) seg.innerHTML = renderResultSegmented(updated);
         renderApplicationsTable();
@@ -2868,10 +3286,21 @@ async function saveNovaVaga() {
 
 function openEditVaga(appId) {
     const section = document.getElementById('editVagaSection');
+    if (!section.hidden) { section.hidden = true; return; }
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
+    // Fecha o stage manager se estiver aberto
+    const smSection = document.getElementById('stageManagerSection');
+    if (_stageManagerOpen) {
+        smSection.hidden = true;
+        _stageManagerOpen = false;
+        _sortableInst = null;
+        _undoStack = [];
+        _redoStack = [];
+    }
     section.innerHTML = vagaFormHTML(app);
     section.hidden = false;
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 function closeEditVaga() {
     document.getElementById('editVagaSection').hidden = true;
@@ -3009,8 +3438,8 @@ function dismissReply() {
 
 function startReply() {
     // Se só houver 1 versão ativa, abre o modal direto. Senão, scroll pra tabela e dá feedback visual.
-    api('GET', '/api/admin/cv-versions').then(versions => {
-        const active = versions.filter(v => v.active);
+    api('GET', '/api/admin/cv-versions?limit=100&status=ativo').then(res => {
+        const active = res.data;
         if (active.length === 1) {
             const cv = active[0];
             openSendCV({ id: cv.id, name: cv.name, file_name: cv.file_name });
@@ -3032,12 +3461,25 @@ function startReply() {
 
 // ─── CVS ──────────────────────────────────────────────────
 async function loadCVs() {
+    const search = document.getElementById('cvSearch')?.value || '';
+    const status = document.getElementById('cvStatusFilter')?.value || '';
+    const params = new URLSearchParams({ page: _cvPage, limit: 25, sort: _cvSort.col, dir: _cvSort.dir });
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+
     try {
-        _cvData = await api('GET', '/api/admin/cv-versions');
+        const res = await api('GET', `/api/admin/cv-versions?${params}`);
+        _cvData  = res.data;
+        _cvTotal = res.total;
+        _cvPages = res.pages;
         renderCVs();
+        _updateCvPagination();
+
+        // Atualiza select do formulário de tokens com todos os CVs ativos (sem paginação)
+        const allActive = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
         const sel = document.getElementById('tokenCV');
         const cur = sel.value;
-        sel.innerHTML = '<option value="">Selecione…</option>' + _cvData.filter(c => c.active).map(cv =>
+        sel.innerHTML = '<option value="">Selecione…</option>' + allActive.data.map(cv =>
             `<option value="${cv.id}">${esc(cv.name)}</option>`
         ).join('');
         if (cur) sel.value = cur;
@@ -3047,37 +3489,28 @@ async function loadCVs() {
 }
 
 function renderCVs() {
-    const q = (document.getElementById('cvSearch')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('cvStatusFilter')?.value || '';
-    let data = _cvData;
-    if (q) data = data.filter(cv =>
-        cv.name.toLowerCase().includes(q) ||
-        (cv.description || '').toLowerCase().includes(q) ||
-        cv.file_name.toLowerCase().includes(q)
-    );
-    if (statusFilter) data = data.filter(cv => (cv.active ? 'ativo' : 'inativo') === statusFilter);
-    data = _sortData(data, _cvSort.col, _cvSort.dir);
     updateSortHeaders('cvs');
 
     const tbody = document.getElementById('cvTable');
     const countEl = document.getElementById('cvCount');
-    if (countEl) countEl.textContent = data.length !== _cvData.length ? `${data.length} de ${_cvData.length}` : `${_cvData.length} registros`;
+    if (countEl) countEl.textContent = _cvTotal ? `${_cvTotal} registros` : '';
 
-    if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">${_cvData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum currículo cadastrado'}</td></tr>`;
+    if (!_cvData.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum currículo encontrado</td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map(cv => `
+    tbody.innerHTML = _cvData.map(cv => `
         <tr>
-            <td><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</td>
-            <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
-            <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
-            <td>${fmtDate(cv.created_at)}</td>
+            <td data-label="Nome"><span><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</span></td>
+            <td data-label="Arquivo"><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
+            <td data-label="Status"><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
+            <td data-label="Adicionado">${fmtDate(cv.created_at)}</td>
             <td>
                 <div class="row-actions">
-                    <button class="btn btn-sm" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
-                    <button class="btn btn-cyan btn-sm" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
-                    <button class="btn btn-sm" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm cv-action-btn" onclick="previewCV('${cv.id}', '${esc(cv.name)}')" title="Pré-visualizar PDF"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-sm cv-action-btn" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
+                    <button class="btn btn-cyan btn-sm cv-action-btn" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i><span class="cv-btn-lbl">Enviar</span></button>
+                    <button class="btn btn-sm cv-action-btn" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </td>
@@ -3088,7 +3521,31 @@ function renderCVs() {
 function clearCvFilters() {
     ['cvSearch', 'cvStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _cvSort = { col: 'created_at', dir: 'desc' };
-    renderCVs();
+    _cvPage = 1;
+    loadCVs();
+}
+
+function _debouncedCvLoad() {
+    _cvPage = 1;
+    clearTimeout(_cvSearchTimer);
+    _cvSearchTimer = setTimeout(loadCVs, 300);
+}
+
+function setCvPage(p) {
+    const np = Math.max(1, Math.min(_cvPages || 1, p));
+    if (np === _cvPage) return;
+    _cvPage = np;
+    loadCVs();
+}
+
+function _updateCvPagination() {
+    const el = document.getElementById('cvPagination');
+    if (!el) return;
+    if (_cvPages <= 1) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    document.getElementById('cvPrevBtn').disabled = _cvPage <= 1;
+    document.getElementById('cvNextBtn').disabled = _cvPage >= _cvPages;
+    document.getElementById('cvPageInfo').textContent = `Página ${_cvPage} de ${_cvPages}`;
 }
 
 async function deleteCV(id, name) {
@@ -3249,42 +3706,43 @@ async function createToken() {
 }
 
 async function loadTokens() {
+    const search = document.getElementById('tokenSearch')?.value || '';
+    const status = document.getElementById('tokenStatusFilter')?.value || '';
+    const params = new URLSearchParams({ page: _tokenPage, limit: 25, sort: _tokenSort.col, dir: _tokenSort.dir });
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+
     try {
-        _tokenData = await api('GET', '/api/admin/tokens');
+        const res = await api('GET', `/api/admin/tokens?${params}`);
+        _tokenData  = res.data;
+        _tokenTotal = res.total;
+        _tokenPages = res.pages;
         renderTokens();
+        _updateTokenPagination();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
 function renderTokens() {
-    const q = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('tokenStatusFilter')?.value || '';
-    let data = _tokenData;
-    if (q) data = data.filter(t =>
-        (t.label || '').toLowerCase().includes(q) ||
-        (t.cv_versions?.name || '').toLowerCase().includes(q)
-    );
-    if (statusFilter) data = data.filter(t => t.status === statusFilter);
-    data = _sortData(data, _tokenSort.col, _tokenSort.dir);
     updateSortHeaders('tokens');
 
     const tbody = document.getElementById('tokenTable');
     const countEl = document.getElementById('tokenCount');
-    if (countEl) countEl.textContent = data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`;
+    if (countEl) countEl.textContent = _tokenTotal ? `${_tokenTotal} registros` : '';
 
-    if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">${_tokenData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum token criado'}</td></tr>`;
+    if (!_tokenData.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>`;
         return;
     }
-    tbody.innerHTML = data.map(t => {
+    tbody.innerHTML = _tokenData.map(t => {
         const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
         const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
         return `
             <tr>
-                <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
-                <td>${esc(t.cv_versions?.name || '—')}</td>
-                <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
-                <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
-                <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
+                <td data-label="Label"><span><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></span></td>
+                <td data-label="Currículo">${esc(t.cv_versions?.name || '—')}</td>
+                <td data-label="Status"><span class="badge ${badgeCls}">● ${t.status}</span></td>
+                <td data-label="Usos" style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
+                <td data-label="Expira" style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
                 <td>
                     <div class="row-actions">
                         ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
@@ -3299,7 +3757,31 @@ function renderTokens() {
 function clearTokenFilters() {
     ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _tokenSort = { col: 'expires_at', dir: 'asc' };
-    renderTokens();
+    _tokenPage = 1;
+    loadTokens();
+}
+
+function _debouncedTokenLoad() {
+    _tokenPage = 1;
+    clearTimeout(_tokenSearchTimer);
+    _tokenSearchTimer = setTimeout(loadTokens, 300);
+}
+
+function setTokenPage(p) {
+    const np = Math.max(1, Math.min(_tokenPages || 1, p));
+    if (np === _tokenPage) return;
+    _tokenPage = np;
+    loadTokens();
+}
+
+function _updateTokenPagination() {
+    const el = document.getElementById('tokenPagination');
+    if (!el) return;
+    if (_tokenPages <= 1) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    document.getElementById('tokenPrevBtn').disabled = _tokenPage <= 1;
+    document.getElementById('tokenNextBtn').disabled = _tokenPage >= _tokenPages;
+    document.getElementById('tokenPageInfo').textContent = `Página ${_tokenPage} de ${_tokenPages}`;
 }
 
 async function revokeToken(id) {
@@ -3781,10 +4263,10 @@ function renderLogs() {
     }
     tbody.innerHTML = _logData.map(l => `
         <tr onclick="openLogDetail(${JSON.stringify(l).replace(/"/g,'&quot;')})">
-            <td>${smartLogLabel(l)}</td>
-            <td>${smartCvName(l)}</td>
-            <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
-            <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
+            <td data-label="Token"><span>${smartLogLabel(l)}</span></td>
+            <td data-label="Currículo"><span>${smartCvName(l)}</span></td>
+            <td data-label="IP" style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
+            <td data-label="Data" style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
         </tr>
     `).join('');
 }

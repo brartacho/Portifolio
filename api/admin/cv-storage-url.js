@@ -62,10 +62,14 @@ export default async function handler(req, res) {
             }
         }
 
+        const signOptions = req.query.preview === '1'
+            ? {}  // inline — permite pré-visualização no iframe
+            : { download: safeFileName };
+
         const { data: signed, error: signErr } = await supabase
             .storage
             .from(BUCKET())
-            .createSignedUrl(cv.file_path, 60, { download: safeFileName });
+            .createSignedUrl(cv.file_path, 60, signOptions);
 
         if (signErr || !signed) return res.status(500).json({ error: signErr?.message || 'Falha ao gerar URL' });
 

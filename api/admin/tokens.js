@@ -2,6 +2,9 @@ import { randomBytes, createHash } from 'crypto';
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase } from '../_lib/supabase.js';
 
+const ALLOWED_SORT = new Set(['label', 'expires_at', 'use_count', 'created_at']);
+const MAX_LIMIT = 100;
+
 export default async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -10,24 +13,77 @@ export default async function handler(req, res) {
     const supabase = getSupabase();
 
     if (req.method === 'GET') {
-        const { data, error } = await supabase
-            .from('download_tokens')
-            .select('id, label, expires_at, max_uses, use_count, revoked, created_at, cv_versions(name)')
-            .order('created_at', { ascending: false });
+        const {
+            search = '',
+            status = '',
+            sort   = 'expires_at',
+            dir    = 'asc',
+            page   = '1',
+            limit: limitParam = '25',
+        } = req.query;
 
+        const pageNum  = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(MAX_LIMIT, Math.max(1, parseInt(limitParam) || 25));
+        const offset   = (pageNum - 1) * limitNum;
+        const ascending = dir === 'asc';
+        const sortCol  = ALLOWED_SORT.has(sort) ? sort : 'expires_at';
+
+        const now = new Date().toISOString();
+
+        let query = supabase
+            .from('download_tokens')
+            .select('id, label, expires_at, max_uses, use_count, revoked, created_at, cv_versions(name)', { count: 'exact' });
+
+        // Search: label or cv name (cv name requires a sub-query workaround)
+        if (search) {
+            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+            // Find cv_version ids whose name matches
+            const { data: matchedCVs } = await supabase
+                .from('cv_versions')
+                .select('id')
+                .ilike('name', `%${s}%`);
+            const cvIds = matchedCVs?.map(c => c.id) || [];
+            let orConds = `label.ilike.%${s}%`;
+            if (cvIds.length) orConds += `,cv_version_id.in.(${cvIds.join(',')})`;
+            query = query.or(orConds);
+        }
+
+        // Status filter — DB-level where possible
+        if (status === 'revogado') {
+            query = query.eq('revoked', true);
+        } else if (status === 'expirado') {
+            query = query.eq('revoked', false).lt('expires_at', now);
+        } else if (status === 'ativo' || status === 'esgotado') {
+            // Pre-filter: not revoked, not expired — then compute exact status below
+            query = query.eq('revoked', false).gte('expires_at', now);
+        }
+
+        query = query.order(sortCol, { ascending }).range(offset, offset + limitNum - 1);
+
+        const { data, error, count } = await query;
         if (error) return res.status(500).json({ error: error.message });
 
-        // Compute status for each token
-        const now = new Date();
-        const enriched = data.map(t => ({
+        // Enrich with computed status
+        const enriched = (data ?? []).map(t => ({
             ...t,
             status: t.revoked ? 'revogado'
-                : new Date(t.expires_at) < now ? 'expirado'
+                : new Date(t.expires_at) < new Date() ? 'expirado'
                 : (t.max_uses !== null && t.use_count >= t.max_uses) ? 'esgotado'
                 : 'ativo',
         }));
 
-        return res.status(200).json(enriched);
+        // Post-filter for ativo/esgotado (DB pre-filter already narrows the set)
+        const filtered = (status === 'ativo' || status === 'esgotado')
+            ? enriched.filter(t => t.status === status)
+            : enriched;
+
+        return res.status(200).json({
+            data:  filtered,
+            total: count ?? 0,
+            page:  pageNum,
+            limit: limitNum,
+            pages: Math.ceil((count ?? 0) / limitNum),
+        });
     }
 
     if (req.method === 'POST') {
@@ -49,7 +105,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Data de expiração inválida ou no passado' });
         }
 
-        // Hex token: URL-safe sem caracteres que confundem markdown do WhatsApp/Telegram (`_`, `-`)
         const rawToken = randomBytes(24).toString('hex');
         const tokenHash = createHash('sha256').update(rawToken).digest('hex');
 
@@ -73,9 +128,6 @@ export default async function handler(req, res) {
 
         if (error) return res.status(500).json({ error: error.message });
 
-        // Share URL: SEMPRE público (recrutador clica no celular dele).
-        // Em dev, NEXT_PUBLIC_BASE_URL aponta pra localhost (usado em links de reset),
-        // mas o link compartilhado precisa ser o domínio público.
         const baseUrl = process.env.PUBLIC_SHARE_URL
             || process.env.NEXT_PUBLIC_BASE_URL
             || 'https://artacho.dev';
@@ -98,7 +150,6 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
-        // Soft revoke (deixa o registro pra histórico)
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
 
