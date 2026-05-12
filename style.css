@@ -2428,10 +2428,12 @@ body.menu-open #content-wrapper {
     }
 
     .hero-photo {
-        max-width: 100%;
-        aspect-ratio: auto;
-        object-fit: unset;
+        width: 280px;
+        max-width: 280px;
         height: auto;
+        aspect-ratio: auto;
+        object-fit: fill;
+        object-position: center center;
     }
 
     .about-grid {
@@ -2583,10 +2585,12 @@ body.menu-open #content-wrapper {
     }
 
     .hero-photo {
-        max-width: 100%;
-        aspect-ratio: auto;
-        object-fit: unset;
+        width: 200px;
+        max-width: 200px;
         height: auto;
+        aspect-ratio: auto;
+        object-fit: fill;
+        object-position: center center;
     }
 
     .hero-photo-frame::after { display: none; }
