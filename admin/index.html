@@ -1297,16 +1297,23 @@
         }
         .sm-reorder-btn:hover    { border-color:var(--text-dim); color:var(--text); }
         .sm-reorder-btn.unlocked { border-color:var(--cyan); color:var(--cyan); }
-        /* Links de reset/undo — visíveis no modo reordenação */
-        .sm-recovery-row {
-            display:none; gap:12px; align-items:center; padding:4px 0;
+        /* Botões de histórico (undo/redo) no header do manager */
+        .sm-hist-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:none; align-items:center; justify-content:center;
+            font-size:0.7rem; color:var(--text-dim); cursor:pointer;
+            transition:all 0.12s; flex-shrink:0;
         }
-        .sm-recovery-row.visible { display:flex; }
-        .sm-reset-link, .sm-undo-link {
+        .sm-hist-btn:not(:disabled):hover { border-color:var(--text-dim); color:var(--text); }
+        .sm-hist-btn:disabled { opacity:0.3; cursor:default; }
+        /* Link de reset — visível apenas no modo reordenação */
+        .sm-reset-link {
             background:transparent; border:none; font-size:0.68rem;
-            color:var(--text-dim); cursor:pointer; text-decoration:underline; padding:0;
+            color:var(--text-dim); cursor:pointer; text-decoration:underline;
+            padding:4px 0; display:none;
         }
-        .sm-undo-link { color:var(--cyan); }
+        .sm-reset-link.visible { display:inline-block; }
         /* Ação no toast (↩ Desfazer) */
         .toast-action {
             background:transparent; border:1px solid currentColor;
@@ -2367,8 +2374,8 @@ function renderDrawerBody(app) {
         <div style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border-soft)">
             <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
             <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
-            <button class="btn btn-sm" style="margin-left:auto;color:var(--danger);border-color:var(--danger-soft)"
-                onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i> Deletar</button>
+            <button class="btn btn-sm" style="margin-left:auto;color:var(--danger);border-color:var(--danger-soft);padding:6px 10px" title="Deletar candidatura"
+                onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
 
         <div id="stageManagerSection" hidden></div>
@@ -2425,7 +2432,8 @@ const DEFAULT_STAGE_NAMES = [
 let _stageManagerOpen = false;
 let _dragUnlocked     = localStorage.getItem('admin_drag_unlocked') === 'true';
 let _sortableInst     = null;
-let _prevStagesUndo   = null;
+let _undoStack        = [];
+let _redoStack        = [];
 
 function toggleStageManager(appId) {
     const section = document.getElementById('stageManagerSection');
@@ -2433,7 +2441,8 @@ function toggleStageManager(appId) {
         section.hidden = true;
         _stageManagerOpen = false;
         _sortableInst     = null;
-        _prevStagesUndo   = null;
+        _undoStack        = [];
+        _redoStack        = [];
         return;
     }
     const app = _applications.find(a => a.id === appId);
@@ -2477,13 +2486,23 @@ function renderStageManager(app) {
 
     section.innerHTML = `
         <div style="border-top:1px solid var(--border-soft);padding-top:12px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-                <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim)">Gerenciar etapas</div>
-                <button class="sm-reorder-btn${_dragUnlocked ? ' unlocked' : ''}" id="smReorderBtn"
-                        onclick="toggleDragMode('${app.id}')">
-                    <i class="fa-solid fa-${_dragUnlocked ? 'lock-open' : 'lock'}"></i>
-                    ${_dragUnlocked ? 'Concluir' : 'Reordenar'}
-                </button>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px">
+                <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);flex-shrink:0">Gerenciar etapas</div>
+                <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+                    <button class="sm-hist-btn" id="smUndoBtn" title="Desfazer reordenamento"
+                            disabled onclick="undoReorder('${app.id}')">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button class="sm-hist-btn" id="smRedoBtn" title="Refazer reordenamento"
+                            disabled onclick="redoReorder('${app.id}')">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button class="sm-reorder-btn${_dragUnlocked ? ' unlocked' : ''}" id="smReorderBtn"
+                            onclick="toggleDragMode('${app.id}')">
+                        <i class="fa-solid fa-${_dragUnlocked ? 'lock-open' : 'lock'}"></i>
+                        ${_dragUnlocked ? 'Concluir' : 'Reordenar'}
+                    </button>
+                </div>
             </div>
             <div class="stage-manager" id="stageManagerList">${rows}</div>
             <button class="btn btn-sm" id="smAddStageBtn" style="margin-top:8px;width:100%"
@@ -2491,16 +2510,10 @@ function renderStageManager(app) {
                     ${_dragUnlocked ? 'disabled' : ''}>
                 <i class="fa-solid fa-plus"></i> Adicionar etapa
             </button>
-            <div class="sm-recovery-row${_dragUnlocked ? ' visible' : ''}" id="smRecoveryRow">
-                <button class="sm-reset-link" id="smResetLink"
-                        onclick="resetStageOrder('${app.id}')">
-                    ↺ Restaurar ordem padrão
-                </button>
-                <button class="sm-undo-link" id="smUndoLink" style="${_prevStagesUndo ? '' : 'display:none'}"
-                        onclick="undoLastReorder('${app.id}')">
-                    ↩ Desfazer último reordenamento
-                </button>
-            </div>
+            <button class="sm-reset-link${_dragUnlocked ? ' visible' : ''}" id="smResetLink"
+                    onclick="resetStageOrder('${app.id}')">
+                ↺ Restaurar ordem padrão
+            </button>
         </div>
     `;
     initSortable(app.id);
@@ -2519,8 +2532,7 @@ function initSortable(appId) {
             if (evt.oldIndex === evt.newIndex) return;
             const app = _applications.find(a => a.id === appId);
             if (!app) return;
-            // Salva snapshot para undo persistente
-            _prevStagesUndo = app.stages.map(s => ({
+            const snapshot = app.stages.map(s => ({
                 name: s.name, status: stageStatus(s), active: s.active !== false
             }));
             const reordered = [...app.stages];
@@ -2531,11 +2543,13 @@ function initSortable(appId) {
             }));
             _sortableInst?.option('disabled', true);
             try {
+                _undoStack.push(snapshot);
+                _redoStack = [];
                 await patchStages(appId, next);
                 if (_dragUnlocked) _applyDragMode(true);
-                showToast('Etapa reordenada — use ↩ Desfazer para reverter');
+                showToast('Etapa reordenada');
             } catch (e) {
-                _prevStagesUndo = null;
+                _undoStack.pop();
                 showToast(e.message, 'error');
                 if (_dragUnlocked) _sortableInst?.option('disabled', false);
             }
@@ -2553,28 +2567,55 @@ function _applyDragMode(enabled) {
     _sortableInst?.option('disabled', !enabled);
     document.querySelectorAll('#stageManagerList .stage-manager-row')
             .forEach(r => r.classList.toggle('drag-active', enabled));
-    const btn         = document.getElementById('smReorderBtn');
-    const recoveryRow = document.getElementById('smRecoveryRow');
-    const undoLink    = document.getElementById('smUndoLink');
-    const addBtn      = document.getElementById('smAddStageBtn');
+    const btn      = document.getElementById('smReorderBtn');
+    const resetLnk = document.getElementById('smResetLink');
+    const undoBtn  = document.getElementById('smUndoBtn');
+    const redoBtn  = document.getElementById('smRedoBtn');
+    const addBtn   = document.getElementById('smAddStageBtn');
     if (btn) {
         btn.classList.toggle('unlocked', enabled);
         btn.innerHTML = `<i class="fa-solid fa-${enabled ? 'lock-open' : 'lock'}"></i> ${enabled ? 'Concluir' : 'Reordenar'}`;
     }
-    if (recoveryRow) recoveryRow.classList.toggle('visible', enabled);
-    if (undoLink)    undoLink.style.display = _prevStagesUndo ? '' : 'none';
-    if (addBtn)      addBtn.disabled = enabled;
+    if (resetLnk) resetLnk.classList.toggle('visible', enabled);
+    if (undoBtn)  { undoBtn.style.display = enabled ? 'flex' : 'none'; undoBtn.disabled = _undoStack.length === 0; }
+    if (redoBtn)  { redoBtn.style.display = enabled ? 'flex' : 'none'; redoBtn.disabled = _redoStack.length === 0; }
+    if (addBtn)   addBtn.disabled = enabled;
 }
 
-async function undoLastReorder(appId) {
-    if (!_prevStagesUndo) return;
-    const snapshot = _prevStagesUndo;
-    _prevStagesUndo = null;
+async function undoReorder(appId) {
+    if (_undoStack.length === 0) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const current = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const prev = _undoStack.pop();
+    _redoStack.push(current);
     try {
-        await patchStages(appId, snapshot);
+        await patchStages(appId, prev);
         if (_dragUnlocked) _applyDragMode(true);
         showToast('Reordenamento desfeito');
-    } catch (e) { showToast(e.message, 'error'); }
+    } catch (e) {
+        _undoStack.push(prev);
+        _redoStack.pop();
+        showToast(e.message, 'error');
+    }
+}
+
+async function redoReorder(appId) {
+    if (_redoStack.length === 0) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const current = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const next = _redoStack.pop();
+    _undoStack.push(current);
+    try {
+        await patchStages(appId, next);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Reordenamento refeito');
+    } catch (e) {
+        _redoStack.push(next);
+        _undoStack.pop();
+        showToast(e.message, 'error');
+    }
 }
 
 async function resetStageOrder(appId) {
@@ -2720,15 +2761,18 @@ function vagaFormHTML(app) {
                     <input id="vfGestorEmail" class="mock-input" placeholder="m.silva@empresa.com" ${v('gestor_email',120)} autocomplete="off" data-form-type="other">
                 </div>
             </div>
-            <div class="form-group" style="margin:0">
-                <label style="font-size:0.75rem">Data de envio</label>
-                <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Data de envio</label>
+                    <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
+                </div>
+                <div></div>
             </div>
             <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" style="flex:1" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
                 <button class="btn btn-cyan btn-sm" style="flex:1" onclick="${app ? `saveEditVaga('${app.id}')` : 'saveNovaVaga()'}">
                     <i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar candidatura'}
                 </button>
-                <button class="btn btn-sm" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
             </div>
             <p id="vfMsg" hidden style="font-size:0.78rem"></p>
         </div>
