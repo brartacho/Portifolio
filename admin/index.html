@@ -1203,22 +1203,26 @@
             width:20px; height:20px; border-radius:50%; flex-shrink:0;
             display:flex; align-items:center; justify-content:center; font-size:0.6rem;
         }
-        .stage-circle.done    { background:#22c55e; color:#fff; }
-        .stage-circle.current { background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.4); }
-        .stage-circle.inactive{ border:1px dashed #334155; background:transparent; }
-        .stage-circle.pending { border:1px solid #334155; background:transparent; }
+        .stage-circle.done-step  { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); border:1px solid rgba(255,255,255,0.1); }
+        .stage-circle.done       { background:#22c55e; color:#fff; }
+        .stage-circle.rejected   { background:#ef4444; color:#fff; }
+        .stage-circle.current    { background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.4); }
+        .stage-circle.pending    { border:1px solid #334155; background:transparent; }
         .stage-line { width:1px; flex:1; min-height:12px; margin:2px 0; }
-        .stage-line.done    { background:#22c55e; }
-        .stage-line.current { background:linear-gradient(#eab308, #334155); }
-        .stage-line.other   { background:#1e2030; }
+        .stage-line.done-step { background:rgba(255,255,255,0.12); }
+        .stage-line.done      { background:#22c55e; }
+        .stage-line.rejected  { background:#ef4444; }
+        .stage-line.current   { background:linear-gradient(#eab308, #334155); }
+        .stage-line.other     { background:#1e2030; }
         .stage-label {
             font-size:0.72rem; padding:1px 0 12px; line-height:1.3;
             transition:opacity 0.15s;
         }
-        .stage-label.inactive { opacity:0.3; }
-        .stage-label.done     { color:#22c55e; }
-        .stage-label.current  { color:#eab308; font-weight:600; }
-        .stage-label.pending  { color:var(--text-dim); }
+        .stage-label.done-step { color:var(--text-dim); }
+        .stage-label.done      { color:#22c55e; }
+        .stage-label.rejected  { color:#ef4444; font-weight:600; }
+        .stage-label.current   { color:#eab308; font-weight:600; }
+        .stage-label.pending   { color:var(--text-dim); }
 
         /* Gerenciador de etapas */
         .stage-manager { display:flex; flex-direction:column; gap:6px; }
@@ -2286,19 +2290,34 @@ function renderDrawerBody(app) {
 }
 
 function renderTimeline(stages) {
-    return stages.map((s, i) => {
-        const isLast = i === stages.length - 1;
+    const visible = stages.filter(s => s.active !== false);
+    return visible.map((s, i) => {
+        const isLast = i === visible.length - 1;
+        const isAprovado = s.name === 'Aprovado';
+        const isRecusado = s.name === 'Recusado';
         let circleClass, lineClass, labelClass, content = '';
-        if (!s.active) {
-            circleClass = 'inactive'; lineClass = 'other'; labelClass = 'inactive';
-        } else if (s.done) {
-            circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
-            content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
+
+        if (s.done) {
+            if (isAprovado) {
+                circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
+                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
+            } else if (isRecusado) {
+                circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
+                content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
+            } else {
+                circleClass = 'done-step'; lineClass = 'done-step'; labelClass = 'done-step';
+                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
+            }
         } else if (s.current) {
-            circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
+            if (isRecusado) {
+                circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
+            } else {
+                circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
+            }
         } else {
             circleClass = 'pending'; lineClass = 'other'; labelClass = 'pending';
         }
+
         return `<div class="stage-row">
             <div class="stage-icon-col">
                 <div class="stage-circle ${circleClass}">${content}</div>
