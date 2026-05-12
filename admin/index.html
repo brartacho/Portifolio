@@ -2497,9 +2497,10 @@ const AUTO_REFRESH_MS = 60_000;
 
 function _getTabLoader() {
     if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
-    if (_activeTab === 'tokens') return () => Promise.all([loadCVs(), loadTokens()]);
+    if (_activeTab === 'tokens') return loadTokens;
     if (_activeTab === 'logs')   return loadLogs;
-    return () => Promise.all([loadCVs(), loadTokens(), loadStorageStats()]);
+    if (_activeTab === 'vagas')  return loadApplications;
+    return loadCVs;
 }
 
 function _updateRefreshTs() {
@@ -3348,8 +3349,8 @@ function switchTab(name, btn) {
 
 // ─── LOAD ALL ─────────────────────────────────────────────
 function loadAll() {
+    // Carrega apenas a aba inicial (CVs) + stats. As demais abas carregam sob demanda.
     loadCVs();
-    loadTokens();
     loadStorageStats();
     detectReplyContext();
     _lastRefreshAt = Date.now();
@@ -3459,6 +3460,19 @@ function startReply() {
     }).catch(e => showToast(e.message, 'error'));
 }
 
+async function _refreshCvSelect() {
+    try {
+        const res = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
+        const sel = document.getElementById('tokenCV');
+        const cur = sel?.value;
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione…</option>' + res.data.map(cv =>
+            `<option value="${cv.id}">${esc(cv.name)}</option>`
+        ).join('');
+        if (cur) sel.value = cur;
+    } catch (_) {}
+}
+
 // ─── CVS ──────────────────────────────────────────────────
 async function loadCVs() {
     const search = document.getElementById('cvSearch')?.value || '';
@@ -3475,14 +3489,8 @@ async function loadCVs() {
         renderCVs();
         _updateCvPagination();
 
-        // Atualiza select do formulário de tokens com todos os CVs ativos (sem paginação)
-        const allActive = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
-        const sel = document.getElementById('tokenCV');
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">Selecione…</option>' + allActive.data.map(cv =>
-            `<option value="${cv.id}">${esc(cv.name)}</option>`
-        ).join('');
-        if (cur) sel.value = cur;
+        // Atualiza select do formulário de tokens
+        _refreshCvSelect();
     } catch (e) {
         showToast(e.message, 'error');
     }
@@ -3713,7 +3721,10 @@ async function loadTokens() {
     if (status) params.set('status', status);
 
     try {
-        const res = await api('GET', `/api/admin/tokens?${params}`);
+        const [res] = await Promise.all([
+            api('GET', `/api/admin/tokens?${params}`),
+            _refreshCvSelect(),
+        ]);
         _tokenData  = res.data;
         _tokenTotal = res.total;
         _tokenPages = res.pages;
