@@ -1239,6 +1239,21 @@
             font-family:var(--font-display); outline:none;
         }
         .stage-name-input:focus { color:var(--cyan); }
+
+        /* Botões de estado por etapa no gerenciador */
+        .sm-status-btns { display:flex; gap:3px; flex-shrink:0; }
+        .sm-status-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; font-size:0.68rem; color:var(--text-dim);
+            transition:all 0.12s;
+        }
+        .sm-status-btn:hover { border-color:var(--text-dim); color:var(--text); }
+        .sm-status-btn.active.st-pending  { border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.07); color:var(--text); }
+        .sm-status-btn.active.st-running  { border-color:#eab308; background:rgba(234,179,8,0.15); color:#eab308; }
+        .sm-status-btn.active.st-done     { border-color:#22c55e; background:rgba(34,197,94,0.15); color:#22c55e; }
+        .sm-status-btn.active.st-rejected { border-color:#ef4444; background:rgba(239,68,68,0.15); color:#ef4444; }
     </style>
 </head>
 <body>
@@ -2140,19 +2155,28 @@ let _applications = [];
 let _vagasFilter  = 'all';
 let _openAppId    = null;
 
+// Retorna o status canônico de uma etapa (suporta formato novo e legado)
+function stageStatus(s) {
+    if (s.status) return s.status;
+    if (s.done)    return 'done';
+    if (s.current) return 'running';
+    return 'pending';
+}
+
 function getAppStatus(app) {
-    const curr = (app.stages || []).find(s => s.current && s.active !== false);
-    if (!curr) return 'em-processo';
-    const n = curr.name;
-    if (n === 'Aprovado')  return 'aprovado';
-    if (n === 'Recusado')  return 'recusado';
-    if (n === 'Enviado')   return 'enviado';
+    const active = (app.stages || []).filter(s => s.active !== false);
+    if (active.some(s => s.name === 'Aprovado' && stageStatus(s) === 'done')) return 'aprovado';
+    if (active.some(s => s.name === 'Recusado' && ['done','running','rejected'].includes(stageStatus(s)))) return 'recusado';
+    if (active.some(s => ['running','done','rejected'].includes(stageStatus(s)))) return 'em-processo';
     return 'em-processo';
 }
 
 function getAppCurrentStageName(app) {
-    const curr = (app.stages || []).find(s => s.current && s.active !== false);
-    return curr ? curr.name : '—';
+    const active = (app.stages || []).filter(s => s.active !== false);
+    const running = active.find(s => stageStatus(s) === 'running');
+    if (running) return running.name;
+    const lastDone = [...active].reverse().find(s => ['done','rejected'].includes(stageStatus(s)));
+    return lastDone ? lastDone.name : '—';
 }
 
 async function loadApplications() {
@@ -2293,27 +2317,24 @@ function renderTimeline(stages) {
     const visible = stages.filter(s => s.active !== false);
     return visible.map((s, i) => {
         const isLast = i === visible.length - 1;
-        const isAprovado = s.name === 'Aprovado';
-        const isRecusado = s.name === 'Recusado';
+        const st = stageStatus(s);
         let circleClass, lineClass, labelClass, content = '';
 
-        if (s.done) {
-            if (isAprovado) {
+        if (st === 'done') {
+            if (s.name === 'Aprovado') {
                 circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
-                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
-            } else if (isRecusado) {
+            } else if (s.name === 'Recusado') {
                 circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
                 content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
             } else {
                 circleClass = 'done-step'; lineClass = 'done-step'; labelClass = 'done-step';
-                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
             }
-        } else if (s.current) {
-            if (isRecusado) {
-                circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
-            } else {
-                circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
-            }
+            if (!content) content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
+        } else if (st === 'rejected') {
+            circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
+            content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
+        } else if (st === 'running') {
+            circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
         } else {
             circleClass = 'pending'; lineClass = 'other'; labelClass = 'pending';
         }
@@ -2358,21 +2379,34 @@ function toggleStageManager(appId) {
 
 function renderStageManager(app) {
     const section = document.getElementById('stageManagerSection');
-    const rows = app.stages.map((s, i) => `
-        <div class="stage-manager-row${!s.active ? ' inactive' : ''}" id="smRow${i}">
-            <span class="stage-toggle${s.active ? ' active' : ''}" title="${s.active ? 'Ativa — clique para inativar' : 'Inativa — clique para ativar'}"
+    const rows = app.stages.map((s, i) => {
+        const st = stageStatus(s);
+        const stBtn = (v, icon, title) => {
+            const active = st === v ? ` active st-${v}` : '';
+            const disabled = !s.active ? ' disabled' : '';
+            return `<button class="sm-status-btn${active}" title="${title}"${disabled}
+                onclick="setStageStatus('${app.id}',${i},'${v}')">
+                <i class="fa-${v === 'pending' ? 'regular' : 'solid'} fa-${icon}"></i>
+            </button>`;
+        };
+        return `
+        <div class="stage-manager-row${!s.active ? ' inactive' : ''}">
+            <span class="stage-toggle${s.active ? ' active' : ''}"
+                  title="${s.active ? 'Ativa — clique para ocultar' : 'Oculta — clique para ativar'}"
                   onclick="toggleStageActive('${app.id}',${i})">
                 <i class="fa-solid fa-${s.active ? 'toggle-on' : 'toggle-off'}"></i>
             </span>
             <input class="stage-name-input" value="${esc(s.name)}" maxlength="80"
                    onblur="renameStage('${app.id}',${i},this.value)"
                    onkeydown="if(event.key==='Enter')this.blur()">
-            <span style="display:flex;gap:4px">
-                ${s.active && !s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem" title="Marcar como etapa atual" onclick="setCurrentStage('${app.id}',${i})"><i class="fa-solid fa-circle-dot"></i></button>` : ''}
-                ${s.active && s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;color:var(--success)" title="Marcar como concluída" onclick="markStageDone('${app.id}',${i})"><i class="fa-solid fa-check"></i></button>` : ''}
+            <span class="sm-status-btns">
+                ${stBtn('pending',  'circle',      'Não iniciado')}
+                ${stBtn('running',  'circle-dot',  'Executando')}
+                ${stBtn('done',     'check',       'Aprovado')}
+                ${stBtn('rejected', 'xmark',       'Reprovado')}
             </span>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     section.innerHTML = `
         <div style="border-top:1px solid var(--border-soft);padding-top:12px">
@@ -2401,7 +2435,9 @@ async function patchStages(appId, stages) {
 async function toggleStageActive(appId, stageIdx) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, active: !s.active, current: false } : s);
+    const stages = app.stages.map((s, i) =>
+        i === stageIdx ? { ...s, active: !s.active, status: 'pending', done: false, current: false } : s
+    );
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2414,26 +2450,14 @@ async function renameStage(appId, stageIdx, newName) {
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function setCurrentStage(appId, stageIdx) {
+async function setStageStatus(appId, stageIdx, status) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = app.stages.map((s, i) => ({
-        ...s,
-        current: i === stageIdx && s.active !== false,
-        done:    i < stageIdx && s.active !== false ? true : false,
-    }));
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
-}
-
-async function markStageDone(appId, stageIdx) {
-    const app = _applications.find(a => a.id === appId);
-    if (!app) return;
-    const stages = app.stages.map((s, i) => {
-        if (i === stageIdx) return { ...s, done: true, current: false };
-        const nextActive = app.stages.findIndex((ns, ni) => ni > stageIdx && ns.active !== false);
-        if (i === nextActive) return { ...s, current: true };
-        return s;
-    });
+    // Atualiza apenas a etapa clicada — sem cascade nas demais
+    const stages = app.stages.map((s, i) => i === stageIdx
+        ? { ...s, status, done: status === 'done', current: status === 'running' }
+        : s
+    );
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2442,7 +2466,7 @@ async function addCustomStage(appId) {
     if (!name || !name.trim()) return;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = [...app.stages, { name: name.trim(), done: false, current: false, active: true }];
+    const stages = [...app.stages, { name: name.trim(), status: 'pending', done: false, current: false, active: true }];
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
