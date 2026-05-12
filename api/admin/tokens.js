@@ -2,9 +2,6 @@ import { randomBytes, createHash } from 'crypto';
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase } from '../_lib/supabase.js';
 
-const ALLOWED_SORT = new Set(['label', 'expires_at', 'use_count', 'created_at']);
-const MAX_LIMIT = 100;
-
 export default async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -13,57 +10,13 @@ export default async function handler(req, res) {
     const supabase = getSupabase();
 
     if (req.method === 'GET') {
-        const {
-            search = '',
-            status = '',
-            sort   = 'expires_at',
-            dir    = 'asc',
-            page   = '1',
-            limit: limitParam = '25',
-        } = req.query;
-
-        const pageNum  = Math.max(1, parseInt(page) || 1);
-        const limitNum = Math.min(MAX_LIMIT, Math.max(1, parseInt(limitParam) || 25));
-        const offset   = (pageNum - 1) * limitNum;
-        const ascending = dir === 'asc';
-        const sortCol  = ALLOWED_SORT.has(sort) ? sort : 'expires_at';
-
-        const now = new Date().toISOString();
-
-        let query = supabase
+        const { data, error } = await supabase
             .from('download_tokens')
-            .select('id, label, expires_at, max_uses, use_count, revoked, created_at, cv_versions(name)', { count: 'exact' });
+            .select('id, label, expires_at, max_uses, use_count, revoked, created_at, cv_versions(name)')
+            .order('expires_at', { ascending: true });
 
-        // Search: label or cv name (cv name requires a sub-query workaround)
-        if (search) {
-            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
-            // Find cv_version ids whose name matches
-            const { data: matchedCVs } = await supabase
-                .from('cv_versions')
-                .select('id')
-                .ilike('name', `%${s}%`);
-            const cvIds = matchedCVs?.map(c => c.id) || [];
-            let orConds = `label.ilike.%${s}%`;
-            if (cvIds.length) orConds += `,cv_version_id.in.(${cvIds.join(',')})`;
-            query = query.or(orConds);
-        }
-
-        // Status filter — DB-level where possible
-        if (status === 'revogado') {
-            query = query.eq('revoked', true);
-        } else if (status === 'expirado') {
-            query = query.eq('revoked', false).lt('expires_at', now);
-        } else if (status === 'ativo' || status === 'esgotado') {
-            // Pre-filter: not revoked, not expired — then compute exact status below
-            query = query.eq('revoked', false).gte('expires_at', now);
-        }
-
-        query = query.order(sortCol, { ascending }).range(offset, offset + limitNum - 1);
-
-        const { data, error, count } = await query;
         if (error) return res.status(500).json({ error: error.message });
 
-        // Enrich with computed status
         const enriched = (data ?? []).map(t => ({
             ...t,
             status: t.revoked ? 'revogado'
@@ -72,18 +25,7 @@ export default async function handler(req, res) {
                 : 'ativo',
         }));
 
-        // Post-filter for ativo/esgotado (DB pre-filter already narrows the set)
-        const filtered = (status === 'ativo' || status === 'esgotado')
-            ? enriched.filter(t => t.status === status)
-            : enriched;
-
-        return res.status(200).json({
-            data:  filtered,
-            total: count ?? 0,
-            page:  pageNum,
-            limit: limitNum,
-            pages: Math.ceil((count ?? 0) / limitNum),
-        });
+        return res.status(200).json(enriched);
     }
 
     if (req.method === 'POST') {

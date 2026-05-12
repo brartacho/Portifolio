@@ -491,6 +491,8 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
+            background: var(--bg-elevated);
+            color: var(--text-soft);
             transition: opacity 0.2s, transform 0.15s;
         }
 
@@ -502,6 +504,13 @@
         .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         .btn-ghost { background: var(--bg-elevated); color: var(--text-soft); border: 1px solid var(--border); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        /* Enviar no contexto da tabela de CVs: ghost cyan em vez de sólido */
+        #cvTable .btn-cyan.cv-action-btn {
+            background: var(--cyan-soft);
+            color: var(--cyan);
+            border: 1px solid var(--cyan-mid);
+        }
 
         /* ─── CARDS / PANELS ─────────────────────────── */
         .panel {
@@ -1712,11 +1721,11 @@
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
                 <div class="filter-bar">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="_debouncedCvLoad()">
+                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
                         <span class="th-filter-count" id="cvCount"></span>
                         <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="cvStatusFilter" onchange="_cvPage=1;loadCVs()" style="width:148px;flex-shrink:0">
+                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
                         <option value="">Todos os status</option>
                         <option value="ativo">Ativo</option>
                         <option value="inativo">Inativo</option>
@@ -1735,11 +1744,6 @@
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                     </table>
-                </div>
-                <div class="pagination" id="cvPagination" style="display:none">
-                    <button class="btn btn-sm" id="cvPrevBtn" onclick="setCvPage(_cvPage - 1)">‹ Anterior</button>
-                    <span id="cvPageInfo"></span>
-                    <button class="btn btn-sm" id="cvNextBtn" onclick="setCvPage(_cvPage + 1)">Próxima ›</button>
                 </div>
             </div>
         </div>
@@ -1793,11 +1797,11 @@
                 <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
                 <div class="filter-bar">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="_debouncedTokenLoad()">
+                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
                         <span class="th-filter-count" id="tokenCount"></span>
                         <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="tokenStatusFilter" onchange="_tokenPage=1;loadTokens()" style="width:152px;flex-shrink:0">
+                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
                         <option value="">Todos os status</option>
                         <option value="ativo">Ativo</option>
                         <option value="expirado">Expirado</option>
@@ -1819,11 +1823,6 @@
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                     </table>
-                </div>
-                <div class="pagination" id="tokenPagination" style="display:none">
-                    <button class="btn btn-sm" id="tokenPrevBtn" onclick="setTokenPage(_tokenPage - 1)">‹ Anterior</button>
-                    <span id="tokenPageInfo"></span>
-                    <button class="btn btn-sm" id="tokenNextBtn" onclick="setTokenPage(_tokenPage + 1)">Próxima ›</button>
                 </div>
             </div>
         </div>
@@ -1894,7 +1893,7 @@
 
             <div class="filter-bar" style="margin-bottom:12px">
                 <div class="filter-search">
-                    <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="_debouncedAppLoad()">
+                    <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderApplicationsTable()">
                     <span class="th-filter-count" id="vagasCount"></span>
                     <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                 </div>
@@ -1914,11 +1913,6 @@
                         <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
                     </tbody>
                 </table>
-            </div>
-            <div class="pagination" id="appPagination" style="display:none">
-                <button class="btn btn-sm" id="appPrevBtn" onclick="setAppPage(_appPage - 1)">‹ Anterior</button>
-                <span id="appPageInfo"></span>
-                <button class="btn btn-sm" id="appNextBtn" onclick="setAppPage(_appPage + 1)">Próxima ›</button>
             </div>
         </div>
 
@@ -2425,27 +2419,13 @@ function closePdfPreview() {
 
 // ─── DATA STORES (filter-aware rendering) ─────────────────
 let _cvData     = [];
-let _cvPage     = 1;
-let _cvTotal    = 0;
-let _cvPages    = 0;
-let _cvSearchTimer = null;
-
 let _tokenData  = [];
-let _tokenPage  = 1;
-let _tokenTotal = 0;
-let _tokenPages = 0;
-let _tokenSearchTimer = null;
 
 let _logData    = [];
 let _logPage    = 1;
 let _logTotal   = 0;
 let _logPages   = 0;
 let _logSearchTimer = null;
-
-let _appPage    = 1;
-let _appTotal   = 0;
-let _appPages   = 0;
-let _appSearchTimer = null;
 
 // ─── SORT ─────────────────────────────────────────────────
 let _cvSort    = { col: 'created_at', dir: 'desc' };
@@ -2469,9 +2449,9 @@ function toggleSort(table, col) {
     const state = { cvs: _cvSort, tokens: _tokenSort, logs: _logSort }[table];
     if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
     else { state.col = col; state.dir = 'asc'; }
-    if (table === 'cvs')    { _cvPage = 1;    loadCVs(); }
-    else if (table === 'tokens') { _tokenPage = 1; loadTokens(); }
-    else                    { _logPage = 1;   loadLogs(); }
+    if (table === 'cvs')         renderCVs();
+    else if (table === 'tokens') renderTokens();
+    else                         { _logPage = 1; loadLogs(); }
 }
 
 function updateSortHeaders(table) {
@@ -2570,19 +2550,10 @@ async function loadApplications() {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
     }
 
-    const search = document.getElementById('vagasSearch')?.value || '';
-    const result = _vagasFilter === 'all' ? '' : _vagasFilter.replace('-', '_');
-    const params = new URLSearchParams({ page: _appPage, limit: 25 });
-    if (search) params.set('search', search);
-    if (result) params.set('result', result);
-
     try {
-        const res = await api('GET', `/api/admin/applications?${params}`);
-        _applications = res.data;
-        _appTotal = res.total;
-        _appPages = res.pages;
+        const data = await api('GET', '/api/admin/applications');
+        _applications = data;
         renderApplicationsTable();
-        _updateAppPagination();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:32px">${esc(e.message)}</td></tr>`;
     }
@@ -2591,14 +2562,27 @@ async function loadApplications() {
 function renderApplicationsTable() {
     const tbody = document.getElementById('vagasTableBody');
     const countEl = document.getElementById('vagasCount');
-    if (countEl) countEl.textContent = _appTotal ? `${_appTotal} registros` : '';
 
-    if (!_applications.length) {
+    const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
+
+    let filtered = _applications;
+    if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (search) filtered = filtered.filter(app =>
+        (app.empresa || '').toLowerCase().includes(search) ||
+        (app.vaga || '').toLowerCase().includes(search) ||
+        (app.gestor_nome || '').toLowerCase().includes(search)
+    );
+
+    if (countEl) countEl.textContent = _applications.length
+        ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
+        : '';
+
+    if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = _applications.map(app => {
+    tbody.innerHTML = filtered.map(app => {
         const status  = getAppStatus(app);
         const stage   = esc(getAppCurrentStageName(app));
         const empresa = esc(app.empresa || '—');
@@ -2622,40 +2606,15 @@ function renderApplicationsTable() {
 
 function setVagasFilter(filter, btn) {
     _vagasFilter = filter;
-    _appPage = 1;
     document.querySelectorAll('.vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    loadApplications();
+    renderApplicationsTable();
 }
 
 function clearVagasSearch() {
     const el = document.getElementById('vagasSearch');
     if (el) el.value = '';
-    _appPage = 1;
-    loadApplications();
-}
-
-function _debouncedAppLoad() {
-    _appPage = 1;
-    clearTimeout(_appSearchTimer);
-    _appSearchTimer = setTimeout(loadApplications, 300);
-}
-
-function setAppPage(p) {
-    const np = Math.max(1, Math.min(_appPages || 1, p));
-    if (np === _appPage) return;
-    _appPage = np;
-    loadApplications();
-}
-
-function _updateAppPagination() {
-    const el = document.getElementById('appPagination');
-    if (!el) return;
-    if (_appPages <= 1) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    document.getElementById('appPrevBtn').disabled = _appPage <= 1;
-    document.getElementById('appNextBtn').disabled = _appPage >= _appPages;
-    document.getElementById('appPageInfo').textContent = `Página ${_appPage} de ${_appPages}`;
+    renderApplicationsTable();
 }
 
 function openDrawer(id) {
@@ -3439,8 +3398,7 @@ function dismissReply() {
 
 function startReply() {
     // Se só houver 1 versão ativa, abre o modal direto. Senão, scroll pra tabela e dá feedback visual.
-    api('GET', '/api/admin/cv-versions?limit=100&status=ativo').then(res => {
-        const active = res.data;
+    api('GET', '/api/admin/cv-versions?limit=100&status=ativo').then(active => {
         if (active.length === 1) {
             const cv = active[0];
             openSendCV({ id: cv.id, name: cv.name, file_name: cv.file_name });
@@ -3462,11 +3420,11 @@ function startReply() {
 
 async function _refreshCvSelect() {
     try {
-        const res = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
+        const data = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
         const sel = document.getElementById('tokenCV');
         const cur = sel?.value;
         if (!sel) return;
-        sel.innerHTML = '<option value="">Selecione…</option>' + res.data.map(cv =>
+        sel.innerHTML = '<option value="">Selecione…</option>' + data.map(cv =>
             `<option value="${cv.id}">${esc(cv.name)}</option>`
         ).join('');
         if (cur) sel.value = cur;
@@ -3475,21 +3433,10 @@ async function _refreshCvSelect() {
 
 // ─── CVS ──────────────────────────────────────────────────
 async function loadCVs() {
-    const search = document.getElementById('cvSearch')?.value || '';
-    const status = document.getElementById('cvStatusFilter')?.value || '';
-    const params = new URLSearchParams({ page: _cvPage, limit: 25, sort: _cvSort.col, dir: _cvSort.dir });
-    if (search) params.set('search', search);
-    if (status) params.set('status', status);
-
     try {
-        const res = await api('GET', `/api/admin/cv-versions?${params}`);
-        _cvData  = res.data;
-        _cvTotal = res.total;
-        _cvPages = res.pages;
+        const data = await api('GET', '/api/admin/cv-versions');
+        _cvData = data;
         renderCVs();
-        _updateCvPagination();
-
-        // Atualiza select do formulário de tokens
         _refreshCvSelect();
     } catch (e) {
         showToast(e.message, 'error');
@@ -3501,13 +3448,29 @@ function renderCVs() {
 
     const tbody = document.getElementById('cvTable');
     const countEl = document.getElementById('cvCount');
-    if (countEl) countEl.textContent = _cvTotal ? `${_cvTotal} registros` : '';
 
-    if (!_cvData.length) {
+    const search = (document.getElementById('cvSearch')?.value || '').toLowerCase();
+    const status = document.getElementById('cvStatusFilter')?.value || '';
+
+    let data = _cvData;
+    if (search) data = data.filter(cv =>
+        (cv.name || '').toLowerCase().includes(search) ||
+        (cv.description || '').toLowerCase().includes(search) ||
+        (cv.file_name || '').toLowerCase().includes(search)
+    );
+    if (status === 'ativo')   data = data.filter(cv => cv.active);
+    if (status === 'inativo') data = data.filter(cv => !cv.active);
+    data = _sortData(data, _cvSort.col, _cvSort.dir);
+
+    if (countEl) countEl.textContent = _cvData.length
+        ? (data.length !== _cvData.length ? `${data.length} de ${_cvData.length}` : `${_cvData.length} registros`)
+        : '';
+
+    if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum currículo encontrado</td></tr>`;
         return;
     }
-    tbody.innerHTML = _cvData.map(cv => `
+    tbody.innerHTML = data.map(cv => `
         <tr>
             <td data-label="Nome"><span><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</span></td>
             <td data-label="Arquivo"><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
@@ -3529,31 +3492,7 @@ function renderCVs() {
 function clearCvFilters() {
     ['cvSearch', 'cvStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _cvSort = { col: 'created_at', dir: 'desc' };
-    _cvPage = 1;
-    loadCVs();
-}
-
-function _debouncedCvLoad() {
-    _cvPage = 1;
-    clearTimeout(_cvSearchTimer);
-    _cvSearchTimer = setTimeout(loadCVs, 300);
-}
-
-function setCvPage(p) {
-    const np = Math.max(1, Math.min(_cvPages || 1, p));
-    if (np === _cvPage) return;
-    _cvPage = np;
-    loadCVs();
-}
-
-function _updateCvPagination() {
-    const el = document.getElementById('cvPagination');
-    if (!el) return;
-    if (_cvPages <= 1) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    document.getElementById('cvPrevBtn').disabled = _cvPage <= 1;
-    document.getElementById('cvNextBtn').disabled = _cvPage >= _cvPages;
-    document.getElementById('cvPageInfo').textContent = `Página ${_cvPage} de ${_cvPages}`;
+    renderCVs();
 }
 
 async function deleteCV(id, name) {
@@ -3714,22 +3653,13 @@ async function createToken() {
 }
 
 async function loadTokens() {
-    const search = document.getElementById('tokenSearch')?.value || '';
-    const status = document.getElementById('tokenStatusFilter')?.value || '';
-    const params = new URLSearchParams({ page: _tokenPage, limit: 25, sort: _tokenSort.col, dir: _tokenSort.dir });
-    if (search) params.set('search', search);
-    if (status) params.set('status', status);
-
     try {
-        const [res] = await Promise.all([
-            api('GET', `/api/admin/tokens?${params}`),
+        const [data] = await Promise.all([
+            api('GET', '/api/admin/tokens'),
             _refreshCvSelect(),
         ]);
-        _tokenData  = res.data;
-        _tokenTotal = res.total;
-        _tokenPages = res.pages;
+        _tokenData = data;
         renderTokens();
-        _updateTokenPagination();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -3738,13 +3668,27 @@ function renderTokens() {
 
     const tbody = document.getElementById('tokenTable');
     const countEl = document.getElementById('tokenCount');
-    if (countEl) countEl.textContent = _tokenTotal ? `${_tokenTotal} registros` : '';
 
-    if (!_tokenData.length) {
+    const search = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
+    const status = document.getElementById('tokenStatusFilter')?.value || '';
+
+    let data = _tokenData;
+    if (search) data = data.filter(t =>
+        (t.label || '').toLowerCase().includes(search) ||
+        (t.cv_versions?.name || '').toLowerCase().includes(search)
+    );
+    if (status) data = data.filter(t => t.status === status);
+    data = _sortData(data, _tokenSort.col, _tokenSort.dir);
+
+    if (countEl) countEl.textContent = _tokenData.length
+        ? (data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`)
+        : '';
+
+    if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>`;
         return;
     }
-    tbody.innerHTML = _tokenData.map(t => {
+    tbody.innerHTML = data.map(t => {
         const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
         const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
         return `
@@ -3768,31 +3712,7 @@ function renderTokens() {
 function clearTokenFilters() {
     ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _tokenSort = { col: 'expires_at', dir: 'asc' };
-    _tokenPage = 1;
-    loadTokens();
-}
-
-function _debouncedTokenLoad() {
-    _tokenPage = 1;
-    clearTimeout(_tokenSearchTimer);
-    _tokenSearchTimer = setTimeout(loadTokens, 300);
-}
-
-function setTokenPage(p) {
-    const np = Math.max(1, Math.min(_tokenPages || 1, p));
-    if (np === _tokenPage) return;
-    _tokenPage = np;
-    loadTokens();
-}
-
-function _updateTokenPagination() {
-    const el = document.getElementById('tokenPagination');
-    if (!el) return;
-    if (_tokenPages <= 1) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    document.getElementById('tokenPrevBtn').disabled = _tokenPage <= 1;
-    document.getElementById('tokenNextBtn').disabled = _tokenPage >= _tokenPages;
-    document.getElementById('tokenPageInfo').textContent = `Página ${_tokenPage} de ${_tokenPages}`;
+    renderTokens();
 }
 
 async function revokeToken(id) {
