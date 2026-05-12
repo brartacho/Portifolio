@@ -1297,13 +1297,16 @@
         }
         .sm-reorder-btn:hover    { border-color:var(--text-dim); color:var(--text); }
         .sm-reorder-btn.unlocked { border-color:var(--cyan); color:var(--cyan); }
-        /* Link de reset — visível apenas no modo reordenação */
-        .sm-reset-link {
-            background:transparent; border:none; font-size:0.68rem;
-            color:var(--text-dim); cursor:pointer; text-decoration:underline;
-            padding:4px 0; display:none;
+        /* Links de reset/undo — visíveis no modo reordenação */
+        .sm-recovery-row {
+            display:none; gap:12px; align-items:center; padding:4px 0;
         }
-        .sm-reset-link.visible { display:inline-block; }
+        .sm-recovery-row.visible { display:flex; }
+        .sm-reset-link, .sm-undo-link {
+            background:transparent; border:none; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer; text-decoration:underline; padding:0;
+        }
+        .sm-undo-link { color:var(--cyan); }
         /* Ação no toast (↩ Desfazer) */
         .toast-action {
             background:transparent; border:1px solid currentColor;
@@ -2422,13 +2425,15 @@ const DEFAULT_STAGE_NAMES = [
 let _stageManagerOpen = false;
 let _dragUnlocked     = localStorage.getItem('admin_drag_unlocked') === 'true';
 let _sortableInst     = null;
+let _prevStagesUndo   = null;
 
 function toggleStageManager(appId) {
     const section = document.getElementById('stageManagerSection');
     if (_stageManagerOpen) {
         section.hidden = true;
         _stageManagerOpen = false;
-        _sortableInst = null;
+        _sortableInst     = null;
+        _prevStagesUndo   = null;
         return;
     }
     const app = _applications.find(a => a.id === appId);
@@ -2486,10 +2491,16 @@ function renderStageManager(app) {
                     ${_dragUnlocked ? 'disabled' : ''}>
                 <i class="fa-solid fa-plus"></i> Adicionar etapa
             </button>
-            <button class="sm-reset-link${_dragUnlocked ? ' visible' : ''}" id="smResetLink"
-                    onclick="resetStageOrder('${app.id}')">
-                ↺ Restaurar ordem padrão
-            </button>
+            <div class="sm-recovery-row${_dragUnlocked ? ' visible' : ''}" id="smRecoveryRow">
+                <button class="sm-reset-link" id="smResetLink"
+                        onclick="resetStageOrder('${app.id}')">
+                    ↺ Restaurar ordem padrão
+                </button>
+                <button class="sm-undo-link" id="smUndoLink" style="${_prevStagesUndo ? '' : 'display:none'}"
+                        onclick="undoLastReorder('${app.id}')">
+                    ↩ Desfazer último reordenamento
+                </button>
+            </div>
         </div>
     `;
     initSortable(app.id);
@@ -2508,7 +2519,8 @@ function initSortable(appId) {
             if (evt.oldIndex === evt.newIndex) return;
             const app = _applications.find(a => a.id === appId);
             if (!app) return;
-            const prevStages = app.stages.map(s => ({
+            // Salva snapshot para undo persistente
+            _prevStagesUndo = app.stages.map(s => ({
                 name: s.name, status: stageStatus(s), active: s.active !== false
             }));
             const reordered = [...app.stages];
@@ -2521,16 +2533,9 @@ function initSortable(appId) {
             try {
                 await patchStages(appId, next);
                 if (_dragUnlocked) _applyDragMode(true);
-                showToast('Etapa reordenada', 'success', {
-                    label: '↩ Desfazer',
-                    callback: async () => {
-                        try {
-                            await patchStages(appId, prevStages);
-                            if (_dragUnlocked) _applyDragMode(true);
-                        } catch (e) { showToast(e.message, 'error'); }
-                    }
-                });
+                showToast('Etapa reordenada — use ↩ Desfazer para reverter');
             } catch (e) {
+                _prevStagesUndo = null;
                 showToast(e.message, 'error');
                 if (_dragUnlocked) _sortableInst?.option('disabled', false);
             }
@@ -2548,15 +2553,28 @@ function _applyDragMode(enabled) {
     _sortableInst?.option('disabled', !enabled);
     document.querySelectorAll('#stageManagerList .stage-manager-row')
             .forEach(r => r.classList.toggle('drag-active', enabled));
-    const btn    = document.getElementById('smReorderBtn');
-    const link   = document.getElementById('smResetLink');
-    const addBtn = document.getElementById('smAddStageBtn');
+    const btn         = document.getElementById('smReorderBtn');
+    const recoveryRow = document.getElementById('smRecoveryRow');
+    const undoLink    = document.getElementById('smUndoLink');
+    const addBtn      = document.getElementById('smAddStageBtn');
     if (btn) {
         btn.classList.toggle('unlocked', enabled);
         btn.innerHTML = `<i class="fa-solid fa-${enabled ? 'lock-open' : 'lock'}"></i> ${enabled ? 'Concluir' : 'Reordenar'}`;
     }
-    if (link)   link.classList.toggle('visible', enabled);
-    if (addBtn) addBtn.disabled = enabled;
+    if (recoveryRow) recoveryRow.classList.toggle('visible', enabled);
+    if (undoLink)    undoLink.style.display = _prevStagesUndo ? '' : 'none';
+    if (addBtn)      addBtn.disabled = enabled;
+}
+
+async function undoLastReorder(appId) {
+    if (!_prevStagesUndo) return;
+    const snapshot = _prevStagesUndo;
+    _prevStagesUndo = null;
+    try {
+        await patchStages(appId, snapshot);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Reordenamento desfeito');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function resetStageOrder(appId) {
