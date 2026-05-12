@@ -2349,7 +2349,7 @@ function renderStageManager(app) {
                    onblur="renameStage('${app.id}',${i},this.value)"
                    onkeydown="if(event.key==='Enter')this.blur()">
             <span style="display:flex;gap:4px">
-                ${s.active && !s.done && !s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem" title="Marcar como etapa atual" onclick="setCurrentStage('${app.id}',${i})"><i class="fa-solid fa-circle-dot"></i></button>` : ''}
+                ${s.active && !s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem" title="Marcar como etapa atual" onclick="setCurrentStage('${app.id}',${i})"><i class="fa-solid fa-circle-dot"></i></button>` : ''}
                 ${s.active && s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;color:var(--success)" title="Marcar como concluída" onclick="markStageDone('${app.id}',${i})"><i class="fa-solid fa-check"></i></button>` : ''}
             </span>
         </div>
@@ -2399,7 +2399,7 @@ async function setCurrentStage(appId, stageIdx) {
     const stages = app.stages.map((s, i) => ({
         ...s,
         current: i === stageIdx && s.active !== false,
-        done:    i < stageIdx && s.active !== false ? true : s.done,
+        done:    i < stageIdx && s.active !== false ? true : false,
     }));
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
