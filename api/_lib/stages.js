@@ -5,5 +5,5 @@ export const DEFAULT_STAGES = [
     { name: 'Teste Técnico',          status: 'pending', active: true },
     { name: 'Entrevista Técnica',     status: 'pending', active: true },
     { name: 'Entrevista Coordenador', status: 'pending', active: true },
-    { name: 'Proposta / Oferta',      status: 'pending', active: true },
+    { name: 'Proposta',               status: 'pending', active: true },
 ];
