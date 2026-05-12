@@ -386,8 +386,9 @@ body.menu-open #content-wrapper {
 
 .nav-github-header {
     color: var(--text-dim);
-    font-size: 1.18rem;
+    font-size: 1.45rem;
     transition: color 0.2s ease;
+    line-height: 1;
 }
 
 .hamburger {

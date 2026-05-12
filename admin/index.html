@@ -1307,6 +1307,15 @@
         }
         .sm-hist-btn:not(:disabled):hover { border-color:var(--text-dim); color:var(--text); }
         .sm-hist-btn:disabled { opacity:0.3; cursor:default; }
+        /* Botão de cancelar reordenamento */
+        .sm-cancel-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:none; align-items:center; justify-content:center;
+            font-size:0.7rem; color:var(--text-dim); cursor:pointer;
+            transition:all 0.12s; flex-shrink:0;
+        }
+        .sm-cancel-btn:hover { border-color:#ef4444; color:#ef4444; }
         /* Link de reset — visível apenas no modo reordenação */
         .sm-reset-link {
             background:transparent; border:none; font-size:0.68rem;
@@ -2429,11 +2438,12 @@ const DEFAULT_STAGE_NAMES = [
     'Entrevista Técnica', 'Entrevista Coordenador', 'Proposta / Oferta'
 ];
 
-let _stageManagerOpen = false;
-let _dragUnlocked     = localStorage.getItem('admin_drag_unlocked') === 'true';
-let _sortableInst     = null;
-let _undoStack        = [];
-let _redoStack        = [];
+let _stageManagerOpen       = false;
+let _dragUnlocked           = localStorage.getItem('admin_drag_unlocked') === 'true';
+let _sortableInst           = null;
+let _undoStack              = [];
+let _redoStack              = [];
+let _reorderModeSnapshot    = null;
 
 function toggleStageManager(appId) {
     const section = document.getElementById('stageManagerSection');
@@ -2502,6 +2512,11 @@ function renderStageManager(app) {
                         <i class="fa-solid fa-${_dragUnlocked ? 'lock-open' : 'lock'}"></i>
                         ${_dragUnlocked ? 'Concluir' : 'Reordenar'}
                     </button>
+                    <button class="sm-cancel-btn" id="smCancelBtn"
+                            title="Cancelar — desfaz todas as mudanças desta sessão"
+                            onclick="cancelDragMode('${app.id}')">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             </div>
             <div class="stage-manager" id="stageManagerList">${rows}</div>
@@ -2558,28 +2573,64 @@ function initSortable(appId) {
 }
 
 function toggleDragMode(appId) {
+    if (!_dragUnlocked) {
+        // Entrando no modo reordenação — salva snapshot para cancelar depois
+        const app = _applications.find(a => a.id === appId);
+        if (app) _reorderModeSnapshot = app.stages.map(s => ({
+            name: s.name, status: stageStatus(s), active: s.active !== false
+        }));
+        _undoStack = [];
+        _redoStack = [];
+    } else {
+        // Concluindo — descarta snapshot e histórico
+        _reorderModeSnapshot = null;
+        _undoStack = [];
+        _redoStack = [];
+    }
     _dragUnlocked = !_dragUnlocked;
     localStorage.setItem('admin_drag_unlocked', _dragUnlocked);
     _applyDragMode(_dragUnlocked);
+}
+
+async function cancelDragMode(appId) {
+    const snapshot = _reorderModeSnapshot;
+    _reorderModeSnapshot = null;
+    _undoStack = [];
+    _redoStack = [];
+    _dragUnlocked = false;
+    localStorage.setItem('admin_drag_unlocked', false);
+    if (snapshot) {
+        const app = _applications.find(a => a.id === appId);
+        const changed = app?.stages.map(s => s.name).join(',') !== snapshot.map(s => s.name).join(',');
+        if (changed) {
+            try {
+                await patchStages(appId, snapshot);
+                showToast('Reordenamento cancelado');
+            } catch (e) { showToast(e.message, 'error'); return; }
+        }
+    }
+    _applyDragMode(false);
 }
 
 function _applyDragMode(enabled) {
     _sortableInst?.option('disabled', !enabled);
     document.querySelectorAll('#stageManagerList .stage-manager-row')
             .forEach(r => r.classList.toggle('drag-active', enabled));
-    const btn      = document.getElementById('smReorderBtn');
-    const resetLnk = document.getElementById('smResetLink');
-    const undoBtn  = document.getElementById('smUndoBtn');
-    const redoBtn  = document.getElementById('smRedoBtn');
-    const addBtn   = document.getElementById('smAddStageBtn');
+    const btn       = document.getElementById('smReorderBtn');
+    const resetLnk  = document.getElementById('smResetLink');
+    const undoBtn   = document.getElementById('smUndoBtn');
+    const redoBtn   = document.getElementById('smRedoBtn');
+    const cancelBtn = document.getElementById('smCancelBtn');
+    const addBtn    = document.getElementById('smAddStageBtn');
     if (btn) {
         btn.classList.toggle('unlocked', enabled);
         btn.innerHTML = `<i class="fa-solid fa-${enabled ? 'lock-open' : 'lock'}"></i> ${enabled ? 'Concluir' : 'Reordenar'}`;
     }
     if (resetLnk) resetLnk.classList.toggle('visible', enabled);
-    if (undoBtn)  { undoBtn.style.display = enabled ? 'flex' : 'none'; undoBtn.disabled = _undoStack.length === 0; }
-    if (redoBtn)  { redoBtn.style.display = enabled ? 'flex' : 'none'; redoBtn.disabled = _redoStack.length === 0; }
-    if (addBtn)   addBtn.disabled = enabled;
+    if (undoBtn)   { undoBtn.style.display = enabled ? 'flex' : 'none'; undoBtn.disabled = _undoStack.length === 0; }
+    if (redoBtn)   { redoBtn.style.display = enabled ? 'flex' : 'none'; redoBtn.disabled = _redoStack.length === 0; }
+    if (cancelBtn) cancelBtn.style.display = enabled ? 'flex' : 'none';
+    if (addBtn)    addBtn.disabled = enabled;
 }
 
 async function undoReorder(appId) {
