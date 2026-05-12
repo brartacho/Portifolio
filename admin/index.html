@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1272,6 +1273,43 @@
         .sm-status-btn.active.st-running  { border-color:#eab308; background:rgba(234,179,8,0.15); color:#eab308; }
         .sm-status-btn.active.st-done     { border-color:#22c55e; background:rgba(34,197,94,0.15); color:#22c55e; }
         .sm-status-btn.active.st-rejected { border-color:#ef4444; background:rgba(239,68,68,0.15); color:#ef4444; }
+
+        /* Drag handle */
+        .drag-handle {
+            color:var(--text-dim); font-size:0.75rem; cursor:grab;
+            padding:0 2px; opacity:0; pointer-events:none; flex-shrink:0;
+            transition:opacity 0.15s;
+        }
+        /* Modo reordenação: handle visível, outros controles inativos */
+        .stage-manager-row.drag-active .drag-handle      { opacity:1; pointer-events:auto; }
+        .stage-manager-row.drag-active .sm-status-btns   { opacity:0.3; pointer-events:none; }
+        .stage-manager-row.drag-active .stage-toggle     { opacity:0.3; pointer-events:none; }
+        .stage-manager-row.drag-active .stage-name-input { opacity:0.5; pointer-events:none; }
+        /* Ghost/chosen do SortableJS */
+        .sortable-ghost  { opacity:0.4; background:var(--bg-hover); }
+        .sortable-chosen { background:var(--bg-hover); }
+        /* Botão de reordenar no header */
+        .sm-reorder-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; padding:3px 8px; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer;
+            display:flex; align-items:center; gap:4px; transition:all 0.12s;
+        }
+        .sm-reorder-btn:hover    { border-color:var(--text-dim); color:var(--text); }
+        .sm-reorder-btn.unlocked { border-color:var(--cyan); color:var(--cyan); }
+        /* Link de reset — visível apenas no modo reordenação */
+        .sm-reset-link {
+            background:transparent; border:none; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer; text-decoration:underline;
+            padding:4px 0; display:none;
+        }
+        .sm-reset-link.visible { display:inline-block; }
+        /* Ação no toast (↩ Desfazer) */
+        .toast-action {
+            background:transparent; border:1px solid currentColor;
+            border-radius:6px; padding:3px 8px; font-size:0.75rem;
+            cursor:pointer; color:inherit; font-family:inherit; flex-shrink:0;
+        }
     </style>
 </head>
 <body>
@@ -2376,13 +2414,21 @@ async function deleteApplication(id) {
     }
 }
 
+const DEFAULT_STAGE_NAMES = [
+    'Enviado', 'Triagem de CV', 'Entrevista RH', 'Teste Técnico',
+    'Entrevista Técnica', 'Entrevista Coordenador', 'Proposta / Oferta'
+];
+
 let _stageManagerOpen = false;
+let _dragUnlocked     = localStorage.getItem('admin_drag_unlocked') === 'true';
+let _sortableInst     = null;
 
 function toggleStageManager(appId) {
     const section = document.getElementById('stageManagerSection');
     if (_stageManagerOpen) {
         section.hidden = true;
         _stageManagerOpen = false;
+        _sortableInst = null;
         return;
     }
     const app = _applications.find(a => a.id === appId);
@@ -2405,7 +2451,8 @@ function renderStageManager(app) {
             </button>`;
         };
         return `
-        <div class="stage-manager-row${!s.active ? ' inactive' : ''}">
+        <div class="stage-manager-row${!s.active ? ' inactive' : ''}${_dragUnlocked ? ' drag-active' : ''}">
+            <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
             <span class="stage-toggle${s.active ? ' active' : ''}"
                   title="${s.active ? 'Ativa — clique para ocultar' : 'Oculta — clique para ativar'}"
                   onclick="toggleStageActive('${app.id}',${i})">
@@ -2425,13 +2472,113 @@ function renderStageManager(app) {
 
     section.innerHTML = `
         <div style="border-top:1px solid var(--border-soft);padding-top:12px">
-            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Gerenciar etapas</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim)">Gerenciar etapas</div>
+                <button class="sm-reorder-btn${_dragUnlocked ? ' unlocked' : ''}" id="smReorderBtn"
+                        onclick="toggleDragMode('${app.id}')">
+                    <i class="fa-solid fa-${_dragUnlocked ? 'lock-open' : 'lock'}"></i>
+                    ${_dragUnlocked ? 'Concluir' : 'Reordenar'}
+                </button>
+            </div>
             <div class="stage-manager" id="stageManagerList">${rows}</div>
-            <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick="addCustomStage('${app.id}')">
+            <button class="btn btn-sm" id="smAddStageBtn" style="margin-top:8px;width:100%"
+                    onclick="addCustomStage('${app.id}')"
+                    ${_dragUnlocked ? 'disabled' : ''}>
                 <i class="fa-solid fa-plus"></i> Adicionar etapa
+            </button>
+            <button class="sm-reset-link${_dragUnlocked ? ' visible' : ''}" id="smResetLink"
+                    onclick="resetStageOrder('${app.id}')">
+                ↺ Restaurar ordem padrão
             </button>
         </div>
     `;
+    initSortable(app.id);
+}
+
+function initSortable(appId) {
+    const el = document.getElementById('stageManagerList');
+    if (!el) return;
+    _sortableInst = Sortable.create(el, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        disabled: !_dragUnlocked,
+        onEnd: async (evt) => {
+            if (evt.oldIndex === evt.newIndex) return;
+            const app = _applications.find(a => a.id === appId);
+            if (!app) return;
+            const prevStages = app.stages.map(s => ({
+                name: s.name, status: stageStatus(s), active: s.active !== false
+            }));
+            const reordered = [...app.stages];
+            const [moved] = reordered.splice(evt.oldIndex, 1);
+            reordered.splice(evt.newIndex, 0, moved);
+            const next = reordered.map(s => ({
+                name: s.name, status: stageStatus(s), active: s.active !== false
+            }));
+            _sortableInst?.option('disabled', true);
+            try {
+                await patchStages(appId, next);
+                if (_dragUnlocked) _applyDragMode(true);
+                showToast('Etapa reordenada', 'success', {
+                    label: '↩ Desfazer',
+                    callback: async () => {
+                        try {
+                            await patchStages(appId, prevStages);
+                            if (_dragUnlocked) _applyDragMode(true);
+                        } catch (e) { showToast(e.message, 'error'); }
+                    }
+                });
+            } catch (e) {
+                showToast(e.message, 'error');
+                if (_dragUnlocked) _sortableInst?.option('disabled', false);
+            }
+        }
+    });
+}
+
+function toggleDragMode(appId) {
+    _dragUnlocked = !_dragUnlocked;
+    localStorage.setItem('admin_drag_unlocked', _dragUnlocked);
+    _applyDragMode(_dragUnlocked);
+}
+
+function _applyDragMode(enabled) {
+    _sortableInst?.option('disabled', !enabled);
+    document.querySelectorAll('#stageManagerList .stage-manager-row')
+            .forEach(r => r.classList.toggle('drag-active', enabled));
+    const btn    = document.getElementById('smReorderBtn');
+    const link   = document.getElementById('smResetLink');
+    const addBtn = document.getElementById('smAddStageBtn');
+    if (btn) {
+        btn.classList.toggle('unlocked', enabled);
+        btn.innerHTML = `<i class="fa-solid fa-${enabled ? 'lock-open' : 'lock'}"></i> ${enabled ? 'Concluir' : 'Reordenar'}`;
+    }
+    if (link)   link.classList.toggle('visible', enabled);
+    if (addBtn) addBtn.disabled = enabled;
+}
+
+async function resetStageOrder(appId) {
+    if (!confirm('Restaurar a ordem padrão das etapas?\nEtapas personalizadas irão para o final da lista.')) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const sorted = [...app.stages].sort((a, b) => {
+        const ia = DEFAULT_STAGE_NAMES.indexOf(a.name);
+        const ib = DEFAULT_STAGE_NAMES.indexOf(b.name);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+    });
+    const normalized = sorted.map(s => ({
+        name: s.name, status: stageStatus(s), active: s.active !== false
+    }));
+    try {
+        await patchStages(appId, normalized);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Ordem restaurada');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function patchStages(appId, stages) {
@@ -3709,12 +3856,22 @@ document.getElementById('shareModal').addEventListener('click', e => {
 });
 
 // ─── TOAST ────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
+function showToast(msg, type = 'success', action = null) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    t.innerHTML = '';
+    const span = document.createElement('span');
+    span.textContent = msg;
+    t.appendChild(span);
+    if (action) {
+        const btn = document.createElement('button');
+        btn.className = 'toast-action';
+        btn.textContent = action.label;
+        btn.onclick = () => { t.classList.remove('show'); action.callback(); };
+        t.appendChild(btn);
+    }
     t.className = `toast ${type} show`;
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+    t._timer = setTimeout(() => t.classList.remove('show'), action ? 6000 : 3500);
 }
 
 // ─── UTILS ────────────────────────────────────────────────
