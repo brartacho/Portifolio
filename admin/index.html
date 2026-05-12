@@ -2346,7 +2346,7 @@ function renderTimeline(stages) {
             circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
             content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
         } else if (st === 'rejected') {
-            circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
+            circleClass = 'rejected'; lineClass = 'other'; labelClass = 'rejected';
             content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
         } else if (st === 'running') {
             circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
