@@ -1240,6 +1240,24 @@
         }
         .stage-name-input:focus { color:var(--cyan); }
 
+        /* Segmented control de Resultado da candidatura */
+        .result-segmented {
+            display:flex; gap:6px; flex-wrap:wrap;
+        }
+        .result-seg {
+            flex:1; min-width:0;
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:8px; padding:8px 10px;
+            font-family:var(--font-mono); font-size:0.72rem; font-weight:600;
+            color:var(--text-dim); cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            transition:all 0.15s;
+        }
+        .result-seg:hover { border-color:var(--text-dim); color:var(--text); }
+        .result-seg.active.r-em_processo { border-color:var(--cyan);   background:rgba(34,211,238,0.12);  color:var(--cyan); }
+        .result-seg.active.r-aprovado    { border-color:#22c55e;       background:rgba(34,197,94,0.15);   color:#22c55e; }
+        .result-seg.active.r-recusado    { border-color:#ef4444;       background:rgba(239,68,68,0.15);   color:#ef4444; }
+
         /* Botões de estado por etapa no gerenciador */
         .sm-status-btns { display:flex; gap:3px; flex-shrink:0; }
         .sm-status-btn {
@@ -2155,7 +2173,7 @@ let _applications = [];
 let _vagasFilter  = 'all';
 let _openAppId    = null;
 
-// Retorna o status canônico de uma etapa (suporta formato novo e legado)
+// Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
 function stageStatus(s) {
     if (s.status) return s.status;
     if (s.done)    return 'done';
@@ -2163,12 +2181,11 @@ function stageStatus(s) {
     return 'pending';
 }
 
+// Resultado da candidatura: vem direto do campo `result` (em_processo|aprovado|recusado)
+// Frontend traduz para os slugs do filtro: aprovado / recusado / em-processo
 function getAppStatus(app) {
-    const active = (app.stages || []).filter(s => s.active !== false);
-    if (active.some(s => s.name === 'Aprovado' && stageStatus(s) === 'done')) return 'aprovado';
-    if (active.some(s => s.name === 'Recusado' && ['done','running','rejected'].includes(stageStatus(s)))) return 'recusado';
-    if (active.some(s => ['running','done','rejected'].includes(stageStatus(s)))) return 'em-processo';
-    return 'em-processo';
+    const r = app.result || 'em_processo';
+    return r === 'em_processo' ? 'em-processo' : r;
 }
 
 function getAppCurrentStageName(app) {
@@ -2295,6 +2312,11 @@ function renderDrawerBody(app) {
         </div>
 
         <div>
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Resultado</div>
+            <div class="result-segmented" id="drawerResult">${renderResultSegmented(app)}</div>
+        </div>
+
+        <div>
             <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Processo seletivo</div>
             <div class="stage-timeline" id="drawerTimeline">
                 ${renderTimeline(app.stages || [])}
@@ -2321,13 +2343,8 @@ function renderTimeline(stages) {
         let circleClass, lineClass, labelClass, content = '';
 
         if (st === 'done') {
-            if (s.name === 'Recusado') {
-                circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
-                content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
-            } else {
-                circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
-                content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
-            }
+            circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
+            content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
         } else if (st === 'rejected') {
             circleClass = 'rejected'; lineClass = 'rejected'; labelClass = 'rejected';
             content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
@@ -2433,9 +2450,11 @@ async function patchStages(appId, stages) {
 async function toggleStageActive(appId, stageIdx) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = app.stages.map((s, i) =>
-        i === stageIdx ? { ...s, active: !s.active, status: 'pending', done: false, current: false } : s
-    );
+    const stages = app.stages.map((s, i) => {
+        const nextActive = i === stageIdx ? !s.active : s.active !== false;
+        const nextStatus = i === stageIdx ? 'pending' : stageStatus(s);
+        return { name: s.name, status: nextStatus, active: nextActive };
+    });
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2444,7 +2463,11 @@ async function renameStage(appId, stageIdx, newName) {
     if (!trimmed) return;
     const app = _applications.find(a => a.id === appId);
     if (!app || app.stages[stageIdx].name === trimmed) return;
-    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, name: trimmed } : s);
+    const stages = app.stages.map((s, i) => ({
+        name: i === stageIdx ? trimmed : s.name,
+        status: stageStatus(s),
+        active: s.active !== false,
+    }));
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2453,10 +2476,34 @@ async function setStageStatus(appId, stageIdx, status) {
     if (!app) return;
     // Atualiza apenas a etapa clicada — sem cascade nas demais
     const stages = app.stages.map((s, i) => i === stageIdx
-        ? { ...s, status, done: status === 'done', current: status === 'running' }
-        : s
+        ? { name: s.name, status, active: s.active !== false }
+        : { name: s.name, status: stageStatus(s), active: s.active !== false }
     );
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderResultSegmented(app) {
+    const r = app.result || 'em_processo';
+    const item = (val, icon, label) => `
+        <button class="result-seg${r === val ? ` active r-${val}` : ''}"
+                onclick="setAppResult('${app.id}','${val}')">
+            <i class="fa-solid fa-${icon}"></i> ${label}
+        </button>`;
+    return item('em_processo', 'clock',        'Em processo')
+         + item('aprovado',    'circle-check', 'Aprovado')
+         + item('recusado',    'circle-xmark', 'Recusado');
+}
+
+async function setAppResult(appId, result) {
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result });
+        const idx = _applications.findIndex(a => a.id === appId);
+        if (idx !== -1) _applications[idx] = updated;
+        // Re-renderiza só o segmented (preserva scroll do drawer)
+        const seg = document.getElementById('drawerResult');
+        if (seg) seg.innerHTML = renderResultSegmented(updated);
+        renderApplicationsTable();
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function addCustomStage(appId) {
@@ -2464,7 +2511,8 @@ async function addCustomStage(appId) {
     if (!name || !name.trim()) return;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = [...app.stages, { name: name.trim(), status: 'pending', done: false, current: false, active: true }];
+    const normalized = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const stages = [...normalized, { name: name.trim(), status: 'pending', active: true }];
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 

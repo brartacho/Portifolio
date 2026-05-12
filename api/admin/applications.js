@@ -6,6 +6,9 @@ const TEXT_MAX = { empresa: 200, vaga: 200, linkedin_empresa: 300, link_vaga: 50
 
 const CONTROL_CHARS = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
 
+const VALID_STATUSES = new Set(['pending', 'running', 'done', 'rejected']);
+const VALID_RESULTS  = new Set(['em_processo', 'aprovado', 'recusado']);
+
 function clean(str, max) {
     if (typeof str !== 'string') return null;
     return str.replace(CONTROL_CHARS, '').trim().slice(0, max) || null;
@@ -67,7 +70,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id obrigatório' });
 
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, stages } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, stages, result } = req.body || {};
 
         const patch = {};
         if (empresa !== undefined) {
@@ -87,13 +90,27 @@ export default async function handler(req, res) {
             }
             patch.data_envio = data_envio || null;
         }
-        if (stages           !== undefined) {
-            if (!Array.isArray(stages) || stages.some(s => typeof s.name !== 'string')) {
-                return res.status(400).json({ error: 'stages deve ser array de objetos com name (string)' });
+        if (stages !== undefined) {
+            if (!Array.isArray(stages)) {
+                return res.status(400).json({ error: 'stages deve ser array' });
             }
-            const currentCount = stages.filter(s => s.current && s.active !== false).length;
-            if (currentCount > 1) return res.status(400).json({ error: 'Apenas uma etapa pode ser current:true' });
+            for (const s of stages) {
+                if (typeof s.name !== 'string' || !s.name.trim()) {
+                    return res.status(400).json({ error: 'stages: name (string) é obrigatório' });
+                }
+                if (s.status !== undefined && !VALID_STATUSES.has(s.status)) {
+                    return res.status(400).json({ error: `stages: status inválido (${s.status})` });
+                }
+            }
+            const runningCount = stages.filter(s => s.status === 'running' && s.active !== false).length;
+            if (runningCount > 1) return res.status(400).json({ error: 'Apenas uma etapa pode estar executando' });
             patch.stages = stages;
+        }
+        if (result !== undefined) {
+            if (!VALID_RESULTS.has(result)) {
+                return res.status(400).json({ error: `result inválido (${result})` });
+            }
+            patch.result = result;
         }
 
         if (Object.keys(patch).length === 0) return res.status(400).json({ error: 'Nenhum campo para atualizar' });
