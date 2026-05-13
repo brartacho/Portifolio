@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -490,6 +491,8 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
+            background: var(--bg-elevated);
+            color: var(--text-soft);
             transition: opacity 0.2s, transform 0.15s;
         }
 
@@ -501,6 +504,13 @@
         .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
         .btn-ghost { background: var(--bg-elevated); color: var(--text-soft); border: 1px solid var(--border); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        /* Enviar no contexto da tabela de CVs: ghost cyan em vez de sólido */
+        #cvTable .btn-cyan.cv-action-btn {
+            background: var(--cyan-soft);
+            color: var(--cyan);
+            border: 1px solid var(--cyan-mid);
+        }
 
         /* ─── CARDS / PANELS ─────────────────────────── */
         .panel {
@@ -712,14 +722,24 @@
         .th-filter-input::placeholder { color: rgba(255,255,255,0.22); }
         .th-filter-input::-webkit-search-cancel-button { cursor: pointer; opacity: 0.5; }
 
+        /* Scrollbar discreta para o tema escuro */
+        * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+        *::-webkit-scrollbar { width: 4px; height: 4px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+        *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
         /* Calendar icon light in dark background */
-        .th-filter-input[type="date"] { color-scheme: dark; padding-right: 2px; }
-        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator {
+        .th-filter-input[type="date"],
+        .mock-input[type="date"] { color-scheme: dark; padding-right: 2px; }
+        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator,
+        .mock-input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             opacity: 0.55;
             transition: opacity 0.15s;
         }
-        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+        .th-filter-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        .mock-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 
         .th-filter-count {
             display: inline-flex;
@@ -757,7 +777,75 @@
         }
 
         /* ─── TABLE ──────────────────────────────────── */
-        .tbl-wrap { overflow-x: auto; }
+        .tbl-wrap { overflow-x: auto; position: relative; }
+
+        /* Coluna de ações: sempre alinhada à direita, sem pulo */
+        .row-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        th.col-actions { width: 1%; text-align: right; white-space: nowrap; }
+
+        /* Botões ícone-only nas tabelas: quadrados e centrados */
+        .row-actions .btn {
+            justify-content: center;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        /* Overlay de loading sobre a tabela — não substitui linhas, evita jump */
+        .tbl-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 10, 15, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 20;
+            pointer-events: none;
+        }
+        .tbl-overlay.visible {
+            display: flex;
+            pointer-events: all;
+        }
+        .tbl-overlay-spinner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cyan);
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            background: rgba(10,10,20,0.75);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(34,211,238,0.18);
+        }
+
+        /* Skeleton shimmer para primeira carga */
+        @keyframes skel-shimmer {
+            0%   { background-position: -400% center; }
+            100% { background-position: 400% center; }
+        }
+        .skel-cell {
+            display: inline-block;
+            height: 12px;
+            border-radius: 4px;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.04) 25%,
+                rgba(255,255,255,0.1)  50%,
+                rgba(255,255,255,0.04) 75%
+            );
+            background-size: 400% 100%;
+            animation: skel-shimmer 1.6s ease-in-out infinite;
+        }
+        #logTable tr.skel-row td { padding: 14px 14px; border-bottom: 1px solid var(--border); }
 
         table {
             width: 100%;
@@ -795,6 +883,7 @@
             font-family: var(--font-mono);
             font-size: 0.72rem;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .badge-active   { background: var(--success-soft);  color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
@@ -1028,13 +1117,223 @@
         }
 
         /* ─── RESPONSIVE ─────────────────────────────── */
+        .vaga-meta-mobile { display: none; }
+        .col-gestor, .col-date { }
+        .cv-btn-lbl { display: none; }
+
         @media (max-width: 600px) {
-            .app-content { padding: 16px; }
-            .panel { padding: 18px; }
+            /* Geral */
+            .app-content { padding: 12px; }
+            .panel { padding: 14px 12px; }
             .row-2, .row-3 { grid-template-columns: 1fr; }
             .share-actions { grid-template-columns: 1fr; }
-            .app-tabs { padding: 12px 16px 0; gap: 0; }
-            .tab-btn { padding: 8px 12px; font-size: 0.82rem; }
+            .app-tabs { padding: 10px 12px 0; gap: 0; overflow-x: auto; flex-wrap: nowrap; }
+            .tab-btn { padding: 8px 10px; font-size: 0.78rem; flex-shrink: 0; white-space: nowrap; }
+            .app-header { padding: 0 12px; }
+
+            /* Filtros com scroll horizontal */
+            .vagas-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+            .vagas-filter-chip { flex-shrink: 0; }
+
+            /* ── Vagas table: card 2-col ── */
+            #vagasTableWrap { overflow: visible; }
+            .vagas-table { display: block; }
+            .vagas-table thead { display: none; }
+            .vagas-table tbody { display: flex; flex-direction: column; gap: 6px; }
+            .vagas-table tbody tr {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                align-items: center;
+                padding: 12px 14px;
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                cursor: pointer;
+                transition: background 0.1s;
+            }
+            .vagas-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+            .vagas-table tbody tr.selected { background: rgba(34,211,238,0.04); border-color: rgba(34,211,238,0.2); }
+            .vagas-table tbody tr td { border: none !important; padding: 0; background: transparent !important; }
+            .vagas-table tr td:nth-child(1) { grid-column: 1; }
+            .vagas-table tr td:nth-child(4) { grid-column: 2; padding-left: 10px; }
+            .col-gestor, .col-date { display: none; }
+            .vaga-meta-mobile { display: block; font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+            .stage-badge { white-space: normal; text-align: center; line-height: 1.3; max-width: 88px; font-size: 0.68rem; }
+
+            /* ── tbl-wrap tables (CVs, tokens, logs) → card list ── */
+            .tbl-wrap { overflow: visible; }
+            .tbl-wrap table { display: block; width: 100%; }
+            .tbl-wrap thead { display: none; }
+            .tbl-wrap tbody { display: flex; flex-direction: column; gap: 8px; }
+            .tbl-wrap tbody tr {
+                display: flex;
+                flex-direction: column;
+                border: 1px solid var(--border-soft);
+                border-radius: 10px;
+                padding: 12px 14px;
+                gap: 6px;
+                background: var(--bg-soft);
+            }
+            /* Skeleton: mostra só 1 barra */
+            .tbl-wrap tbody tr.skel-row { flex-direction: row; height: 52px; overflow: hidden; gap: 0; }
+            .tbl-wrap tbody tr.skel-row td { display: none; border: none; }
+            .tbl-wrap tbody tr.skel-row td:first-child { display: block; flex: 1; height: 100%; }
+            /* Células de dados */
+            .tbl-wrap tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 0;
+                border: none;
+                font-size: 0.84rem;
+                gap: 10px;
+            }
+            .tbl-wrap tbody td::before {
+                content: attr(data-label);
+                font-size: 0.68rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-dim);
+                flex-shrink: 0;
+                min-width: 74px;
+                padding-top: 2px;
+            }
+            .tbl-wrap tbody td:not([data-label])::before { display: none; }
+            /* Célula de ações (sem data-label) */
+            .tbl-wrap tbody td:not([data-label]) {
+                justify-content: flex-end;
+                border-top: 1px solid var(--border-soft);
+                padding-top: 10px;
+                margin-top: 2px;
+            }
+            /* Botões de ação mais fáceis de tocar */
+            .row-actions { gap: 8px; }
+            .btn.btn-sm { min-height: 34px; min-width: 34px; padding: 0 10px; }
+
+            /* ── App header: compacto ── */
+            .app-header { gap: 8px; padding: 0 12px; }
+            .app-refresh-ts { display: none; }
+            .app-logout { padding: 5px 8px; font-size: 0; }
+            .app-logout i { font-size: 0.85rem; }
+
+            /* ── Filter bar: empilhado ── */
+            .filter-bar { flex-direction: column; gap: 8px; }
+            .filter-search { width: 100%; }
+            .th-filter-select { width: 100% !important; }
+            .filter-date-group { width: 100%; flex-wrap: wrap; gap: 6px; }
+            .filter-date-group .th-filter-input[type="date"] { flex: 1; width: auto !important; min-width: 110px; }
+
+            /* ── Drawer: full-screen ── */
+            .vagas-drawer { width: 100vw; max-width: 100vw; }
+            .drawer-body { padding: 14px 16px; }
+            .drawer-header { padding: 16px 16px 12px; }
+
+            /* ── Botões do drawer (Editar / Gerenciar / Deletar) ── */
+            .drawer-actions { flex-wrap: wrap; }
+            .drawer-actions .btn-sm:not(.btn-danger) { flex: 1; justify-content: center; text-align: center; }
+
+            /* ── Resultado segmentado: cabe em 1 linha ── */
+            .result-seg { padding: 6px 4px; font-size: 0.72rem; gap: 4px; }
+
+            /* ── Stage manager no drawer ── */
+            .stage-manager-row { gap: 4px; }
+            .sm-status-btns { gap: 3px; }
+            .sm-status-btn { padding: 2px 5px; font-size: 0.66rem; }
+
+            /* ── CV table: card redesenhado (sem labels, hierarquia visual) ── */
+            #cvTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto auto;
+                gap: 0;
+                padding: 0 !important;
+                background: var(--bg-soft) !important;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            #cvTable td {
+                display: block !important;
+                border: none !important;
+                margin: 0 !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            #cvTable td::before { display: none !important; }
+
+            /* Linha 1 col 1: nome + descrição */
+            #cvTable td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                padding: 14px 0 4px 14px !important;
+            }
+            #cvTable td:nth-child(1) strong { font-size: 0.9rem; }
+            #cvTable td:nth-child(1) small { font-size: 0.72rem; display: block; margin-top: 2px; }
+
+            /* Linha 1 col 2: badge de status */
+            #cvTable td:nth-child(3) {
+                grid-column: 2;
+                grid-row: 1;
+                display: flex !important;
+                align-items: flex-start;
+                padding: 14px 14px 4px 8px !important;
+            }
+
+            /* Linha 2: arquivo (largura total) */
+            #cvTable td:nth-child(2) {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                padding: 6px 14px 2px !important;
+                font-size: 0.72rem !important;
+                color: var(--text-dim) !important;
+                word-break: break-all;
+            }
+            #cvTable td:nth-child(2) span { font-size: 0.72rem !important; }
+
+            /* Linha 3: data de adição */
+            #cvTable td:nth-child(4) {
+                grid-column: 1 / -1;
+                grid-row: 3;
+                padding: 2px 14px 10px !important;
+                font-size: 0.68rem !important;
+                color: var(--text-dim) !important;
+            }
+
+            /* Linha 4: toolbar de ações */
+            #cvTable td:nth-child(5) {
+                grid-column: 1 / -1;
+                grid-row: 4;
+                display: flex !important;
+                justify-content: stretch !important;
+                border-top: 1px solid var(--border-soft) !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: rgba(255,255,255,0.02) !important;
+            }
+            #cvTable td:nth-child(5) .row-actions {
+                flex: 1;
+                gap: 0;
+                border-radius: 0;
+            }
+            #cvTable .cv-action-btn {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 5px;
+                border-radius: 0;
+                border: none;
+                border-right: 1px solid var(--border-soft);
+                min-height: 40px;
+                padding: 0 8px;
+                font-size: 0.75rem;
+            }
+            #cvTable .btn-danger {
+                border-radius: 0;
+                border: none;
+                min-height: 40px;
+                min-width: 44px;
+                padding: 0;
+            }
+            .cv-btn-lbl { display: inline; font-size: 0.72rem; }
         }
 
         /* ─── GESTÃO DE VAGAS ───────────────────────── */
@@ -1062,6 +1361,43 @@
         .stage-badge.status-aprovado    { background:rgba(74,222,128,0.12); color:#4ade80; }
         .stage-badge.status-recusado    { background:rgba(239,68,68,0.12); color:#f87171; }
         .stage-badge.status-enviado     { background:rgba(99,102,241,0.12); color:#818cf8; }
+
+        /* ─── BADGE DE CANAL NO DRAWER ────────────────── */
+        .vaga-source-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.65rem; font-weight: 600; padding: 2px 7px;
+            border-radius: 10px; vertical-align: middle;
+        }
+        .vaga-source-badge.email  { background:rgba(34,211,238,0.1); color:var(--cyan); border:1px solid rgba(34,211,238,0.2); }
+        .vaga-source-badge.manual { background:rgba(255,255,255,0.05); color:var(--text-dim); border:1px solid var(--border); }
+
+        /* ─── INFO SECTIONS DO DRAWER ──────────────────── */
+        .dinfo-section {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid var(--border-soft);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .dinfo-label {
+            font-size: 0.62rem; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--text-dim); font-weight: 600;
+        }
+        .dinfo-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-soft); }
+        .dinfo-icon { color: var(--text-dim); font-size: 0.72rem; width: 14px; text-align: center; flex-shrink: 0; }
+        .dinfo-link { color: var(--cyan); text-decoration: none; }
+        .dinfo-link:hover { text-decoration: underline; }
+        .dinfo-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .dinfo-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 20px;
+            border: 1px solid var(--border); font-size: 0.72rem;
+            color: var(--cyan); text-decoration: none;
+            background: rgba(34,211,238,0.04);
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .dinfo-chip:hover { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.3); }
+        .dinfo-obs { font-size: 0.75rem; color: var(--text-soft); line-height: 1.5; white-space: pre-wrap; }
 
         /* Drawer */
         .vagas-drawer-overlay {
@@ -1097,22 +1433,26 @@
             width:20px; height:20px; border-radius:50%; flex-shrink:0;
             display:flex; align-items:center; justify-content:center; font-size:0.6rem;
         }
-        .stage-circle.done    { background:#22c55e; color:#fff; }
-        .stage-circle.current { background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.4); }
-        .stage-circle.inactive{ border:1px dashed #334155; background:transparent; }
-        .stage-circle.pending { border:1px solid #334155; background:transparent; }
+        .stage-circle.done-step  { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); border:1px solid rgba(255,255,255,0.1); }
+        .stage-circle.done       { background:#22c55e; color:#fff; }
+        .stage-circle.rejected   { background:#ef4444; color:#fff; }
+        .stage-circle.current    { background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.4); }
+        .stage-circle.pending    { border:1px solid #334155; background:transparent; }
         .stage-line { width:1px; flex:1; min-height:12px; margin:2px 0; }
-        .stage-line.done    { background:#22c55e; }
-        .stage-line.current { background:linear-gradient(#eab308, #334155); }
-        .stage-line.other   { background:#1e2030; }
+        .stage-line.done-step { background:rgba(255,255,255,0.12); }
+        .stage-line.done      { background:#22c55e; }
+        .stage-line.rejected  { background:#ef4444; }
+        .stage-line.current   { background:linear-gradient(#eab308, #334155); }
+        .stage-line.other     { background:#1e2030; }
         .stage-label {
             font-size:0.72rem; padding:1px 0 12px; line-height:1.3;
             transition:opacity 0.15s;
         }
-        .stage-label.inactive { opacity:0.3; }
-        .stage-label.done     { color:#22c55e; }
-        .stage-label.current  { color:#eab308; font-weight:600; }
-        .stage-label.pending  { color:var(--text-dim); }
+        .stage-label.done-step { color:var(--text-dim); }
+        .stage-label.done      { color:#22c55e; }
+        .stage-label.rejected  { color:#ef4444; font-weight:600; }
+        .stage-label.current   { color:#eab308; font-weight:600; }
+        .stage-label.pending   { color:var(--text-dim); }
 
         /* Gerenciador de etapas */
         .stage-manager { display:flex; flex-direction:column; gap:6px; }
@@ -1129,6 +1469,98 @@
             font-family:var(--font-display); outline:none;
         }
         .stage-name-input:focus { color:var(--cyan); }
+
+        /* Segmented control de Resultado da candidatura */
+        .result-segmented {
+            display:flex; gap:6px; flex-wrap:wrap;
+        }
+        .result-seg {
+            flex:1; min-width:0;
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:8px; padding:8px 10px;
+            font-family:var(--font-mono); font-size:0.72rem; font-weight:600;
+            color:var(--text-dim); cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            transition:all 0.15s;
+        }
+        .result-seg:hover { border-color:var(--text-dim); color:var(--text); }
+        .result-seg.active.r-em_processo { border-color:#eab308;       background:rgba(234,179,8,0.12);   color:#eab308; }
+        .result-seg.active.r-aprovado    { border-color:#22c55e;       background:rgba(34,197,94,0.15);   color:#22c55e; }
+        .result-seg.active.r-recusado    { border-color:#ef4444;       background:rgba(239,68,68,0.15);   color:#ef4444; }
+
+        /* Botões de estado por etapa no gerenciador */
+        .sm-status-btns { display:flex; gap:3px; flex-shrink:0; }
+        .sm-status-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; font-size:0.68rem; color:var(--text-dim);
+            transition:all 0.12s;
+        }
+        .sm-status-btn:hover { border-color:var(--text-dim); color:var(--text); }
+        .sm-status-btn.active.st-pending  { border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.07); color:var(--text); }
+        .sm-status-btn.active.st-running  { border-color:#eab308; background:rgba(234,179,8,0.15); color:#eab308; }
+        .sm-status-btn.active.st-done     { border-color:#22c55e; background:rgba(34,197,94,0.15); color:#22c55e; }
+        .sm-status-btn.active.st-rejected { border-color:#ef4444; background:rgba(239,68,68,0.15); color:#ef4444; }
+
+        /* Drag handle */
+        .drag-handle {
+            color:var(--text-dim); font-size:0.75rem; cursor:grab;
+            padding:0 2px; opacity:0; pointer-events:none; flex-shrink:0;
+            transition:opacity 0.15s;
+        }
+        /* Modo reordenação: handle visível, outros controles inativos */
+        .stage-manager-row.drag-active .drag-handle      { opacity:1; pointer-events:auto; }
+        .stage-manager-row.drag-active .sm-status-btns   { opacity:0.3; pointer-events:none; }
+        .stage-manager-row.drag-active .stage-toggle     { opacity:0.3; pointer-events:none; }
+        .stage-manager-row.drag-active .stage-name-input { opacity:0.5; pointer-events:none; }
+        /* Ghost/chosen do SortableJS */
+        .sortable-ghost  { opacity:0.4; background:var(--bg-hover); }
+        .sortable-chosen { background:var(--bg-hover); }
+        /* Botão de reordenar no header */
+        .sm-reorder-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; padding:3px 8px; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer;
+            display:flex; align-items:center; gap:4px; transition:all 0.12s;
+        }
+        .sm-reorder-btn:hover    { border-color:var(--text-dim); color:var(--text); }
+        .sm-reorder-btn.unlocked { border-color:var(--cyan); color:var(--cyan); }
+        /* Botões de histórico (undo/redo) no header do manager */
+        .sm-hist-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:none; align-items:center; justify-content:center;
+            font-size:0.7rem; color:var(--text-dim); cursor:pointer;
+            transition:all 0.12s; flex-shrink:0;
+        }
+        .sm-hist-btn:not(:disabled):hover { border-color:var(--text-dim); color:var(--text); }
+        .sm-hist-btn:disabled { opacity:0.3; cursor:default; }
+        /* Botão de cancelar reordenamento */
+        .sm-cancel-btn {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; width:26px; height:26px;
+            display:none; align-items:center; justify-content:center;
+            font-size:0.7rem; color:var(--text-dim); cursor:pointer;
+            transition:all 0.12s; flex-shrink:0;
+        }
+        .sm-cancel-btn:hover { border-color:#ef4444; color:#ef4444; }
+        /* Botão de reset — visível apenas no modo reordenação */
+        .sm-reset-link {
+            background:transparent; border:1px solid var(--border-soft);
+            border-radius:6px; padding:3px 8px; font-size:0.68rem;
+            color:var(--text-dim); cursor:pointer; text-decoration:none;
+            display:none; align-items:center; gap:4px; transition:all 0.12s;
+            font-family:inherit;
+        }
+        .sm-reset-link:hover   { border-color:var(--text-dim); color:var(--text); }
+        .sm-reset-link.visible { display:inline-flex; }
+        /* Ação no toast (↩ Desfazer) */
+        .toast-action {
+            background:transparent; border:1px solid currentColor;
+            border-radius:6px; padding:3px 8px; font-size:0.75rem;
+            cursor:pointer; color:inherit; font-family:inherit; flex-shrink:0;
+        }
     </style>
 </head>
 <body>
@@ -1142,8 +1574,8 @@
         <p class="login-label">// painel administrativo</p>
 
         <div class="form-group">
-            <label for="loginUsername">Email ou telefone</label>
-            <input type="text" id="loginUsername" placeholder="seu@email.com ou +55..." autocomplete="username" inputmode="email">
+            <label for="loginUsername">Email</label>
+            <input type="email" id="loginUsername" placeholder="seu@email.com" autocomplete="username" inputmode="email">
         </div>
         <div class="form-group">
             <label for="loginPassword">Senha</label>
@@ -1307,7 +1739,7 @@
                                 <th>Arquivo para download</th>
                                 <th>Status</th>
                                 <th class="sortable sort-active" data-sort="created_at" onclick="toggleSort('cvs','created_at')">Adicionado<span class="sort-arrow">▼</span></th>
-                                <th></th>
+                                <th class="col-actions"></th>
                             </tr>
                         </thead>
                         <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1381,12 +1813,12 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Label</th>
-                                <th class="sortable" data-sort="cv_versions.name" onclick="toggleSort('tokens','cv_versions.name')">Currículo<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="status" onclick="toggleSort('tokens','status')">Status<span class="sort-arrow">↕</span></th>
+                                <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
+                                <th>Currículo</th>
+                                <th>Status</th>
                                 <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
                                 <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
-                                <th></th>
+                                <th class="col-actions"></th>
                             </tr>
                         </thead>
                         <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
@@ -1420,7 +1852,12 @@
                         <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()">
                     </div>
                 </div>
-                <div class="tbl-wrap">
+                <div class="tbl-wrap" id="logTblWrap">
+                    <div class="tbl-overlay" id="logOverlay">
+                        <span class="tbl-overlay-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando…
+                        </span>
+                    </div>
                     <table>
                         <thead>
                             <tr>
@@ -1430,7 +1867,7 @@
                                 <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
                             </tr>
                         </thead>
-                        <tbody id="logTable"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                        <tbody id="logTable"></tbody>
                     </table>
                 </div>
                 <div class="pagination" id="logPagination" style="display:none">
@@ -1444,7 +1881,7 @@
         <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
         <div id="tab-vagas" class="tab-panel">
 
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
                 <div class="vagas-filters" id="vagasFilters">
                     <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
                     <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
@@ -1452,6 +1889,14 @@
                     <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
                 </div>
                 <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+            </div>
+
+            <div class="filter-bar" style="margin-bottom:12px">
+                <div class="filter-search">
+                    <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderApplicationsTable()">
+                    <span class="th-filter-count" id="vagasCount"></span>
+                    <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
             <div id="vagasTableWrap" style="overflow-x:auto">
@@ -1696,6 +2141,23 @@
 <!-- ─── TOAST ────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
+<!-- ─── PDF PREVIEW MODAL ────────────────────────── -->
+<div id="pdfPreviewOverlay" onclick="closePdfPreview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1100;align-items:center;justify-content:center;padding:16px">
+    <div onclick="event.stopPropagation()" style="background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:12px;width:min(860px,100%);height:min(90vh,900px);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border-soft);flex-shrink:0">
+            <span id="pdfPreviewTitle" style="font-size:0.85rem;font-weight:500;color:var(--text)"></span>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" id="pdfDownloadBtn" onclick="downloadCV(_previewCvId)"><i class="fa-solid fa-download"></i> Baixar</button>
+                <button class="btn btn-sm" onclick="closePdfPreview()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div style="flex:1;overflow:hidden;position:relative">
+            <div id="pdfLoadingMsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:0.85rem">Carregando PDF…</div>
+            <iframe id="pdfPreviewFrame" style="width:100%;height:100%;border:none;display:none" onload="document.getElementById('pdfLoadingMsg').style.display='none';this.style.display='block'"></iframe>
+        </div>
+    </div>
+</div>
+
 <script>
 // ─── STATE ───────────────────────────────────────────────
 let jwtToken = null;
@@ -1743,7 +2205,7 @@ async function doLogin() {
     errEl.style.display = 'none';
 
     if (!username) {
-        errEl.textContent = 'Informe seu email ou telefone.';
+        errEl.textContent = 'Informe seu email.';
         errEl.style.display = 'block';
         return;
     }
@@ -1927,9 +2389,38 @@ async function downloadCV(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+let _previewCvId = null;
+
+async function previewCV(id, name) {
+    _previewCvId = id;
+    const overlay = document.getElementById('pdfPreviewOverlay');
+    const frame   = document.getElementById('pdfPreviewFrame');
+    const loading = document.getElementById('pdfLoadingMsg');
+    const title   = document.getElementById('pdfPreviewTitle');
+    title.textContent = name;
+    frame.style.display = 'none';
+    frame.src = '';
+    loading.style.display = 'flex';
+    overlay.style.display = 'flex';
+    try {
+        const dl = await api('GET', `/api/admin/cv-storage-url?id=${id}&preview=1`);
+        frame.src = dl.signedUrl;
+    } catch (e) {
+        loading.textContent = 'Erro ao carregar PDF: ' + e.message;
+    }
+}
+
+function closePdfPreview() {
+    const overlay = document.getElementById('pdfPreviewOverlay');
+    const frame   = document.getElementById('pdfPreviewFrame');
+    overlay.style.display = 'none';
+    frame.src = '';
+}
+
 // ─── DATA STORES (filter-aware rendering) ─────────────────
 let _cvData     = [];
 let _tokenData  = [];
+
 let _logData    = [];
 let _logPage    = 1;
 let _logTotal   = 0;
@@ -1958,9 +2449,9 @@ function toggleSort(table, col) {
     const state = { cvs: _cvSort, tokens: _tokenSort, logs: _logSort }[table];
     if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
     else { state.col = col; state.dir = 'asc'; }
-    if (table === 'cvs') renderCVs();
+    if (table === 'cvs')         renderCVs();
     else if (table === 'tokens') renderTokens();
-    else { _logPage = 1; loadLogs(); }
+    else                         { _logPage = 1; loadLogs(); }
 }
 
 function updateSortHeaders(table) {
@@ -1986,9 +2477,10 @@ const AUTO_REFRESH_MS = 60_000;
 
 function _getTabLoader() {
     if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
-    if (_activeTab === 'tokens') return () => Promise.all([loadCVs(), loadTokens()]);
+    if (_activeTab === 'tokens') return loadTokens;
     if (_activeTab === 'logs')   return loadLogs;
-    return () => Promise.all([loadCVs(), loadTokens(), loadStorageStats()]);
+    if (_activeTab === 'vagas')  return loadApplications;
+    return loadCVs;
 }
 
 function _updateRefreshTs() {
@@ -2025,26 +2517,42 @@ let _applications = [];
 let _vagasFilter  = 'all';
 let _openAppId    = null;
 
+// Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
+function stageStatus(s) {
+    if (s.status) return s.status;
+    if (s.done)    return 'done';
+    if (s.current) return 'running';
+    return 'pending';
+}
+
+// Resultado da candidatura: vem direto do campo `result` (em_processo|aprovado|recusado)
+// Frontend traduz para os slugs do filtro: aprovado / recusado / em-processo
 function getAppStatus(app) {
-    const curr = (app.stages || []).find(s => s.current && s.active !== false);
-    if (!curr) return 'em-processo';
-    const n = curr.name;
-    if (n === 'Aprovado')  return 'aprovado';
-    if (n === 'Recusado')  return 'recusado';
-    if (n === 'Enviado')   return 'enviado';
-    return 'em-processo';
+    const r = app.result || 'em_processo';
+    return r === 'em_processo' ? 'em-processo' : r;
+}
+
+function normalizeStageName(name) {
+    return (name || '').replace(/\s*\/\s*Oferta$/i, '');
 }
 
 function getAppCurrentStageName(app) {
-    const curr = (app.stages || []).find(s => s.current && s.active !== false);
-    return curr ? curr.name : '—';
+    const active = (app.stages || []).filter(s => s.active !== false);
+    const running = active.find(s => stageStatus(s) === 'running');
+    if (running) return normalizeStageName(running.name);
+    const lastDone = [...active].reverse().find(s => ['done','rejected'].includes(stageStatus(s)));
+    return lastDone ? normalizeStageName(lastDone.name) : '—';
 }
 
 async function loadApplications() {
     const tbody = document.getElementById('vagasTableBody');
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
+    if (!_applications.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>';
+    }
+
     try {
-        _applications = await api('GET', '/api/admin/applications');
+        const data = await api('GET', '/api/admin/applications');
+        _applications = data;
         renderApplicationsTable();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--danger);padding:32px">${esc(e.message)}</td></tr>`;
@@ -2053,9 +2561,21 @@ async function loadApplications() {
 
 function renderApplicationsTable() {
     const tbody = document.getElementById('vagasTableBody');
-    const filtered = _vagasFilter === 'all'
-        ? _applications
-        : _applications.filter(a => getAppStatus(a) === _vagasFilter);
+    const countEl = document.getElementById('vagasCount');
+
+    const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
+
+    let filtered = _applications;
+    if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (search) filtered = filtered.filter(app =>
+        (app.empresa || '').toLowerCase().includes(search) ||
+        (app.vaga || '').toLowerCase().includes(search) ||
+        (app.gestor_nome || '').toLowerCase().includes(search)
+    );
+
+    if (countEl) countEl.textContent = _applications.length
+        ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
+        : '';
 
     if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
@@ -2070,13 +2590,15 @@ function renderApplicationsTable() {
         const gestor  = esc(app.gestor_nome || '—');
         const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
         const selected = _openAppId === app.id ? ' selected' : '';
+        const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
         return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
             <td>
                 <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
                 ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
             </td>
-            <td style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
-            <td style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
+            <td class="col-gestor" style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
+            <td class="col-date" style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
             <td><span class="stage-badge status-${status}">${stage}</span></td>
         </tr>`;
     }).join('');
@@ -2089,6 +2611,12 @@ function setVagasFilter(filter, btn) {
     renderApplicationsTable();
 }
 
+function clearVagasSearch() {
+    const el = document.getElementById('vagasSearch');
+    if (el) el.value = '';
+    renderApplicationsTable();
+}
+
 function openDrawer(id) {
     _openAppId = id;
     const app = _applications.find(a => a.id === id);
@@ -2096,9 +2624,11 @@ function openDrawer(id) {
 
     document.getElementById('drawerEmpresa').textContent = app.empresa || '—';
     document.getElementById('drawerVaga').textContent    = app.vaga || '';
-    const srcBadge = app.source === 'cv_send' ? '📧 via envio' : '✎ manual';
+    const srcBadge = app.source === 'cv_send'
+        ? '<span class="vaga-source-badge email"><i class="fa-solid fa-envelope"></i> via email</span>'
+        : '<span class="vaga-source-badge manual"><i class="fa-solid fa-pen"></i> manual</span>';
     const dt = app.data_envio ? fmtDate(app.data_envio) : '—';
-    document.getElementById('drawerMeta').textContent = `${dt} · ${srcBadge}`;
+    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}`;
 
     renderDrawerBody(app);
 
@@ -2117,27 +2647,45 @@ function closeDrawer() {
 function renderDrawerBody(app) {
     const body = document.getElementById('drawerBody');
 
-    const gestor = app.gestor_nome
-        ? `<div style="font-size:0.75rem;color:var(--text-soft)">
-               <i class="fa-solid fa-user" style="color:var(--text-dim);margin-right:4px"></i>
-               ${esc(app.gestor_nome)}
-               ${app.gestor_email ? ` &lt;<a href="mailto:${esc(app.gestor_email)}" style="color:var(--cyan)">${esc(app.gestor_email)}</a>&gt;` : ''}
-           </div>` : '';
+    const recruiterRows = [];
+    if (app.gestor_nome) {
+        recruiterRows.push(`<div class="dinfo-row"><i class="fa-solid fa-user dinfo-icon"></i>${esc(app.gestor_nome)}</div>`);
+    }
+    if (app.gestor_email) {
+        recruiterRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
+    }
 
-    const links = [
-        app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-brands fa-linkedin"></i> LinkedIn empresa</a>` : '',
-        app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" style="color:var(--cyan);font-size:0.72rem"><i class="fa-solid fa-link"></i> Link da vaga</a>` : '',
-    ].filter(Boolean).join(' · ');
+    const chips = [
+        app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>` : '',
+        app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>` : '',
+    ].filter(Boolean);
 
-    const obs = app.observacoes
-        ? `<div style="font-size:0.72rem;color:var(--text-soft);background:var(--bg-surface);padding:8px 10px;border-radius:6px">${esc(app.observacoes)}</div>`
-        : '';
+    const hasRecruiter = recruiterRows.length > 0;
+    const hasChips     = chips.length > 0;
+    const hasObs       = !!app.observacoes;
+
+    const recruiterSection = hasRecruiter || hasChips ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Recrutador</div>
+            ${recruiterRows.join('')}
+            ${hasChips ? `<div class="dinfo-chips">${chips.join('')}</div>` : ''}
+        </div>` : '';
+
+    const obsSection = hasObs ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Observações</div>
+            <div class="dinfo-obs">${esc(app.observacoes)}</div>
+        </div>` : '';
 
     body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:6px">
-            ${gestor}
-            ${links ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${links}</div>` : ''}
-            ${obs}
+        <div style="display:flex;flex-direction:column;gap:10px">
+            ${recruiterSection}
+            ${obsSection}
+        </div>
+
+        <div>
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Resultado</div>
+            <div class="result-segmented" id="drawerResult">${renderResultSegmented(app)}</div>
         </div>
 
         <div>
@@ -2147,11 +2695,11 @@ function renderDrawerBody(app) {
             </div>
         </div>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border-soft)">
+        <div class="drawer-actions" style="display:flex;gap:8px;padding-top:4px;border-top:1px solid var(--border-soft)">
             <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
             <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
-            <button class="btn btn-sm" style="margin-left:auto;color:var(--danger);border-color:var(--danger-soft)"
-                onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i> Deletar</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:auto;padding:6px 10px" title="Deletar candidatura"
+                onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
 
         <div id="stageManagerSection" hidden></div>
@@ -2160,25 +2708,30 @@ function renderDrawerBody(app) {
 }
 
 function renderTimeline(stages) {
-    return stages.map((s, i) => {
-        const isLast = i === stages.length - 1;
+    const visible = stages.filter(s => s.active !== false);
+    return visible.map((s, i) => {
+        const isLast = i === visible.length - 1;
+        const st = stageStatus(s);
         let circleClass, lineClass, labelClass, content = '';
-        if (!s.active) {
-            circleClass = 'inactive'; lineClass = 'other'; labelClass = 'inactive';
-        } else if (s.done) {
+
+        if (st === 'done') {
             circleClass = 'done'; lineClass = 'done'; labelClass = 'done';
             content = '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>';
-        } else if (s.current) {
+        } else if (st === 'rejected') {
+            circleClass = 'rejected'; lineClass = 'other'; labelClass = 'rejected';
+            content = '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>';
+        } else if (st === 'running') {
             circleClass = 'current'; lineClass = 'current'; labelClass = 'current';
         } else {
             circleClass = 'pending'; lineClass = 'other'; labelClass = 'pending';
         }
+
         return `<div class="stage-row">
             <div class="stage-icon-col">
                 <div class="stage-circle ${circleClass}">${content}</div>
                 ${!isLast ? `<div class="stage-line ${lineClass}"></div>` : ''}
             </div>
-            <div class="stage-label ${labelClass}">${esc(s.name)}</div>
+            <div class="stage-label ${labelClass}">${esc(normalizeStageName(s.name))}</div>
         </div>`;
     }).join('');
 }
@@ -2195,15 +2748,31 @@ async function deleteApplication(id) {
     }
 }
 
-let _stageManagerOpen = false;
+const DEFAULT_STAGE_NAMES = [
+    'Enviado', 'Triagem de CV', 'Entrevista RH', 'Teste Técnico',
+    'Entrevista Técnica', 'Entrevista Coordenador', 'Proposta'
+];
+
+let _stageManagerOpen       = false;
+let _dragUnlocked           = localStorage.getItem('admin_drag_unlocked') === 'true';
+let _sortableInst           = null;
+let _undoStack              = [];
+let _redoStack              = [];
+let _reorderModeSnapshot    = null;
 
 function toggleStageManager(appId) {
     const section = document.getElementById('stageManagerSection');
     if (_stageManagerOpen) {
         section.hidden = true;
         _stageManagerOpen = false;
+        _sortableInst     = null;
+        _undoStack        = [];
+        _redoStack        = [];
         return;
     }
+    // Fecha o form de edição se estiver aberto
+    const editSection = document.getElementById('editVagaSection');
+    if (editSection && !editSection.hidden) editSection.hidden = true;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
     renderStageManager(app);
@@ -2213,49 +2782,259 @@ function toggleStageManager(appId) {
 
 function renderStageManager(app) {
     const section = document.getElementById('stageManagerSection');
-    const rows = app.stages.map((s, i) => `
-        <div class="stage-manager-row${!s.active ? ' inactive' : ''}" id="smRow${i}">
-            <span class="stage-toggle${s.active ? ' active' : ''}" title="${s.active ? 'Ativa — clique para inativar' : 'Inativa — clique para ativar'}"
+    const rows = app.stages.map((s, i) => {
+        const st = stageStatus(s);
+        const stBtn = (v, icon, title) => {
+            const active = st === v ? ` active st-${v}` : '';
+            const disabled = !s.active ? ' disabled' : '';
+            return `<button class="sm-status-btn${active}" title="${title}"${disabled}
+                onclick="setStageStatus('${app.id}',${i},'${v}')">
+                <i class="fa-${v === 'pending' ? 'regular' : 'solid'} fa-${icon}"></i>
+            </button>`;
+        };
+        return `
+        <div class="stage-manager-row${!s.active ? ' inactive' : ''}${_dragUnlocked ? ' drag-active' : ''}">
+            <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+            <span class="stage-toggle${s.active ? ' active' : ''}"
+                  title="${s.active ? 'Ativa — clique para ocultar' : 'Oculta — clique para ativar'}"
                   onclick="toggleStageActive('${app.id}',${i})">
                 <i class="fa-solid fa-${s.active ? 'toggle-on' : 'toggle-off'}"></i>
             </span>
             <input class="stage-name-input" value="${esc(s.name)}" maxlength="80"
                    onblur="renameStage('${app.id}',${i},this.value)"
                    onkeydown="if(event.key==='Enter')this.blur()">
-            <span style="display:flex;gap:4px">
-                ${s.active && !s.done && !s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem" title="Marcar como etapa atual" onclick="setCurrentStage('${app.id}',${i})"><i class="fa-solid fa-circle-dot"></i></button>` : ''}
-                ${s.active && s.current ? `<button class="btn btn-sm" style="padding:2px 7px;font-size:0.65rem;color:var(--success)" title="Marcar como concluída" onclick="markStageDone('${app.id}',${i})"><i class="fa-solid fa-check"></i></button>` : ''}
+            <span class="sm-status-btns">
+                ${stBtn('pending',  'circle',      'Não iniciado')}
+                ${stBtn('running',  'circle-dot',  'Executando')}
+                ${stBtn('done',     'check',       'Aprovado')}
+                ${stBtn('rejected', 'xmark',       'Reprovado')}
             </span>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     section.innerHTML = `
         <div style="border-top:1px solid var(--border-soft);padding-top:12px">
-            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:10px">Gerenciar etapas</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px">
+                <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);flex-shrink:0">Gerenciar etapas</div>
+                <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+                    <button class="sm-hist-btn" id="smUndoBtn" title="Desfazer reordenamento"
+                            disabled onclick="undoReorder('${app.id}')">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <button class="sm-hist-btn" id="smRedoBtn" title="Refazer reordenamento"
+                            disabled onclick="redoReorder('${app.id}')">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button class="sm-reorder-btn${_dragUnlocked ? ' unlocked' : ''}" id="smReorderBtn"
+                            onclick="toggleDragMode('${app.id}')">
+                        <i class="fa-solid fa-${_dragUnlocked ? 'lock-open' : 'lock'}"></i>
+                        ${_dragUnlocked ? 'Concluir' : 'Reordenar'}
+                    </button>
+                    <button class="sm-cancel-btn" id="smCancelBtn"
+                            title="Cancelar — desfaz todas as mudanças desta sessão"
+                            onclick="cancelDragMode('${app.id}')">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
             <div class="stage-manager" id="stageManagerList">${rows}</div>
-            <button class="btn btn-sm" style="margin-top:8px;width:100%" onclick="addCustomStage('${app.id}')">
+            <button class="btn btn-sm" id="smAddStageBtn" style="margin-top:8px;width:100%"
+                    onclick="addCustomStage('${app.id}')"
+                    ${_dragUnlocked ? 'disabled' : ''}>
                 <i class="fa-solid fa-plus"></i> Adicionar etapa
+            </button>
+            <button class="sm-reset-link${_dragUnlocked ? ' visible' : ''}" id="smResetLink"
+                    onclick="resetStageOrder('${app.id}')">
+                ↺ Restaurar ordem padrão
             </button>
         </div>
     `;
+    initSortable(app.id);
+}
+
+function initSortable(appId) {
+    const el = document.getElementById('stageManagerList');
+    if (!el) return;
+    _sortableInst = Sortable.create(el, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        disabled: !_dragUnlocked,
+        onEnd: async (evt) => {
+            if (evt.oldIndex === evt.newIndex) return;
+            const app = _applications.find(a => a.id === appId);
+            if (!app) return;
+            const snapshot = app.stages.map(s => ({
+                name: s.name, status: stageStatus(s), active: s.active !== false
+            }));
+            const reordered = [...app.stages];
+            const [moved] = reordered.splice(evt.oldIndex, 1);
+            reordered.splice(evt.newIndex, 0, moved);
+            const next = reordered.map(s => ({
+                name: s.name, status: stageStatus(s), active: s.active !== false
+            }));
+            _sortableInst?.option('disabled', true);
+            try {
+                _undoStack.push(snapshot);
+                _redoStack = [];
+                await patchStages(appId, next);
+                if (_dragUnlocked) _applyDragMode(true);
+                showToast('Etapa reordenada');
+            } catch (e) {
+                _undoStack.pop();
+                showToast(e.message, 'error');
+                if (_dragUnlocked) _sortableInst?.option('disabled', false);
+            }
+        }
+    });
+}
+
+function toggleDragMode(appId) {
+    if (!_dragUnlocked) {
+        // Entrando no modo reordenação — salva snapshot para cancelar depois
+        const app = _applications.find(a => a.id === appId);
+        if (app) _reorderModeSnapshot = app.stages.map(s => ({
+            name: s.name, status: stageStatus(s), active: s.active !== false
+        }));
+        _undoStack = [];
+        _redoStack = [];
+    } else {
+        // Concluindo — descarta snapshot e histórico
+        _reorderModeSnapshot = null;
+        _undoStack = [];
+        _redoStack = [];
+    }
+    _dragUnlocked = !_dragUnlocked;
+    localStorage.setItem('admin_drag_unlocked', _dragUnlocked);
+    _applyDragMode(_dragUnlocked);
+}
+
+async function cancelDragMode(appId) {
+    const snapshot = _reorderModeSnapshot;
+    _reorderModeSnapshot = null;
+    _undoStack = [];
+    _redoStack = [];
+    _dragUnlocked = false;
+    localStorage.setItem('admin_drag_unlocked', false);
+    if (snapshot) {
+        const app = _applications.find(a => a.id === appId);
+        const changed = app?.stages.map(s => s.name).join(',') !== snapshot.map(s => s.name).join(',');
+        if (changed) {
+            try {
+                await patchStages(appId, snapshot);
+                showToast('Reordenamento cancelado');
+            } catch (e) { showToast(e.message, 'error'); return; }
+        }
+    }
+    _applyDragMode(false);
+}
+
+function _applyDragMode(enabled) {
+    _sortableInst?.option('disabled', !enabled);
+    document.querySelectorAll('#stageManagerList .stage-manager-row')
+            .forEach(r => r.classList.toggle('drag-active', enabled));
+    const btn       = document.getElementById('smReorderBtn');
+    const resetLnk  = document.getElementById('smResetLink');
+    const undoBtn   = document.getElementById('smUndoBtn');
+    const redoBtn   = document.getElementById('smRedoBtn');
+    const cancelBtn = document.getElementById('smCancelBtn');
+    const addBtn    = document.getElementById('smAddStageBtn');
+    if (btn) {
+        btn.classList.toggle('unlocked', enabled);
+        btn.innerHTML = `<i class="fa-solid fa-${enabled ? 'lock-open' : 'lock'}"></i> ${enabled ? 'Concluir' : 'Reordenar'}`;
+    }
+    if (resetLnk) resetLnk.classList.toggle('visible', enabled);
+    if (undoBtn)   { undoBtn.style.display = enabled ? 'flex' : 'none'; undoBtn.disabled = _undoStack.length === 0; }
+    if (redoBtn)   { redoBtn.style.display = enabled ? 'flex' : 'none'; redoBtn.disabled = _redoStack.length === 0; }
+    if (cancelBtn) cancelBtn.style.display = enabled ? 'flex' : 'none';
+    if (addBtn)    addBtn.disabled = enabled;
+}
+
+async function undoReorder(appId) {
+    if (_undoStack.length === 0) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const current = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const prev = _undoStack.pop();
+    _redoStack.push(current);
+    try {
+        await patchStages(appId, prev);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Reordenamento desfeito');
+    } catch (e) {
+        _undoStack.push(prev);
+        _redoStack.pop();
+        showToast(e.message, 'error');
+    }
+}
+
+async function redoReorder(appId) {
+    if (_redoStack.length === 0) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const current = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const next = _redoStack.pop();
+    _undoStack.push(current);
+    try {
+        await patchStages(appId, next);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Reordenamento refeito');
+    } catch (e) {
+        _redoStack.push(next);
+        _undoStack.pop();
+        showToast(e.message, 'error');
+    }
+}
+
+async function resetStageOrder(appId) {
+    if (!confirm('Restaurar a ordem padrão das etapas?\nEtapas personalizadas irão para o final da lista.')) return;
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const sorted = [...app.stages].sort((a, b) => {
+        const ia = DEFAULT_STAGE_NAMES.indexOf(a.name);
+        const ib = DEFAULT_STAGE_NAMES.indexOf(b.name);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+    });
+    const normalized = sorted.map(s => ({
+        name: s.name, status: stageStatus(s), active: s.active !== false
+    }));
+    try {
+        await patchStages(appId, normalized);
+        if (_dragUnlocked) _applyDragMode(true);
+        showToast('Ordem restaurada');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function patchStages(appId, stages) {
     const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { stages });
     const idx = _applications.findIndex(a => a.id === appId);
     if (idx !== -1) _applications[idx] = updated;
-    renderDrawerBody(updated);
+    // Atualiza timeline in place (preserva scroll do drawer)
+    const timeline = document.getElementById('drawerTimeline');
+    if (timeline) timeline.innerHTML = renderTimeline(updated.stages || []);
+    // Re-renderiza manager sem fechar/abrir (evita jump)
+    if (_stageManagerOpen) renderStageManager(updated);
     renderApplicationsTable();
-    toggleStageManager(appId); // reabrir manager após update
-    toggleStageManager(appId);
     return updated;
 }
 
 async function toggleStageActive(appId, stageIdx) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, active: !s.active, current: false } : s);
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+    const prevResult = app.result || 'em_processo';
+    const stages = app.stages.map((s, i) => {
+        const nextActive = i === stageIdx ? !s.active : s.active !== false;
+        const nextStatus = i === stageIdx ? 'pending' : stageStatus(s);
+        return { name: s.name, status: nextStatus, active: nextActive };
+    });
+    try {
+        await patchStages(appId, stages);
+        await autoUpdateResult(appId, prevResult);
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function renameStage(appId, stageIdx, newName) {
@@ -2263,31 +3042,103 @@ async function renameStage(appId, stageIdx, newName) {
     if (!trimmed) return;
     const app = _applications.find(a => a.id === appId);
     if (!app || app.stages[stageIdx].name === trimmed) return;
-    const stages = app.stages.map((s, i) => i === stageIdx ? { ...s, name: trimmed } : s);
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
-}
-
-async function setCurrentStage(appId, stageIdx) {
-    const app = _applications.find(a => a.id === appId);
-    if (!app) return;
     const stages = app.stages.map((s, i) => ({
-        ...s,
-        current: i === stageIdx && s.active !== false,
-        done:    i < stageIdx && s.active !== false ? true : s.done,
+        name: i === stageIdx ? trimmed : s.name,
+        status: stageStatus(s),
+        active: s.active !== false,
     }));
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function markStageDone(appId, stageIdx) {
+function deriveResult(stages, currentResult) {
+    const active = stages.filter(s => s.active !== false);
+    if (!active.length) return null;
+    if (active.some(s => stageStatus(s) === 'rejected'))  return 'recusado';
+    if (active.some(s => stageStatus(s) === 'running'))   return 'em_processo';
+    if (active.every(s => stageStatus(s) === 'done'))     return 'aprovado';
+    // Etapa pendente: reverte aprovação, mas não sobrescreve recusa manual
+    if (currentResult === 'aprovado') return 'em_processo';
+    return null;
+}
+
+async function autoUpdateResult(appId, prevResult) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = app.stages.map((s, i) => {
-        if (i === stageIdx) return { ...s, done: true, current: false };
-        const nextActive = app.stages.findIndex((ns, ni) => ni > stageIdx && ns.active !== false);
-        if (i === nextActive) return { ...s, current: true };
-        return s;
-    });
-    try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
+    const current = app.result || 'em_processo';
+    const derived = deriveResult(app.stages, current);
+    if (!derived || derived === current) return;
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result: derived });
+        const idx = _applications.findIndex(a => a.id === appId);
+        if (idx !== -1) _applications[idx] = updated;
+        const seg = document.getElementById('drawerResult');
+        if (seg) seg.innerHTML = renderResultSegmented(updated);
+        renderApplicationsTable();
+        const label  = derived === 'recusado' ? 'Vaga marcada como Recusada' : 'Vaga marcada como Aprovada';
+        const type   = derived === 'recusado' ? 'error' : 'success';
+        showToast(label, type, {
+            label: '↩ Desfazer',
+            callback: async () => {
+                try {
+                    const rev = await api('PUT', `/api/admin/applications?id=${appId}`, { result: prevResult });
+                    const i2 = _applications.findIndex(a => a.id === appId);
+                    if (i2 !== -1) _applications[i2] = rev;
+                    const s2 = document.getElementById('drawerResult');
+                    if (s2) s2.innerHTML = renderResultSegmented(rev);
+                    renderApplicationsTable();
+                } catch (e) { showToast(e.message, 'error'); }
+            }
+        });
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function setStageStatus(appId, stageIdx, status) {
+    const app = _applications.find(a => a.id === appId);
+    if (!app) return;
+    const prevResult = app.result || 'em_processo';
+    // Atualiza apenas a etapa clicada — sem cascade nas demais
+    const stages = app.stages.map((s, i) => i === stageIdx
+        ? { name: s.name, status, active: s.active !== false }
+        : { name: s.name, status: stageStatus(s), active: s.active !== false }
+    );
+    try {
+        await patchStages(appId, stages);
+        await autoUpdateResult(appId, prevResult);
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderResultSegmented(app) {
+    const r = app.result || 'em_processo';
+    const item = (val, icon, label) => `
+        <button class="result-seg${r === val ? ` active r-${val}` : ''}"
+                onclick="setAppResult('${app.id}','${val}')">
+            <i class="fa-solid fa-${icon}"></i> ${label}
+        </button>`;
+    return item('em_processo', 'clock',        'Em processo')
+         + item('aprovado',    'circle-check', 'Aprovado')
+         + item('recusado',    'circle-xmark', 'Recusado');
+}
+
+async function setAppResult(appId, result) {
+    const app = _applications.find(a => a.id === appId);
+    if (result === 'aprovado' && app) {
+        const active = (app.stages || []).filter(s => s.active !== false);
+        const hasRunning  = active.some(s => stageStatus(s) === 'running');
+        const hasRejected = active.some(s => stageStatus(s) === 'rejected');
+        if (hasRunning || hasRejected) {
+            const reason = hasRejected ? 'Há etapas reprovadas' : 'Há etapas em execução';
+            showToast(`${reason} — não é possível aprovar.`, 'error');
+            return;
+        }
+    }
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result });
+        const idx = _applications.findIndex(a => a.id === appId);
+        if (idx !== -1) _applications[idx] = updated;
+        const seg = document.getElementById('drawerResult');
+        if (seg) seg.innerHTML = renderResultSegmented(updated);
+        renderApplicationsTable();
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function addCustomStage(appId) {
@@ -2295,7 +3146,8 @@ async function addCustomStage(appId) {
     if (!name || !name.trim()) return;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
-    const stages = [...app.stages, { name: name.trim(), done: false, current: false, active: true }];
+    const normalized = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
+    const stages = [...normalized, { name: name.trim(), status: 'pending', active: true }];
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2338,15 +3190,18 @@ function vagaFormHTML(app) {
                     <input id="vfGestorEmail" class="mock-input" placeholder="m.silva@empresa.com" ${v('gestor_email',120)} autocomplete="off" data-form-type="other">
                 </div>
             </div>
-            <div class="form-group" style="margin:0">
-                <label style="font-size:0.75rem">Data de envio</label>
-                <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Data de envio</label>
+                    <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
+                </div>
+                <div></div>
             </div>
             <div style="display:flex;gap:8px">
+                <button class="btn btn-sm" style="flex:1" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
                 <button class="btn btn-cyan btn-sm" style="flex:1" onclick="${app ? `saveEditVaga('${app.id}')` : 'saveNovaVaga()'}">
                     <i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar candidatura'}
                 </button>
-                <button class="btn btn-sm" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
             </div>
             <p id="vfMsg" hidden style="font-size:0.78rem"></p>
         </div>
@@ -2391,10 +3246,21 @@ async function saveNovaVaga() {
 
 function openEditVaga(appId) {
     const section = document.getElementById('editVagaSection');
+    if (!section.hidden) { section.hidden = true; return; }
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
+    // Fecha o stage manager se estiver aberto
+    const smSection = document.getElementById('stageManagerSection');
+    if (_stageManagerOpen) {
+        smSection.hidden = true;
+        _stageManagerOpen = false;
+        _sortableInst = null;
+        _undoStack = [];
+        _redoStack = [];
+    }
     section.innerHTML = vagaFormHTML(app);
     section.hidden = false;
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 function closeEditVaga() {
     document.getElementById('editVagaSection').hidden = true;
@@ -2442,8 +3308,8 @@ function switchTab(name, btn) {
 
 // ─── LOAD ALL ─────────────────────────────────────────────
 function loadAll() {
+    // Carrega apenas a aba inicial (CVs) + stats. As demais abas carregam sob demanda.
     loadCVs();
-    loadTokens();
     loadStorageStats();
     detectReplyContext();
     _lastRefreshAt = Date.now();
@@ -2532,8 +3398,7 @@ function dismissReply() {
 
 function startReply() {
     // Se só houver 1 versão ativa, abre o modal direto. Senão, scroll pra tabela e dá feedback visual.
-    api('GET', '/api/admin/cv-versions').then(versions => {
-        const active = versions.filter(v => v.active);
+    api('GET', '/api/admin/cv-versions?limit=100&status=ativo').then(active => {
         if (active.length === 1) {
             const cv = active[0];
             openSendCV({ id: cv.id, name: cv.name, file_name: cv.file_name });
@@ -2553,54 +3418,72 @@ function startReply() {
     }).catch(e => showToast(e.message, 'error'));
 }
 
-// ─── CVS ──────────────────────────────────────────────────
-async function loadCVs() {
+async function _refreshCvSelect() {
     try {
-        _cvData = await api('GET', '/api/admin/cv-versions');
-        renderCVs();
+        const data = await api('GET', '/api/admin/cv-versions?limit=100&status=ativo');
         const sel = document.getElementById('tokenCV');
-        const cur = sel.value;
-        sel.innerHTML = '<option value="">Selecione…</option>' + _cvData.filter(c => c.active).map(cv =>
+        const cur = sel?.value;
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Selecione…</option>' + data.map(cv =>
             `<option value="${cv.id}">${esc(cv.name)}</option>`
         ).join('');
         if (cur) sel.value = cur;
+    } catch (_) {}
+}
+
+// ─── CVS ──────────────────────────────────────────────────
+async function loadCVs() {
+    try {
+        const data = await api('GET', '/api/admin/cv-versions');
+        _cvData = data;
+        renderCVs();
+        _refreshCvSelect();
     } catch (e) {
         showToast(e.message, 'error');
     }
 }
 
 function renderCVs() {
-    const q = (document.getElementById('cvSearch')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('cvStatusFilter')?.value || '';
-    let data = _cvData;
-    if (q) data = data.filter(cv =>
-        cv.name.toLowerCase().includes(q) ||
-        (cv.description || '').toLowerCase().includes(q) ||
-        cv.file_name.toLowerCase().includes(q)
-    );
-    if (statusFilter) data = data.filter(cv => (cv.active ? 'ativo' : 'inativo') === statusFilter);
-    data = _sortData(data, _cvSort.col, _cvSort.dir);
     updateSortHeaders('cvs');
 
     const tbody = document.getElementById('cvTable');
     const countEl = document.getElementById('cvCount');
-    if (countEl) countEl.textContent = data.length !== _cvData.length ? `${data.length} de ${_cvData.length}` : `${_cvData.length} registros`;
+
+    const search = (document.getElementById('cvSearch')?.value || '').toLowerCase();
+    const status = document.getElementById('cvStatusFilter')?.value || '';
+
+    let data = _cvData;
+    if (search) data = data.filter(cv =>
+        (cv.name || '').toLowerCase().includes(search) ||
+        (cv.description || '').toLowerCase().includes(search) ||
+        (cv.file_name || '').toLowerCase().includes(search)
+    );
+    if (status === 'ativo')   data = data.filter(cv => cv.active);
+    if (status === 'inativo') data = data.filter(cv => !cv.active);
+    data = _sortData(data, _cvSort.col, _cvSort.dir);
+
+    if (countEl) countEl.textContent = _cvData.length
+        ? (data.length !== _cvData.length ? `${data.length} de ${_cvData.length}` : `${_cvData.length} registros`)
+        : '';
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">${_cvData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum currículo cadastrado'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum currículo encontrado</td></tr>`;
         return;
     }
     tbody.innerHTML = data.map(cv => `
         <tr>
-            <td><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</td>
-            <td><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
-            <td><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
-            <td>${fmtDate(cv.created_at)}</td>
-            <td style="white-space:nowrap">
-                <button class="btn btn-sm" style="margin-right:6px" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
-                <button class="btn btn-cyan btn-sm" style="margin-right:6px" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i></button>
-                <button class="btn btn-sm" style="margin-right:6px" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            <td data-label="Nome"><span><strong style="color:var(--text)">${esc(cv.name)}</strong>${cv.description ? `<br><small style="color:var(--text-dim)">${esc(cv.description)}</small>` : ''}</span></td>
+            <td data-label="Arquivo"><span style="font-family:var(--font-mono);font-size:0.78rem">${esc(cv.file_name)}</span></td>
+            <td data-label="Status"><span class="badge ${cv.active ? 'badge-active' : 'badge-esgotado'}">${cv.active ? '● ativo' : '○ inativo'}</span></td>
+            <td data-label="Adicionado">${fmtDate(cv.created_at)}</td>
+            <td>
+                <div class="row-actions">
+                    <button class="btn btn-sm cv-action-btn" onclick="previewCV('${cv.id}', '${esc(cv.name)}')" title="Pré-visualizar PDF"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-sm cv-action-btn" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
+                    <button class="btn btn-cyan btn-sm cv-action-btn" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i><span class="cv-btn-lbl">Enviar</span></button>
+                    <button class="btn btn-sm cv-action-btn" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -2771,29 +3654,38 @@ async function createToken() {
 
 async function loadTokens() {
     try {
-        _tokenData = await api('GET', '/api/admin/tokens');
+        const [data] = await Promise.all([
+            api('GET', '/api/admin/tokens'),
+            _refreshCvSelect(),
+        ]);
+        _tokenData = data;
         renderTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
 function renderTokens() {
-    const q = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('tokenStatusFilter')?.value || '';
-    let data = _tokenData;
-    if (q) data = data.filter(t =>
-        (t.label || '').toLowerCase().includes(q) ||
-        (t.cv_versions?.name || '').toLowerCase().includes(q)
-    );
-    if (statusFilter) data = data.filter(t => t.status === statusFilter);
-    data = _sortData(data, _tokenSort.col, _tokenSort.dir);
     updateSortHeaders('tokens');
 
     const tbody = document.getElementById('tokenTable');
     const countEl = document.getElementById('tokenCount');
-    if (countEl) countEl.textContent = data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`;
+
+    const search = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
+    const status = document.getElementById('tokenStatusFilter')?.value || '';
+
+    let data = _tokenData;
+    if (search) data = data.filter(t =>
+        (t.label || '').toLowerCase().includes(search) ||
+        (t.cv_versions?.name || '').toLowerCase().includes(search)
+    );
+    if (status) data = data.filter(t => t.status === status);
+    data = _sortData(data, _tokenSort.col, _tokenSort.dir);
+
+    if (countEl) countEl.textContent = _tokenData.length
+        ? (data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`)
+        : '';
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">${_tokenData.length ? 'Nenhum resultado para o filtro atual' : 'Nenhum token criado'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>`;
         return;
     }
     tbody.innerHTML = data.map(t => {
@@ -2801,14 +3693,16 @@ function renderTokens() {
         const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
         return `
             <tr>
-                <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
-                <td>${esc(t.cv_versions?.name || '—')}</td>
-                <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
-                <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
-                <td style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
-                <td style="white-space:nowrap">
-                    ${t.status === 'ativo' ? `<button class="btn btn-sm" style="margin-right:6px" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                <td data-label="Label"><span><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></span></td>
+                <td data-label="Currículo">${esc(t.cv_versions?.name || '—')}</td>
+                <td data-label="Status"><span class="badge ${badgeCls}">● ${t.status}</span></td>
+                <td data-label="Usos" style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
+                <td data-label="Expira" style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
+                <td>
+                    <div class="row-actions">
+                        ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -3203,6 +4097,32 @@ function smartCvName(l) {
     return '<span style="color:var(--text-dim)">—</span>';
 }
 
+function _showLogOverlay() {
+    document.getElementById('logOverlay')?.classList.add('visible');
+}
+function _hideLogOverlay() {
+    document.getElementById('logOverlay')?.classList.remove('visible');
+}
+
+function _renderLogSkeletons(n = 10) {
+    const widths = [
+        ['58%','65%','72%','40%'],['45%','75%','55%','50%'],
+        ['70%','45%','68%','55%'],['52%','60%','78%','45%'],
+        ['65%','52%','50%','60%'],['42%','70%','62%','65%'],
+        ['75%','58%','45%','52%'],['55%','48%','70%','62%'],
+        ['48%','68%','55%','48%'],['68%','55%','65%','55%'],
+    ];
+    document.getElementById('logTable').innerHTML = Array.from({ length: n }, (_, i) => {
+        const w = widths[i % widths.length];
+        return `<tr class="skel-row">
+            <td><span class="skel-cell" style="width:${w[0]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[1]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[2]}"></span></td>
+            <td><span class="skel-cell" style="width:${w[3]}"></span></td>
+        </tr>`;
+    }).join('');
+}
+
 async function loadLogs() {
     const search = document.getElementById('logSearch')?.value || '';
     const tipo   = document.getElementById('logTipoFilter')?.value || '';
@@ -3215,8 +4135,9 @@ async function loadLogs() {
     if (from)   params.set('from', from);
     if (to)     params.set('to', to);
 
-    document.getElementById('logTable').innerHTML =
-        '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px"><i class="fa-solid fa-circle-notch fa-spin"></i></td></tr>';
+    // Primeira carga: tbody vazio → skeleton para reservar altura
+    if (!document.getElementById('logTable').children.length) _renderLogSkeletons();
+    _showLogOverlay();
 
     try {
         const result = await api('GET', `/api/admin/logs?${params}`);
@@ -3225,11 +4146,16 @@ async function loadLogs() {
         _logPages = result.pages;
         renderLogs();
         _updateLogPagination();
-    } catch (e) { showToast(e.message, 'error'); }
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        _hideLogOverlay();
+    }
 }
 
 function _debouncedLogLoad() {
     _logPage = 1;
+    _showLogOverlay(); // feedback imediato antes do debounce disparar
     clearTimeout(_logSearchTimer);
     _logSearchTimer = setTimeout(loadLogs, 300);
 }
@@ -3268,10 +4194,10 @@ function renderLogs() {
     }
     tbody.innerHTML = _logData.map(l => `
         <tr onclick="openLogDetail(${JSON.stringify(l).replace(/"/g,'&quot;')})">
-            <td>${smartLogLabel(l)}</td>
-            <td>${smartCvName(l)}</td>
-            <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
-            <td style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
+            <td data-label="Token"><span>${smartLogLabel(l)}</span></td>
+            <td data-label="Currículo"><span>${smartCvName(l)}</span></td>
+            <td data-label="IP" style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
+            <td data-label="Data" style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
         </tr>
     `).join('');
 }
@@ -3456,12 +4382,22 @@ document.getElementById('shareModal').addEventListener('click', e => {
 });
 
 // ─── TOAST ────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
+function showToast(msg, type = 'success', action = null) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    t.innerHTML = '';
+    const span = document.createElement('span');
+    span.textContent = msg;
+    t.appendChild(span);
+    if (action) {
+        const btn = document.createElement('button');
+        btn.className = 'toast-action';
+        btn.textContent = action.label;
+        btn.onclick = () => { t.classList.remove('show'); action.callback(); };
+        t.appendChild(btn);
+    }
     t.className = `toast ${type} show`;
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+    t._timer = setTimeout(() => t.classList.remove('show'), action ? 6000 : 3500);
 }
 
 // ─── UTILS ────────────────────────────────────────────────

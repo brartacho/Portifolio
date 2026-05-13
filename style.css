@@ -386,8 +386,9 @@ body.menu-open #content-wrapper {
 
 .nav-github-header {
     color: var(--text-dim);
-    font-size: 1.18rem;
+    font-size: 1.6rem;
     transition: color 0.2s ease;
+    line-height: 1;
 }
 
 .hamburger {
@@ -2408,6 +2409,10 @@ body.menu-open #content-wrapper {
    RESPONSIVE — TABLET (768-899px)
    ============================================================ */
 @media (min-width: 768px) and (max-width: 899px) {
+    #home {
+        padding: 48px 0 40px;
+    }
+
     .hero-layout {
         grid-template-columns: 1fr;
         gap: 32px;
@@ -2418,8 +2423,17 @@ body.menu-open #content-wrapper {
         justify-content: center;
     }
 
+    .hero-photo-frame {
+        width: 280px;
+    }
+
     .hero-photo {
-        max-width: 320px;
+        width: 280px;
+        max-width: 280px;
+        height: auto;
+        aspect-ratio: auto;
+        object-fit: fill;
+        object-position: center center;
     }
 
     .about-grid {
@@ -2566,8 +2580,17 @@ body.menu-open #content-wrapper {
         order: -1;
     }
 
+    .hero-photo-frame {
+        width: 200px;
+    }
+
     .hero-photo {
+        width: 200px;
         max-width: 200px;
+        height: auto;
+        aspect-ratio: auto;
+        object-fit: fill;
+        object-position: center center;
     }
 
     .hero-photo-frame::after { display: none; }
@@ -2761,9 +2784,37 @@ body.menu-open #content-wrapper {
     .accordion-trigger { padding: 18px; }
     .accordion-content { padding: 0 18px 18px; }
 
+    /* Footer mobile: linha 1 = brand | ações  /  linha 2 = copyright */
     .footer-grid {
         grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
         align-items: center;
+        row-gap: 0;
+    }
+
+    .footer-meta {
+        display: contents;
+    }
+
+    .footer-brand {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .footer-actions {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .footer-meta p {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        text-align: left;
+        font-size: 0.75rem;
+        margin: 0;
+        padding-top: 10px;
+        margin-top: 8px;
+        border-top: 1px solid var(--border);
     }
 
     .footer-top-link {

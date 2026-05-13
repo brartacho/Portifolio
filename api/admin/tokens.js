@@ -13,16 +13,14 @@ export default async function handler(req, res) {
         const { data, error } = await supabase
             .from('download_tokens')
             .select('id, label, expires_at, max_uses, use_count, revoked, created_at, cv_versions(name)')
-            .order('created_at', { ascending: false });
+            .order('expires_at', { ascending: true });
 
         if (error) return res.status(500).json({ error: error.message });
 
-        // Compute status for each token
-        const now = new Date();
-        const enriched = data.map(t => ({
+        const enriched = (data ?? []).map(t => ({
             ...t,
             status: t.revoked ? 'revogado'
-                : new Date(t.expires_at) < now ? 'expirado'
+                : new Date(t.expires_at) < new Date() ? 'expirado'
                 : (t.max_uses !== null && t.use_count >= t.max_uses) ? 'esgotado'
                 : 'ativo',
         }));
@@ -49,7 +47,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Data de expiração inválida ou no passado' });
         }
 
-        // Hex token: URL-safe sem caracteres que confundem markdown do WhatsApp/Telegram (`_`, `-`)
         const rawToken = randomBytes(24).toString('hex');
         const tokenHash = createHash('sha256').update(rawToken).digest('hex');
 
@@ -73,9 +70,6 @@ export default async function handler(req, res) {
 
         if (error) return res.status(500).json({ error: error.message });
 
-        // Share URL: SEMPRE público (recrutador clica no celular dele).
-        // Em dev, NEXT_PUBLIC_BASE_URL aponta pra localhost (usado em links de reset),
-        // mas o link compartilhado precisa ser o domínio público.
         const baseUrl = process.env.PUBLIC_SHARE_URL
             || process.env.NEXT_PUBLIC_BASE_URL
             || 'https://artacho.dev';
@@ -98,7 +92,6 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
-        // Soft revoke (deixa o registro pra histórico)
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
 

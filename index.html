@@ -46,15 +46,58 @@
     <link rel="alternate icon" type="image/png" href="imagens/logo_artacho.dev_001.png">
     <link rel="apple-touch-icon" href="imagens/logo_artacho.dev_001.png">
 
+    <!-- preconnect CDNs de recursos críticos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
+    <!-- preload da foto hero — elimina LCP tardio -->
+    <link rel="preload" as="image" href="https://github.com/brartacho.png" fetchpriority="high">
+
+    <!-- CSS crítico (bloqueante — renderiza acima da dobra) -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+    <!-- Ícones: carregam em paralelo sem bloquear render -->
+    <link rel="preload" as="style"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></noscript>
+
+    <link rel="preload" as="style"
+        href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"></noscript>
+
+    <!-- Dados estruturados Person (schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Bruno Artacho",
+      "url": "https://artacho.dev",
+      "jobTitle": "Analista de QA",
+      "description": "Analista de QA com foco em testes manuais, automação com Playwright (E2E), APIs com Postman, SQL e sistemas críticos HealthTech (LIS, ERP, WMS, PDV).",
+      "email": "bruno@artacho.dev",
+      "image": "https://github.com/brartacho.png",
+      "sameAs": [
+        "https://linkedin.com/in/bruno-artacho",
+        "https://github.com/brartacho"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Maringá",
+        "addressRegion": "PR",
+        "addressCountry": "BR"
+      },
+      "knowsAbout": [
+        "Quality Assurance", "Test Automation", "Playwright", "Postman",
+        "SQL", "PostgreSQL", "HealthTech", "LIS", "ERP", "WMS", "PDV"
+      ]
+    }
+    </script>
 </head>
 
 <body>
@@ -135,7 +178,9 @@
                         <img src="https://github.com/brartacho.png"
                              alt="Bruno Artacho"
                              class="hero-photo"
+                             width="460" height="460"
                              loading="eager"
+                             decoding="async"
                              fetchpriority="high">
 
                         <div class="hero-stat-card hero-stat-years" aria-hidden="true">
@@ -595,7 +640,9 @@
                             <div class="project-image-cover">
                                 <img src="./imagens/capa_padaria_bairro_premium.jpg"
                                      alt="Projeto Padaria do Bairro — interface responsiva"
-                                     loading="lazy">
+                                     width="1902" height="1043"
+                                     loading="lazy"
+                                     decoding="async">
                             </div>
                             <div class="project-card-meta">
                                 <span class="project-type-badge project-type-badge--dim">Demonstração front-end</span>
