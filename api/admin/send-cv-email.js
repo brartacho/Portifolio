@@ -42,7 +42,7 @@ const EMAIL_SIGNATURE_HTML = `
         </td>
         <td style="padding:6px 0 6px 20px;vertical-align:top;font-size:13px;line-height:1.7;color:#475569">
             <div style="margin-bottom:2px">
-                <a href="mailto:br.artacho@gmail.com" style="color:#0891b2;text-decoration:none">br.artacho@gmail.com</a>
+                <a href="mailto:bruno@artacho.dev" style="color:#0891b2;text-decoration:none">bruno@artacho.dev</a>
             </div>
             <div style="margin-bottom:2px">
                 <a href="https://wa.me/5544984366533" style="color:#0891b2;text-decoration:none">+55 44 98436-6533</a>
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const base64 = buffer.toString('base64');
 
-    const fromEmail = process.env.NOTIFY_EMAIL || 'br.artacho@gmail.com';
+    const fromEmail = process.env.NOTIFY_EMAIL || 'bruno@artacho.dev';
     const defaultMsg = `Olá ${name},\n\nConforme nossa conversa, segue meu currículo em anexo.\nEstou à disposição para conversarmos sobre a oportunidade.\n\nAtenciosamente,`;
     const finalMsg = msg || defaultMsg;
     const finalHtml = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; padding: 20px; color: #0f172a; line-height: 1.6;">

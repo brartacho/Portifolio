@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 
 const BASE_URL = process.env.BASE_URL || 'https://artacho.dev';
-const EMAIL    = process.env.ADMIN_EMAIL    || 'br.artacho@gmail.com';
+const EMAIL    = process.env.ADMIN_EMAIL    || 'bruno@artacho.dev';
 const PASS     = process.env.ADMIN_PASSWORD || '';
 
 const OUT_IPHONE  = path.join(__dirname, '..', 'test-results', 'mobile-audit');

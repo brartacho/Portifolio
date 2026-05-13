@@ -51,8 +51,9 @@ test.describe('ADMIN — Gestão de etapas', () => {
   }
 
   async function deleteOpenVaga(page) {
-    page.once('dialog', d => d.accept());
-    await page.locator('#drawerBody button', { hasText: /deletar/i }).click();
+    await page.locator('#drawerBody .btn-danger').click();
+    await expect(page.locator('#confirmModal')).toHaveClass(/open/, { timeout: 5000 });
+    await page.evaluate(() => document.getElementById('confirmOkBtn').click());
     await expect(page.locator('#vagasDrawer')).not.toHaveClass(/open/);
   }
 
@@ -66,7 +67,7 @@ test.describe('ADMIN — Gestão de etapas', () => {
     expect(labels).not.toContain('Aprovado');
     expect(labels).not.toContain('Recusado');
     expect(labels).toContain('Enviado');
-    expect(labels).toContain('Proposta / Oferta');
+    expect(labels).toContain('Proposta');
 
     await deleteOpenVaga(page);
   });

@@ -12,7 +12,7 @@ module.exports = defineConfig({
   fullyParallel: false,
   workers: 2,
   timeout: 30_000,
-  retries: 1,
+  retries: process.env.CI ? 1 : 0,
   reporter: [
     ['list'],
     ['html', { outputFolder: 'test-results/report', open: 'never' }],
