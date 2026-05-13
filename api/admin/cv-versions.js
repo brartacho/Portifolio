@@ -2,8 +2,6 @@ import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { normalizeFileName } from '../_lib/filename.js';
 
-const MAX_LIMIT = 100;
-
 export default async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -12,21 +10,11 @@ export default async function handler(req, res) {
     const supabase = getSupabase();
 
     if (req.method === 'GET') {
-        const { search = '', status = '', limit: limitParam = '' } = req.query;
+        const { data, error } = await supabase
+            .from('cv_versions')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-        let query = supabase.from('cv_versions').select('*');
-
-        if (search) {
-            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
-            query = query.or(`name.ilike.%${s}%,description.ilike.%${s}%,file_name.ilike.%${s}%`);
-        }
-        if (status === 'ativo')   query = query.eq('active', true);
-        if (status === 'inativo') query = query.eq('active', false);
-
-        query = query.order('created_at', { ascending: false });
-        if (limitParam) query = query.limit(Math.min(MAX_LIMIT, Math.max(1, parseInt(limitParam) || MAX_LIMIT)));
-
-        const { data, error } = await query;
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json(data ?? []);
     }
