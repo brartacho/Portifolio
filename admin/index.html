@@ -4550,7 +4550,7 @@ async function sendShareEmail() {
     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
 
     try {
-        await api('POST', '/api/admin/send-share-link-email', {
+        await api('POST', '/api/admin/tokens?action=send-email', {
             share_url: _shareUrl,
             recipient_email: email,
             expiry: _shareExpiry,
