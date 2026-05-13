@@ -2320,12 +2320,26 @@
         <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
         <div id="tab-vagas" class="tab-panel">
 
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-                <div class="vagas-filters" id="vagasFilters">
-                    <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
-                    <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
-                    <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
-                    <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                    <div class="vagas-filters" id="vagasFilters">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
+                        <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
+                        <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
+                        <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                    </div>
+                    <div class="vagas-filters" id="vagasFiltersModalidade">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
+                        <button class="vagas-filter-chip" data-filter="Presencial" onclick="setVagasModalidadeFilter('Presencial',this)">Presencial</button>
+                        <button class="vagas-filter-chip" data-filter="Híbrida" onclick="setVagasModalidadeFilter('Híbrida',this)">Híbrida</button>
+                        <button class="vagas-filter-chip" data-filter="Remota" onclick="setVagasModalidadeFilter('Remota',this)">Remota</button>
+                    </div>
+                    <div class="vagas-filters" id="vagasFiltersTipo">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasTipoFilter('all',this)">Contratação</button>
+                        <button class="vagas-filter-chip" data-filter="CLT" onclick="setVagasTipoFilter('CLT',this)">CLT</button>
+                        <button class="vagas-filter-chip" data-filter="PJ" onclick="setVagasTipoFilter('PJ',this)">PJ</button>
+                        <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
+                    </div>
                 </div>
                 <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
             </div>
@@ -2666,6 +2680,26 @@
         <div class="form-group" style="margin-bottom:10px">
             <label for="sendObservacoes" style="font-size:0.78rem">Observações <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
             <input type="text" id="sendObservacoes" placeholder="headhunter, urgência, referência…" maxlength="500" autocomplete="off" data-form-type="other">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+            <div class="form-group" style="margin:0">
+                <label for="sendModalidade" style="font-size:0.78rem">Modalidade <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <select id="sendModalidade" class="mock-input" style="font-size:0.85rem">
+                    <option value="">—</option>
+                    <option value="Presencial">Presencial</option>
+                    <option value="Híbrida">Híbrida</option>
+                    <option value="Remota">Remota</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label for="sendTipoContratacao" style="font-size:0.78rem">Tipo de contratação <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <select id="sendTipoContratacao" class="mock-input" style="font-size:0.85rem">
+                    <option value="">—</option>
+                    <option value="CLT">CLT</option>
+                    <option value="PJ">PJ</option>
+                    <option value="Freelancer">Freelancer</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-group">
@@ -3145,7 +3179,9 @@ setInterval(_updateRefreshTs, 5000);
 
 // ─── GESTÃO DE VAGAS ──────────────────────────────────────
 let _applications = [];
-let _vagasFilter  = 'all';
+let _vagasFilter           = 'all';
+let _vagasModalidadeFilter = 'all';
+let _vagasTipoFilter       = 'all';
 let _openAppId    = null;
 
 // Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
@@ -3197,7 +3233,9 @@ function renderApplicationsTable() {
     const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
 
     let filtered = _applications;
-    if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (_vagasFilter           !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(app => app.modalidade === _vagasModalidadeFilter);
+    if (_vagasTipoFilter       !== 'all') filtered = filtered.filter(app => app.tipo_contratacao === _vagasTipoFilter);
     if (search) filtered = filtered.filter(app =>
         (app.empresa || '').toLowerCase().includes(search) ||
         (app.vaga || '').toLowerCase().includes(search) ||
@@ -3237,7 +3275,19 @@ function renderApplicationsTable() {
 
 function setVagasFilter(filter, btn) {
     _vagasFilter = filter;
-    document.querySelectorAll('.vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#vagasFilters .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasModalidadeFilter(filter, btn) {
+    _vagasModalidadeFilter = filter;
+    document.querySelectorAll('#vagasFiltersModalidade .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasTipoFilter(filter, btn) {
+    _vagasTipoFilter = filter;
+    document.querySelectorAll('#vagasFiltersTipo .vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderApplicationsTable();
 }
@@ -3289,6 +3339,8 @@ function renderDrawerBody(app) {
     const chips = [
         app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>` : '',
         app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>` : '',
+        app.modalidade       ? `<span class="dinfo-chip"><i class="fa-solid fa-map-pin"></i> ${esc(app.modalidade)}</span>` : '',
+        app.tipo_contratacao ? `<span class="dinfo-chip"><i class="fa-solid fa-file-contract"></i> ${esc(app.tipo_contratacao)}</span>` : '',
     ].filter(Boolean);
 
     const hasRecruiter = recruiterRows.length > 0;
@@ -3825,6 +3877,26 @@ function vagaFormHTML(app) {
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Modalidade</label>
+                    <select id="vfModalidade" class="mock-input">
+                        <option value="">—</option>
+                        <option value="Presencial" ${app?.modalidade === 'Presencial' ? 'selected' : ''}>Presencial</option>
+                        <option value="Híbrida" ${app?.modalidade === 'Híbrida' ? 'selected' : ''}>Híbrida</option>
+                        <option value="Remota" ${app?.modalidade === 'Remota' ? 'selected' : ''}>Remota</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Tipo de contratação</label>
+                    <select id="vfTipoContratacao" class="mock-input">
+                        <option value="">—</option>
+                        <option value="CLT" ${app?.tipo_contratacao === 'CLT' ? 'selected' : ''}>CLT</option>
+                        <option value="PJ" ${app?.tipo_contratacao === 'PJ' ? 'selected' : ''}>PJ</option>
+                        <option value="Freelancer" ${app?.tipo_contratacao === 'Freelancer' ? 'selected' : ''}>Freelancer</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
                     <label style="font-size:0.75rem">Data de envio</label>
                     <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
                 </div>
@@ -3867,6 +3939,8 @@ async function saveNovaVaga() {
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
+            modalidade:       document.getElementById('vfModalidade').value || null,
+            tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
         });
         closeNovaVaga();
         await loadApplications();
@@ -3912,6 +3986,8 @@ async function saveEditVaga(appId) {
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
+            modalidade:       document.getElementById('vfModalidade').value || null,
+            tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
         });
         const idx = _applications.findIndex(a => a.id === appId);
         if (idx !== -1) _applications[idx] = updated;
@@ -4555,6 +4631,8 @@ async function sendCV() {
                     linkedin_empresa: linkedinEmpresa  || null,
                     link_vaga:        linkVaga         || null,
                     observacoes:      observacoes      || null,
+                    modalidade:       document.getElementById('sendModalidade').value || null,
+                    tipo_contratacao: document.getElementById('sendTipoContratacao').value || null,
                 });
                 msgEl.className = 'forgot-msg success';
                 msgEl.textContent = r.message || 'Enviado!';
@@ -4604,6 +4682,8 @@ async function sendCV() {
                     linkedin_empresa: linkedinEmpresa || null,
                     link_vaga:        linkVaga        || null,
                     notas:            observacoes     || null,
+                    modalidade:       document.getElementById('sendModalidade').value || null,
+                    tipo_contratacao: document.getElementById('sendTipoContratacao').value || null,
                 }).catch(() => {});
 
                 const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
@@ -4622,13 +4702,17 @@ async function sendCV() {
             } else {
                 // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
                 finalMsg = message.replace(/\[link\]\s*\n*/g, '');
+                const _waModalidade       = document.getElementById('sendModalidade').value;
+                const _waTipoContratacao  = document.getElementById('sendTipoContratacao').value;
                 const dlUrl = `/api/admin/cv-storage-url?id=${_sendCv.id}`
                     + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`
-                    + (empresa         ? `&empresa=${encodeURIComponent(empresa)}`                 : '')
-                    + (vaga            ? `&vaga=${encodeURIComponent(vaga)}`                       : '')
-                    + (linkedinEmpresa ? `&linkedin_empresa=${encodeURIComponent(linkedinEmpresa)}` : '')
-                    + (linkVaga        ? `&link_vaga=${encodeURIComponent(linkVaga)}`               : '')
-                    + (observacoes     ? `&observacoes=${encodeURIComponent(observacoes)}`          : '');
+                    + (empresa              ? `&empresa=${encodeURIComponent(empresa)}`                           : '')
+                    + (vaga                 ? `&vaga=${encodeURIComponent(vaga)}`                                 : '')
+                    + (linkedinEmpresa      ? `&linkedin_empresa=${encodeURIComponent(linkedinEmpresa)}`           : '')
+                    + (linkVaga             ? `&link_vaga=${encodeURIComponent(linkVaga)}`                         : '')
+                    + (observacoes          ? `&observacoes=${encodeURIComponent(observacoes)}`                   : '')
+                    + (_waModalidade        ? `&modalidade=${encodeURIComponent(_waModalidade)}`                  : '')
+                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;

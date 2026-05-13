@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     // GET → gera URL assinada de download
     if (req.method === 'GET') {
-        const { id, recipient, channel, empresa, vaga, linkedin_empresa, link_vaga, observacoes } = req.query;
+        const { id, recipient, channel, empresa, vaga, linkedin_empresa, link_vaga, observacoes, modalidade, tipo_contratacao } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório' });
 
         const { data: cv, error: cvErr } = await supabase
@@ -73,6 +73,8 @@ export default async function handler(req, res) {
                     observacoes:      cleanObs,
                     gestor_nome:      cleanRecipient || null,
                     data_envio:       new Date().toISOString(),
+                    modalidade:       s(modalidade)?.slice(0, 20)       || null,
+                    tipo_contratacao: s(tipo_contratacao)?.slice(0, 20) || null,
                     source:           'cv_send',
                     stages:           DEFAULT_STAGES,
                 }).then(() => {}, () => {});

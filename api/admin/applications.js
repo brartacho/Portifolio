@@ -2,7 +2,10 @@ import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { DEFAULT_STAGES } from '../_lib/stages.js';
 
-const TEXT_MAX = { empresa: 200, vaga: 200, linkedin_empresa: 300, link_vaga: 500, observacoes: 500, gestor_nome: 100, gestor_email: 120 };
+const TEXT_MAX = { empresa: 200, vaga: 200, linkedin_empresa: 300, link_vaga: 500, observacoes: 500, gestor_nome: 100, gestor_email: 120, modalidade: 20, tipo_contratacao: 20 };
+
+const VALID_MODALIDADE       = new Set(['Presencial', 'Híbrida', 'Remota']);
+const VALID_TIPO_CONTRATACAO = new Set(['CLT', 'PJ', 'Freelancer']);
 
 const CONTROL_CHARS = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
 
@@ -45,13 +48,20 @@ export default async function handler(req, res) {
 
     // POST — cria candidatura manual
     if (req.method === 'POST') {
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao } = req.body || {};
 
         const emp = clean(empresa, TEXT_MAX.empresa);
         if (!emp) return res.status(400).json({ error: 'empresa obrigatório' });
 
         if (data_envio && isNaN(new Date(data_envio).getTime())) {
             return res.status(400).json({ error: 'data_envio inválido' });
+        }
+
+        if (modalidade && !VALID_MODALIDADE.has(modalidade)) {
+            return res.status(400).json({ error: `modalidade inválida (${modalidade})` });
+        }
+        if (tipo_contratacao && !VALID_TIPO_CONTRATACAO.has(tipo_contratacao)) {
+            return res.status(400).json({ error: `tipo_contratacao inválido (${tipo_contratacao})` });
         }
 
         const { data, error } = await supabase
@@ -65,6 +75,8 @@ export default async function handler(req, res) {
                 gestor_nome:      clean(gestor_nome, TEXT_MAX.gestor_nome),
                 gestor_email:     clean(gestor_email, TEXT_MAX.gestor_email),
                 data_envio:       data_envio || null,
+                modalidade:       modalidade || null,
+                tipo_contratacao: tipo_contratacao || null,
                 source:           'manual',
                 stages:           DEFAULT_STAGES,
             })
@@ -80,7 +92,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id obrigatório' });
 
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, stages, result } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao, stages, result } = req.body || {};
 
         const patch = {};
         if (empresa !== undefined) {
@@ -115,6 +127,18 @@ export default async function handler(req, res) {
             const runningCount = stages.filter(s => s.status === 'running' && s.active !== false).length;
             if (runningCount > 1) return res.status(400).json({ error: 'Apenas uma etapa pode estar executando' });
             patch.stages = stages;
+        }
+        if (modalidade !== undefined) {
+            if (modalidade !== null && modalidade !== '' && !VALID_MODALIDADE.has(modalidade)) {
+                return res.status(400).json({ error: `modalidade inválida (${modalidade})` });
+            }
+            patch.modalidade = modalidade || null;
+        }
+        if (tipo_contratacao !== undefined) {
+            if (tipo_contratacao !== null && tipo_contratacao !== '' && !VALID_TIPO_CONTRATACAO.has(tipo_contratacao)) {
+                return res.status(400).json({ error: `tipo_contratacao inválido (${tipo_contratacao})` });
+            }
+            patch.tipo_contratacao = tipo_contratacao || null;
         }
         if (result !== undefined) {
             if (!VALID_RESULTS.has(result)) {

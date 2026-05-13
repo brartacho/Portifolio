@@ -15,7 +15,8 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const { cv_version_id, cv_name_snapshot, cv_id_snapshot, ip_address, user_agent, token_id,
-            empresa, vaga, notas, contato, linkedin_empresa, link_vaga } = req.body || {};
+            empresa, vaga, notas, contato, linkedin_empresa, link_vaga,
+            modalidade, tipo_contratacao } = req.body || {};
 
     if (!cv_version_id || !ip_address || !ALLOWED_IP.has(ip_address)) {
         return res.status(400).json({ error: 'cv_version_id e ip_address válidos são obrigatórios' });
@@ -54,6 +55,8 @@ export default async function handler(req, res) {
         observacoes:      cleanNotas,
         gestor_nome:      recName || null,
         data_envio:       new Date().toISOString(),
+        modalidade:       s(modalidade)?.slice(0, 20)       || null,
+        tipo_contratacao: s(tipo_contratacao)?.slice(0, 20) || null,
         source:           'cv_send',
         stages:           DEFAULT_STAGES,
     }).then(() => {}, () => {});
