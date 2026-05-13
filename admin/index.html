@@ -4599,8 +4599,11 @@ async function sendCV() {
                     ip_address:       'admin-send-whatsapp-link',
                     user_agent:       `Send to ${name} via whatsapp-link`,
                     token_id:         tk.id,
-                    empresa: empresa || null,
-                    vaga:    vaga    || null,
+                    empresa:          empresa         || null,
+                    vaga:             vaga            || null,
+                    linkedin_empresa: linkedinEmpresa || null,
+                    link_vaga:        linkVaga        || null,
+                    notas:            observacoes     || null,
                 }).catch(() => {});
 
                 const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
@@ -4621,8 +4624,11 @@ async function sendCV() {
                 finalMsg = message.replace(/\[link\]\s*\n*/g, '');
                 const dlUrl = `/api/admin/cv-storage-url?id=${_sendCv.id}`
                     + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`
-                    + (empresa ? `&empresa=${encodeURIComponent(empresa)}` : '')
-                    + (vaga    ? `&vaga=${encodeURIComponent(vaga)}`       : '');
+                    + (empresa         ? `&empresa=${encodeURIComponent(empresa)}`                 : '')
+                    + (vaga            ? `&vaga=${encodeURIComponent(vaga)}`                       : '')
+                    + (linkedinEmpresa ? `&linkedin_empresa=${encodeURIComponent(linkedinEmpresa)}` : '')
+                    + (linkVaga        ? `&link_vaga=${encodeURIComponent(linkVaga)}`               : '')
+                    + (observacoes     ? `&observacoes=${encodeURIComponent(observacoes)}`          : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
