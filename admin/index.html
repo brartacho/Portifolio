@@ -1962,12 +1962,29 @@
             <a class="share-btn share-btn-whatsapp" id="whatsappBtn" href="#" target="_blank" rel="noreferrer">
                 <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
-            <a class="share-btn share-btn-email" id="emailBtn" href="#">
+            <button class="share-btn share-btn-email" id="emailBtn" onclick="showShareEmailForm()">
                 <i class="fa-solid fa-envelope"></i> E-mail
-            </a>
+            </button>
             <button class="share-btn" onclick="closeShareModal()">
                 <i class="fa-solid fa-xmark"></i> Fechar
             </button>
+        </div>
+
+        <div id="shareEmailForm" style="display:none;margin-top:4px">
+            <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 8px"><i class="fa-solid fa-envelope" style="margin-right:6px"></i>Enviar link por e-mail</p>
+            <div style="display:flex;gap:8px;align-items:center">
+                <input type="email" id="shareEmailInput" placeholder="destinatario@email.com"
+                    style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:0.85rem;color:var(--text);outline:none"
+                    onkeydown="if(event.key==='Enter')sendShareEmail();if(event.key==='Escape')cancelShareEmail()">
+                <button id="shareEmailSendBtn" onclick="sendShareEmail()"
+                    style="background:var(--cyan);color:#0f172a;border:none;border-radius:8px;padding:9px 14px;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+                <button onclick="cancelShareEmail()"
+                    style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:0.85rem;color:var(--text-dim);cursor:pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -4337,33 +4354,67 @@ function renderLogDetail({ log, accesses }) {
 }
 
 // ─── SHARE MODAL ──────────────────────────────────────────
-let _shareUrl = '';
+let _shareUrl    = '';
+let _shareExpiry = '';
 
 function openShareModal(data) {
     _shareUrl = data.shareUrl;
-    const expiry = new Date(data.expires_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    _shareExpiry = new Date(data.expires_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const uses = data.max_uses ? `máx. ${data.max_uses} usos` : 'usos ilimitados';
 
-    document.getElementById('shareModalMeta').textContent = `${data.label || 'Sem label'} · expira ${expiry} · ${uses}`;
+    document.getElementById('shareModalMeta').textContent = `${data.label || 'Sem label'} · expira ${_shareExpiry} · ${uses}`;
     document.getElementById('shareUrl').textContent = _shareUrl;
 
-    const msg = encodeURIComponent(`Olá! Segue meu currículo: ${_shareUrl} (disponível até ${expiry})`);
+    const msg = encodeURIComponent(`Olá! Segue meu currículo: ${_shareUrl} (disponível até ${_shareExpiry})`);
     document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
-
-    const emailSubject = encodeURIComponent('Currículo Bruno Artacho — QA');
-    const emailBody = encodeURIComponent(`Olá!\n\nSegue o link para meu currículo:\n${_shareUrl}\n\nDisponível até ${expiry}.\n\nBruno Artacho`);
-    document.getElementById('emailBtn').href = `https://mail.google.com/mail/?view=cm&fs=1&su=${emailSubject}&body=${emailBody}`;
-    document.getElementById('emailBtn').target = '_blank';
 
     document.getElementById('copyBtn').textContent = '';
     document.getElementById('copyBtn').innerHTML = '<i class="fa-solid fa-copy"></i> Copiar link';
     document.getElementById('copyBtn').classList.remove('copied');
 
+    cancelShareEmail();
     document.getElementById('shareModal').classList.add('open');
 }
 
 function closeShareModal() {
     document.getElementById('shareModal').classList.remove('open');
+}
+
+function showShareEmailForm() {
+    document.getElementById('emailBtn').style.display = 'none';
+    document.getElementById('shareEmailForm').style.display = 'block';
+    document.getElementById('shareEmailInput').value = '';
+    document.getElementById('shareEmailInput').focus();
+}
+
+function cancelShareEmail() {
+    document.getElementById('shareEmailForm').style.display = 'none';
+    document.getElementById('emailBtn').style.display = '';
+}
+
+async function sendShareEmail() {
+    const input = document.getElementById('shareEmailInput');
+    const email = input.value.trim();
+    if (!email) { input.focus(); return; }
+
+    const btn = document.getElementById('shareEmailSendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+
+    try {
+        await api('POST', '/api/admin/send-share-link-email', {
+            share_url: _shareUrl,
+            recipient_email: email,
+            expiry: _shareExpiry,
+        });
+        cancelShareEmail();
+        showToast(`E-mail enviado para ${email}`, 'success');
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+    }
 }
 
 async function copyShareUrl() {
