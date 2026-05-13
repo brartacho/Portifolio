@@ -4385,9 +4385,15 @@ async function copyShareUrl() {
 }
 
 async function sendViaEmail() {
-    try { await navigator.clipboard.writeText(_emailBody); } catch (_) {}
-    window.open('https://mail.google.com/mail/u/0/#inbox?compose=new', '_blank', 'noopener,noreferrer');
-    showToast('Texto copiado! Gmail aberto — crie o email e cole (Ctrl+V).', 'info');
+    try {
+        await navigator.clipboard.writeText(_emailBody);
+        showToast('Texto copiado! Abra o Gmail, crie um email e cole (Ctrl+V).', 'info', {
+            label: 'Abrir Gmail',
+            callback: () => window.open('https://mail.google.com', '_blank', 'noopener,noreferrer'),
+        });
+    } catch (_) {
+        showToast('Não foi possível copiar o texto.', 'error');
+    }
 }
 
 document.getElementById('shareModal').addEventListener('click', e => {
