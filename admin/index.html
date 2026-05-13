@@ -353,6 +353,10 @@
             background: var(--cyan);
         }
 
+        /* ─── CVs TAB — accordion upload (desktop: always visible) ─── */
+        .cvs-upload-toggle { display: none; }
+        .cvs-upload-collapsible { display: block; }
+
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -1177,6 +1181,27 @@
             .mobile-bottom-nav { display: flex; }
             .app-tabs { display: none !important; }
 
+            /* ── CVs tab: lista primeiro, upload em accordion ── */
+            #tab-cvs { display: flex; flex-direction: column; }
+            .cvs-list-section { order: 1; }
+            .cvs-upload-section { order: 2; }
+            .cvs-upload-toggle {
+                display: flex; align-items: center; justify-content: space-between;
+                width: 100%; padding: 14px 16px; margin-top: 4px;
+                background: var(--bg-elevated); border: 1px solid var(--border-soft);
+                border-radius: 10px; color: var(--text-main);
+                font-size: 0.9rem; font-weight: 600;
+                -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+                cursor: pointer;
+            }
+            .cvs-upload-toggle span { display: flex; align-items: center; gap: 8px; }
+            .cvs-upload-chevron { transition: transform 0.2s; font-size: 0.8rem; color: var(--text-dim); }
+            .cvs-upload-toggle[aria-expanded="true"] .cvs-upload-chevron { transform: rotate(180deg); }
+            .cvs-upload-collapsible { display: none; }
+            .cvs-upload-collapsible.open { display: block; }
+            /* esconde panel-title de upload (toggle já é o título) */
+            .cvs-upload-collapsible .panel-title:first-child { display: none; }
+
             /* ── Header: botões icon-only ── */
             .app-refresh span { display: none; }
             .app-logout span { display: none; }
@@ -1713,6 +1738,13 @@
         <!-- ─── CURRÍCULOS ─────────────────────────────── -->
         <div class="tab-panel active" id="tab-cvs">
 
+            <div class="cvs-upload-section">
+                <button class="cvs-upload-toggle" onclick="toggleCvsUpload()" id="cvsUploadToggleBtn" aria-expanded="false">
+                    <span><i class="fa-solid fa-upload"></i> Fazer upload de currículo</span>
+                    <i class="fa-solid fa-chevron-down cvs-upload-chevron"></i>
+                </button>
+                <div class="cvs-upload-collapsible" id="cvsUploadCollapsible">
+
             <!-- Storage usage card (alimentado por /api/admin/storage-stats) -->
             <div class="storage-card" id="storageCard" hidden>
                 <div class="storage-head">
@@ -1776,6 +1808,10 @@
                 </button>
             </div>
 
+                </div><!-- /cvs-upload-collapsible -->
+            </div><!-- /cvs-upload-section -->
+
+            <div class="cvs-list-section">
             <div class="panel">
                 <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
                 <div class="filter-bar">
@@ -1805,6 +1841,7 @@
                     </table>
                 </div>
             </div>
+            </div><!-- /cvs-list-section -->
         </div>
 
         <!-- ─── TOKENS ─────────────────────────────────── -->
@@ -3367,6 +3404,14 @@ async function saveEditVaga(appId) {
         msg.textContent = e.message;
         msg.hidden = false;
     }
+}
+
+// ─── CVs UPLOAD ACCORDION ────────────────────────────────
+function toggleCvsUpload() {
+    const btn = document.getElementById('cvsUploadToggleBtn');
+    const panel = document.getElementById('cvsUploadCollapsible');
+    const open = panel.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 // ─── TABS ─────────────────────────────────────────────────
