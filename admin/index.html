@@ -2342,7 +2342,10 @@
                         <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
                     </div>
                 </div>
-                <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-sm" onclick="exportCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
+                    <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                </div>
             </div>
 
             <div class="filter-bar" style="margin-bottom:12px">
@@ -3190,7 +3193,8 @@ let _applications = [];
 let _vagasFilter           = 'all';
 let _vagasModalidadeFilter = 'all';
 let _vagasTipoFilter       = 'all';
-let _openAppId    = null;
+let _openAppId             = null;
+let _filteredApplications  = [];
 
 // Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
 function stageStatus(s) {
@@ -3268,6 +3272,8 @@ function renderApplicationsTable() {
         ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
         : '';
 
+    _filteredApplications = filtered;
+
     if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
         return;
@@ -3329,6 +3335,52 @@ function clearVagasDate() {
     if (from) from.value = '';
     if (to)   to.value   = '';
     renderApplicationsTable();
+}
+
+function exportCSV() {
+    if (!_filteredApplications.length) {
+        showToast('Nenhuma candidatura para exportar.', 'error');
+        return;
+    }
+    const headers = [
+        'Empresa', 'Vaga', 'Modalidade', 'Tipo', 'Gestor', 'Email Gestor',
+        'Data Envio', 'Resultado', 'Etapa Atual', 'Observações', 'Fonte', 'Arquivada'
+    ];
+    function csvCell(val) {
+        const s = String(val == null ? '' : val);
+        if (s.includes('"') || s.includes(',') || s.includes('\n')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+    }
+    const rows = _filteredApplications.map(app => [
+        app.empresa          || '',
+        app.vaga             || '',
+        app.modalidade       || '',
+        app.tipo_contratacao || '',
+        app.gestor_nome      || '',
+        app.gestor_email     || '',
+        app.data_envio ? app.data_envio.slice(0, 10) : '',
+        app.result           || 'em_processo',
+        getAppCurrentStageName(app),
+        app.observacoes      || '',
+        app.source           || '',
+        app.archived ? 'Sim' : 'Não',
+    ].map(csvCell).join(','));
+
+    const bom  = '﻿';
+    const csv  = bom + [headers.map(csvCell).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    a.href     = url;
+    a.download = `candidaturas-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Exportando ${_filteredApplications.length} candidatura(s).`);
 }
 
 function openDrawer(id) {
