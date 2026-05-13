@@ -1073,19 +1073,20 @@
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 14px 22px;
+            padding: 14px 20px;
             font-size: 0.92rem;
             font-weight: 500;
             z-index: 9999;
             transform: translate(-50%, -120%);
             opacity: 0;
             transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
-            max-width: min(520px, calc(100vw - 40px));
+            width: min(520px, calc(100vw - 24px));
             box-shadow: 0 10px 30px -8px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
+        .toast span { flex: 1; min-width: 0; }
         .toast::before {
             content: '';
             display: inline-block;
@@ -2297,6 +2298,25 @@
     </div>
 </div>
 
+<!-- ─── PROMPT MODAL ─────────────────────────────── -->
+<div class="modal-overlay" id="promptModal">
+    <div class="modal" style="max-width:380px">
+        <p class="modal-title" id="promptTitle"></p>
+        <input id="promptInput" type="text" autocomplete="off" maxlength="120"
+               style="width:100%;box-sizing:border-box;background:var(--bg-dark);
+                      border:1px solid var(--border);border-radius:8px;
+                      padding:10px 14px;font-size:0.95rem;color:var(--text);
+                      font-family:inherit;outline:none;margin-bottom:20px;
+                      transition:border-color 0.15s"
+               onfocus="this.style.borderColor='var(--cyan-mid)'"
+               onblur="this.style.borderColor='var(--border)'">
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn" id="promptCancelBtn">Cancelar</button>
+            <button class="btn btn-cyan" id="promptOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- ─── SHARE MODAL ──────────────────────────────── -->
 <div class="modal-overlay" id="shareModal">
     <div class="modal">
@@ -2658,6 +2678,28 @@ function modalHasUnsavedData(modalId) {
     }
     return false;
 }
+function showPrompt(title, placeholder = '') {
+    return new Promise(resolve => {
+        document.getElementById('promptTitle').textContent = title;
+        const input = document.getElementById('promptInput');
+        input.value = '';
+        input.placeholder = placeholder;
+        const overlay = document.getElementById('promptModal');
+        overlay.classList.add('open');
+        const close = result => {
+            overlay.classList.remove('open');
+            document.removeEventListener('keydown', escHandler);
+            resolve(result);
+        };
+        const escHandler = e => { if (e.key === 'Escape') close(null); };
+        document.addEventListener('keydown', escHandler, { once: true });
+        input.onkeydown = e => { if (e.key === 'Enter') close(input.value.trim() || null); };
+        document.getElementById('promptOkBtn').onclick  = () => close(input.value.trim() || null);
+        document.getElementById('promptCancelBtn').onclick = () => close(null);
+        setTimeout(() => input.focus(), 60);
+    });
+}
+
 function showConfirm(title, message, { okText = 'Confirmar', danger = true } = {}) {
     return new Promise(resolve => {
         document.getElementById('confirmTitle').textContent = title;
@@ -3532,8 +3574,8 @@ async function setAppResult(appId, result) {
 }
 
 async function addCustomStage(appId) {
-    const name = prompt('Nome da nova etapa:');
-    if (!name || !name.trim()) return;
+    const name = await showPrompt('Nova etapa', 'Ex.: Entrevista com Diretor…');
+    if (!name) return;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
     const normalized = app.stages.map(s => ({ name: s.name, status: stageStatus(s), active: s.active !== false }));
