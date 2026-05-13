@@ -1048,6 +1048,12 @@
             box-shadow: 0 10px 30px -8px rgba(239,68,68,0.4);
         }
         .toast.error::before { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+        .toast.info {
+            border-color: rgba(34,211,238,0.4);
+            color: var(--cyan);
+            box-shadow: 0 10px 30px -8px rgba(34,211,238,0.25);
+        }
+        .toast.info::before { background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
 
         /* ─── UPLOAD ZONE ────────────────────────────── */
         .upload-zone {
@@ -1963,9 +1969,9 @@
             <a class="share-btn share-btn-whatsapp" id="whatsappBtn" href="#" target="_blank" rel="noreferrer">
                 <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
-            <a class="share-btn share-btn-email" id="emailBtn" href="#" target="_blank" rel="noreferrer">
+            <button class="share-btn share-btn-email" id="emailBtn" onclick="sendViaEmail()">
                 <i class="fa-solid fa-envelope"></i> E-mail
-            </a>
+            </button>
             <button class="share-btn" onclick="closeShareModal()">
                 <i class="fa-solid fa-xmark"></i> Fechar
             </button>
@@ -4338,7 +4344,8 @@ function renderLogDetail({ log, accesses }) {
 }
 
 // ─── SHARE MODAL ──────────────────────────────────────────
-let _shareUrl = '';
+let _shareUrl  = '';
+let _emailBody = '';
 
 function openShareModal(data) {
     _shareUrl = data.shareUrl;
@@ -4351,9 +4358,7 @@ function openShareModal(data) {
     const msg = encodeURIComponent(`Olá! Segue meu currículo: ${_shareUrl} (disponível até ${expiry})`);
     document.getElementById('whatsappBtn').href = `https://wa.me/?text=${msg}`;
 
-    const emailSubject = encodeURIComponent('Currículo Bruno Artacho — QA');
-    const emailBody = encodeURIComponent(`Olá!\n\nSegue o link para meu currículo:\n${_shareUrl}\n\nDisponível até ${expiry}.\n\nBruno Artacho`);
-    document.getElementById('emailBtn').href = `https://mail.google.com/mail/?view=cm&fs=1&su=${emailSubject}&body=${emailBody}`;
+    _emailBody = `Olá!\n\nSegue o link para meu currículo:\n${_shareUrl}\n\nDisponível até ${expiry}.\n\nBruno Artacho`;
 
     document.getElementById('copyBtn').textContent = '';
     document.getElementById('copyBtn').innerHTML = '<i class="fa-solid fa-copy"></i> Copiar link';
@@ -4377,6 +4382,12 @@ async function copyShareUrl() {
             btn.classList.remove('copied');
         }, 2500);
     } catch { showToast('Não foi possível copiar', 'error'); }
+}
+
+async function sendViaEmail() {
+    try { await navigator.clipboard.writeText(_emailBody); } catch (_) {}
+    window.open('https://mail.google.com/mail/u/0/#inbox?compose=new', '_blank', 'noopener,noreferrer');
+    showToast('Texto copiado! Gmail aberto — crie o email e cole (Ctrl+V).', 'info');
 }
 
 document.getElementById('shareModal').addEventListener('click', e => {
