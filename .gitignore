@@ -16,3 +16,12 @@ node_modules/
 audit-screenshots/
 .vercel
 /tmp/
+
+# Tooling local
+.cursor/
+.mcp.json
+.superpowers/
+test-results/
+
+# Planos de implementação concluídos
+docs/superpowers/
