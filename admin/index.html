@@ -1427,6 +1427,39 @@
                 padding: 0;
             }
             .cv-btn-lbl { display: inline; font-size: 0.72rem; }
+
+            /* ── Input font-size 16px: evita zoom automático no iOS ── */
+            input, select, textarea { font-size: 16px !important; }
+            .th-filter-input { font-size: 16px !important; }
+
+            /* ── Touch targets mínimos ── */
+            .btn.btn-sm { min-height: 48px; min-width: 48px; padding: 0 12px; }
+            .vagas-filter-chip { min-height: 40px; padding: 6px 14px; }
+            .th-filter-clear { min-height: 40px; min-width: 40px; }
+
+            /* ── Stage badges: nunca quebram linha ── */
+            .stage-badge {
+                white-space: nowrap;
+                max-width: 94px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 0.68rem;
+                line-height: 1.2;
+            }
+
+            /* ── Date pickers dos Logs: grid label + input ── */
+            .filter-date-group {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 4px 10px;
+                width: 100%;
+                flex-wrap: unset;
+            }
+            .filter-date-group .th-filter-label { font-size: 0.72rem; align-self: center; }
+            .filter-date-group .th-filter-input[type="date"] { width: 100%; min-width: 0; }
+
+            /* ── Scroll inercial ── */
+            .tbl-wrap { -webkit-overflow-scrolling: touch; }
         }
 
         /* ─── GESTÃO DE VAGAS ───────────────────────── */
@@ -1513,7 +1546,7 @@
             display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
             flex-shrink:0;
         }
-        .drawer-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:16px; }
+        .drawer-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:16px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
         .drawer-actions { display:flex; gap:8px; padding-top:4px; border-top:1px solid var(--border-soft); }
         .drawer-close { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.1rem; padding:2px; }
         .drawer-close:hover { color:var(--text); }
