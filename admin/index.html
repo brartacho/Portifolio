@@ -1963,7 +1963,7 @@
             <a class="share-btn share-btn-whatsapp" id="whatsappBtn" href="#" target="_blank" rel="noreferrer">
                 <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
-            <a class="share-btn share-btn-email" id="emailBtn" href="#">
+            <a class="share-btn share-btn-email" id="emailBtn" href="#" target="_blank" rel="noreferrer">
                 <i class="fa-solid fa-envelope"></i> E-mail
             </a>
             <button class="share-btn" onclick="closeShareModal()">
@@ -4353,7 +4353,7 @@ function openShareModal(data) {
 
     const emailSubject = encodeURIComponent('Currículo Bruno Artacho — QA');
     const emailBody = encodeURIComponent(`Olá!\n\nSegue o link para meu currículo:\n${_shareUrl}\n\nDisponível até ${expiry}.\n\nBruno Artacho`);
-    document.getElementById('emailBtn').href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+    document.getElementById('emailBtn').href = `https://mail.google.com/mail/?view=cm&fs=1&su=${emailSubject}&body=${emailBody}`;
 
     document.getElementById('copyBtn').textContent = '';
     document.getElementById('copyBtn').innerHTML = '<i class="fa-solid fa-copy"></i> Copiar link';
