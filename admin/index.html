@@ -1525,6 +1525,66 @@
             #tokenTable tr.skel-row td { display: none !important; }
             #tokenTable tr.skel-row td:first-child { display: block !important; flex: 1; height: 100%; }
 
+            /* ── Log table: card redesenhado ── */
+            #logTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "token  date"
+                    "cv     cv"
+                    "ip     ip";
+                gap: 0;
+                padding: 0 !important;
+                overflow: hidden;
+                cursor: pointer;
+            }
+            #logTable td {
+                display: block !important;
+                border: none !important;
+                margin: 0 !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            #logTable td::before { display: none !important; }
+            /* Token: título do card */
+            #logTable td:nth-child(1) {
+                grid-area: token;
+                padding: 12px 6px 4px 14px !important;
+                font-size: 0.88rem;
+                align-self: center;
+            }
+            /* Currículo: subtítulo */
+            #logTable td:nth-child(2) {
+                grid-area: cv;
+                padding: 2px 14px 8px !important;
+                font-size: 0.76rem;
+                color: var(--text-dim);
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+            /* IP: rodapé monospace */
+            #logTable td:nth-child(3) {
+                grid-area: ip;
+                padding: 7px 14px !important;
+                font-size: 0.73rem;
+                color: var(--text-dim);
+            }
+            /* Data: topo direito */
+            #logTable td:nth-child(4) {
+                grid-area: date;
+                padding: 12px 14px 4px 6px !important;
+                font-size: 0.75rem;
+                color: var(--text-dim);
+                text-align: right;
+                align-self: center;
+                white-space: nowrap;
+            }
+            #logTable tr.skel-row {
+                display: flex !important;
+                height: 52px; overflow: hidden;
+            }
+            #logTable tr.skel-row td { display: none !important; }
+            #logTable tr.skel-row td:first-child { display: block !important; flex: 1; height: 100%; }
+
             /* ── Input font-size 16px: evita zoom automático no iOS ── */
             input, select, textarea { font-size: 16px !important; }
             .th-filter-input { font-size: 16px !important; }
