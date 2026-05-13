@@ -2285,6 +2285,18 @@
     </div>
 </div>
 
+<!-- ─── CONFIRM MODAL ────────────────────────────── -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width:380px">
+        <p class="modal-title" id="confirmTitle"></p>
+        <p id="confirmMessage" style="color:var(--text-dim);font-size:0.9rem;line-height:1.5;white-space:pre-line;margin:0 0 24px"></p>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn" id="confirmCancelBtn">Cancelar</button>
+            <button class="btn btn-danger" id="confirmOkBtn">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <!-- ─── SHARE MODAL ──────────────────────────────── -->
 <div class="modal-overlay" id="shareModal">
     <div class="modal">
@@ -2646,9 +2658,30 @@ function modalHasUnsavedData(modalId) {
     }
     return false;
 }
-function safeCloseModal(modalId, closeFn) {
+function showConfirm(title, message, { okText = 'Confirmar', danger = true } = {}) {
+    return new Promise(resolve => {
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        const okBtn = document.getElementById('confirmOkBtn');
+        okBtn.textContent = okText;
+        okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-cyan'}`;
+        const overlay = document.getElementById('confirmModal');
+        overlay.classList.add('open');
+        const close = result => {
+            overlay.classList.remove('open');
+            document.removeEventListener('keydown', escHandler);
+            resolve(result);
+        };
+        const escHandler = e => { if (e.key === 'Escape') close(false); };
+        document.addEventListener('keydown', escHandler, { once: true });
+        okBtn.onclick = () => close(true);
+        document.getElementById('confirmCancelBtn').onclick = () => close(false);
+    });
+}
+
+async function safeCloseModal(modalId, closeFn) {
     if (modalHasUnsavedData(modalId)) {
-        if (!confirm('Você tem dados não enviados nesse formulário. Fechar mesmo assim?')) return;
+        if (!await showConfirm('Fechar formulário?', 'Você tem dados não enviados nesse formulário.', { okText: 'Fechar assim mesmo', danger: false })) return;
     }
     closeFn();
 }
@@ -3092,7 +3125,7 @@ function renderTimeline(stages) {
 }
 
 async function deleteApplication(id) {
-    if (!confirm('Deletar esta candidatura? Esta ação não pode ser desfeita.')) return;
+    if (!await showConfirm('Deletar candidatura?', 'Esta ação não pode ser desfeita.', { okText: 'Deletar' })) return;
     try {
         await api('DELETE', `/api/admin/applications?id=${id}`);
         closeDrawer();
@@ -3343,7 +3376,7 @@ async function redoReorder(appId) {
 }
 
 async function resetStageOrder(appId) {
-    if (!confirm('Restaurar a ordem padrão das etapas?\nEtapas personalizadas irão para o final da lista.')) return;
+    if (!await showConfirm('Restaurar ordem das etapas?', 'Etapas personalizadas irão para o final da lista.', { okText: 'Restaurar', danger: false })) return;
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
     const sorted = [...app.stages].sort((a, b) => {
@@ -3869,7 +3902,7 @@ function clearCvFilters() {
 }
 
 async function deleteCV(id, name) {
-    if (!confirm(`Excluir "${name}"? Os tokens associados serão apagados.`)) return;
+    if (!await showConfirm(`Excluir "${name}"?`, 'Os tokens associados serão apagados.', { okText: 'Excluir' })) return;
     try {
         await api('DELETE', `/api/admin/cv-versions?id=${id}`);
         showToast('Currículo excluído');
@@ -4089,7 +4122,7 @@ function clearTokenFilters() {
 }
 
 async function revokeToken(id) {
-    if (!confirm('Revogar este token? O link deixará de funcionar imediatamente.')) return;
+    if (!await showConfirm('Revogar token?', 'O link deixará de funcionar imediatamente.', { okText: 'Revogar' })) return;
     try {
         await api('PATCH', `/api/admin/tokens?id=${id}`);
         showToast('Token revogado');
@@ -4098,7 +4131,7 @@ async function revokeToken(id) {
 }
 
 async function deleteToken(id, label) {
-    if (!confirm(`Excluir o token "${label}"?\n\nAtenção: esta ação remove o token permanentemente — perde-se o histórico de associação. Os logs de download ficam preservados.`)) return;
+    if (!await showConfirm(`Excluir token "${label}"?`, 'Esta ação remove o token permanentemente — perde-se o histórico de associação.\nOs logs de download ficam preservados.', { okText: 'Excluir' })) return;
     try {
         await api('DELETE', `/api/admin/tokens?id=${id}`);
         showToast('Token excluído');
