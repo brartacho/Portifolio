@@ -4,6 +4,9 @@ const { defineConfig, devices } = require('@playwright/test');
 // sem BASE_URL                                        → testa produção (artacho.dev)
 const BASE_URL = process.env.BASE_URL || 'https://artacho.dev';
 
+// Specs que devem rodar em todos os projetos (incluindo mobile/tablet)
+const ALL_PROJECTS_MATCH = ['**/responsive.spec.js', '**/admin-full.spec.js'];
+
 module.exports = defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -22,14 +25,24 @@ module.exports = defineConfig({
     extraHTTPHeaders: { 'Accept-Language': 'pt-BR,pt;q=0.9' },
   },
   projects: [
+    // Desktop — roda todos os specs
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
     },
+
+    // Tablet — iPad Air (820×1180) — top tabs visíveis, layout intermediário
+    {
+      name: 'tablet',
+      use: { ...devices['iPad (gen 7)'], viewport: { width: 820, height: 1180 } },
+      testMatch: ALL_PROJECTS_MATCH,
+    },
+
+    // Mobile — iPhone 14 (390×844) — bottom nav, accordions colapsados
     {
       name: 'mobile',
       use: { ...devices['iPhone 14'] },
-      testMatch: '**/responsive.spec.js',
+      testMatch: ALL_PROJECTS_MATCH,
     },
   ],
   outputDir: 'test-results/artifacts',
