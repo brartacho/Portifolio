@@ -1626,10 +1626,10 @@
     </header>
 
     <nav class="app-tabs">
-        <button class="tab-btn active" onclick="switchTab('cvs', this)"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
-        <button class="tab-btn" onclick="switchTab('tokens', this)"><i class="fa-solid fa-key"></i> Tokens</button>
-        <button class="tab-btn" onclick="switchTab('logs', this)"><i class="fa-solid fa-chart-bar"></i> Logs</button>
-        <button class="tab-btn" onclick="switchTab('vagas', this)"><i class="fa-solid fa-briefcase"></i> Gestão de Vagas</button>
+        <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
+        <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key"></i> Tokens</button>
+        <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')"><i class="fa-solid fa-chart-bar"></i> Logs</button>
+        <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase"></i> Gestão de Vagas</button>
     </nav>
 
     <div class="app-content">
@@ -3310,12 +3310,12 @@ async function saveEditVaga(appId) {
 }
 
 // ─── TABS ─────────────────────────────────────────────────
-function switchTab(name, btn) {
+function switchTab(name) {
     _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${name}`).classList.add('active');
-    btn.classList.add('active');
+    document.querySelectorAll(`[data-tab="${name}"]`).forEach(b => b.classList.add('active'));
 
     if (name === 'cvs') loadCVs();
     if (name === 'tokens') { loadCVs(); loadTokens(); }
