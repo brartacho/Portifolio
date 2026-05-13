@@ -301,6 +301,58 @@
 
         .app-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
 
+        /* ─── BOTTOM NAV (mobile only) ─────────────────────── */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border-soft);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+
+        .mobile-nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 10px 4px;
+            min-height: 56px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 0.6rem;
+            font-family: inherit;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            transition: color 0.15s;
+        }
+
+        .mobile-nav-btn i { font-size: 1.15rem; transition: transform 0.15s; }
+        .mobile-nav-btn:active i { transform: scale(0.88); }
+        .mobile-nav-btn.active { color: var(--cyan); }
+        .mobile-nav-btn.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 28px;
+            height: 2px;
+            border-radius: 0 0 2px 2px;
+            background: var(--cyan);
+        }
+
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -1121,8 +1173,16 @@
         .cv-btn-lbl { display: none; }
 
         @media (max-width: 600px) {
+            /* ── Bottom nav: visível; top tabs: ocultas ── */
+            .mobile-bottom-nav { display: flex; }
+            .app-tabs { display: none !important; }
+
+            /* ── Header: botões icon-only ── */
+            .app-refresh span { display: none; }
+            .app-logout span { display: none; }
+
             /* Geral */
-            .app-content { padding: 12px; }
+            .app-content { padding: 12px 12px calc(68px + env(safe-area-inset-bottom, 0px)); }
             .panel { padding: 14px 12px; }
             .row-2, .row-3 { grid-template-columns: 1fr; }
             .share-actions { grid-template-columns: 1fr; }
