@@ -4352,7 +4352,8 @@ function openShareModal(data) {
 
     const emailSubject = encodeURIComponent('Currículo Bruno Artacho — QA');
     const emailBody = encodeURIComponent(`Olá!\n\nSegue o link para meu currículo:\n${_shareUrl}\n\nDisponível até ${expiry}.\n\nBruno Artacho`);
-    document.getElementById('emailBtn').href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+    document.getElementById('emailBtn').href = `https://mail.google.com/mail/?view=cm&fs=1&su=${emailSubject}&body=${emailBody}`;
+    document.getElementById('emailBtn').target = '_blank';
 
     document.getElementById('copyBtn').textContent = '';
     document.getElementById('copyBtn').innerHTML = '<i class="fa-solid fa-copy"></i> Copiar link';
