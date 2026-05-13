@@ -357,6 +357,10 @@
         .cvs-upload-toggle { display: none; }
         .cvs-upload-collapsible { display: block; }
 
+        /* ─── Tokens TAB — accordion form (desktop: always visible) ─── */
+        .token-form-toggle { display: none; }
+        .token-form-collapsible { display: block; }
+
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -1185,6 +1189,25 @@
             #tab-cvs.active { display: flex; flex-direction: column; }
             .cvs-list-section { order: 1; }
             .cvs-upload-section { order: 2; }
+
+            /* Tokens: lista primeiro, form accordion depois */
+            #tab-tokens.active { display: flex; flex-direction: column; }
+            .token-list-section { order: 1; }
+            .token-form-section { order: 2; }
+            .token-form-toggle {
+                display: flex; align-items: center; justify-content: space-between;
+                width: 100%; padding: 14px 16px; margin-top: 4px;
+                background: var(--bg-elevated); border: 1px solid var(--border-soft);
+                border-radius: 10px; color: var(--text); font-size: 0.9rem;
+                font-weight: 600; cursor: pointer; text-align: left;
+            }
+            .token-form-toggle span { display: flex; align-items: center; gap: 8px; }
+            .token-form-chevron { transition: transform 0.2s; font-size: 0.8rem; color: var(--text-dim); }
+            .token-form-toggle[aria-expanded="true"] .token-form-chevron { transform: rotate(180deg); }
+            .token-form-collapsible { display: none; }
+            .token-form-collapsible.open { display: block; }
+            .token-form-panel-title { display: none; }
+
             .cvs-upload-toggle {
                 display: flex; align-items: center; justify-content: space-between;
                 width: 100%; padding: 14px 16px; margin-top: 4px;
@@ -2046,81 +2069,95 @@
 
         <!-- ─── TOKENS ─────────────────────────────────── -->
         <div class="tab-panel" id="tab-tokens">
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
 
-                <div class="row-2">
-                    <div class="form-group">
-                        <label>Currículo</label>
-                        <select id="tokenCV"><option value="">Selecione…</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Label (identificação)</label>
-                        <input type="text" id="tokenLabel" name="cv-token-label" placeholder="Nubank · Ana · Sr QA" autocomplete="off" data-form-type="other">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Validade</label>
-                    <div class="expiry-opts" id="expiryOpts">
-                        <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
-                        <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
-                        <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
-                        <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
-                        <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
-                        <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
-                    </div>
-                    <input type="datetime-local" id="expiryDate" style="display:none" />
-                </div>
-
-                <div class="form-group">
-                    <label>Máximo de usos</label>
-                    <select id="tokenMaxUses">
-                        <option value="1">1 uso (one-time)</option>
-                        <option value="3">3 usos</option>
-                        <option value="5" selected>5 usos</option>
-                        <option value="10">10 usos</option>
-                        <option value="">Ilimitado</option>
-                    </select>
-                </div>
-
-                <button class="btn btn-cyan" onclick="createToken()">
-                    <i class="fa-solid fa-plus"></i> Gerar token
+            <!-- Formulário accordion (mobile: colapsável, desktop: sempre visível) -->
+            <div class="token-form-section">
+                <button class="token-form-toggle" onclick="toggleTokenForm()" id="tokenFormToggleBtn" aria-expanded="false">
+                    <span><i class="fa-solid fa-key"></i> Gerar novo token</span>
+                    <i class="fa-solid fa-chevron-down token-form-chevron"></i>
                 </button>
-            </div>
+                <div class="token-form-collapsible" id="tokenFormCollapsible">
+                    <div class="panel">
+                        <div class="panel-title token-form-panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
 
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
-                <div class="filter-bar">
-                    <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
-                        <span class="th-filter-count" id="tokenCount"></span>
-                        <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        <div class="row-2">
+                            <div class="form-group">
+                                <label>Currículo</label>
+                                <select id="tokenCV"><option value="">Selecione…</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Label (identificação)</label>
+                                <input type="text" id="tokenLabel" name="cv-token-label" placeholder="Nubank · Ana · Sr QA" autocomplete="off" data-form-type="other">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Validade</label>
+                            <div class="expiry-opts" id="expiryOpts">
+                                <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
+                                <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
+                                <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
+                                <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
+                                <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
+                                <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
+                            </div>
+                            <input type="datetime-local" id="expiryDate" style="display:none" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Máximo de usos</label>
+                            <select id="tokenMaxUses">
+                                <option value="1">1 uso (one-time)</option>
+                                <option value="3">3 usos</option>
+                                <option value="5" selected>5 usos</option>
+                                <option value="10">10 usos</option>
+                                <option value="">Ilimitado</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-cyan" onclick="createToken()">
+                            <i class="fa-solid fa-plus"></i> Gerar token
+                        </button>
                     </div>
-                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
-                        <option value="">Todos os status</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="expirado">Expirado</option>
-                        <option value="revogado">Revogado</option>
-                        <option value="esgotado">Esgotado</option>
-                    </select>
+                </div><!-- /token-form-collapsible -->
+            </div><!-- /token-form-section -->
+
+            <!-- Lista de tokens (mobile: aparece antes do form via CSS order) -->
+            <div class="token-list-section">
+                <div class="panel">
+                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                    <div class="filter-bar">
+                        <div class="filter-search">
+                            <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
+                            <span class="th-filter-count" id="tokenCount"></span>
+                            <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="expirado">Expirado</option>
+                            <option value="revogado">Revogado</option>
+                            <option value="esgotado">Esgotado</option>
+                        </select>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
+                                    <th>Currículo</th>
+                                    <th>Status</th>
+                                    <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
+                                    <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
+                                    <th class="col-actions"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
-                                <th>Currículo</th>
-                                <th>Status</th>
-                                <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
-                                <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
-                                <th class="col-actions"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
+            </div><!-- /token-list-section -->
+
         </div>
 
         <!-- ─── LOGS ───────────────────────────────────── -->
@@ -3610,6 +3647,14 @@ async function saveEditVaga(appId) {
 function toggleCvsUpload() {
     const btn = document.getElementById('cvsUploadToggleBtn');
     const panel = document.getElementById('cvsUploadCollapsible');
+    const open = panel.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+// ─── TOKENS FORM ACCORDION ───────────────────────────────
+function toggleTokenForm() {
+    const btn = document.getElementById('tokenFormToggleBtn');
+    const panel = document.getElementById('tokenFormCollapsible');
     const open = panel.classList.toggle('open');
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
