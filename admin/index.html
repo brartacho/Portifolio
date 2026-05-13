@@ -2327,6 +2327,7 @@
                         <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
                         <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
                         <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                        <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
                     </div>
                     <div class="vagas-filters" id="vagasFiltersModalidade">
                         <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
@@ -3240,7 +3241,12 @@ function renderApplicationsTable() {
     const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
 
     let filtered = _applications;
-    if (_vagasFilter           !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (_vagasFilter === 'arquivadas') {
+        filtered = filtered.filter(app => app.archived);
+    } else {
+        filtered = filtered.filter(app => !app.archived);
+        if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    }
     if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(app => app.modalidade === _vagasModalidadeFilter);
     if (_vagasTipoFilter       !== 'all') filtered = filtered.filter(app => app.tipo_contratacao === _vagasTipoFilter);
 
@@ -3336,7 +3342,8 @@ function openDrawer(id) {
         ? '<span class="vaga-source-badge email"><i class="fa-solid fa-envelope"></i> via email</span>'
         : '<span class="vaga-source-badge manual"><i class="fa-solid fa-pen"></i> manual</span>';
     const dt = app.data_envio ? fmtDate(app.data_envio) : '—';
-    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}`;
+    const archivedBadge = app.archived ? ' · <span class="vaga-source-badge" style="opacity:0.7"><i class="fa-solid fa-box-archive"></i> arquivada</span>' : '';
+    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}${archivedBadge}`;
 
     renderDrawerBody(app);
 
@@ -3408,6 +3415,8 @@ function renderDrawerBody(app) {
         <div class="drawer-actions">
             <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
             <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
+            <button class="btn btn-sm" style="padding:6px 10px;opacity:0.7" title="${app.archived ? 'Desarquivar candidatura' : 'Arquivar candidatura'}"
+                onclick="toggleArchive('${app.id}', ${app.archived})"><i class="fa-solid fa-${app.archived ? 'box-open' : 'box-archive'}"></i></button>
             <button class="btn btn-danger btn-sm" style="padding:6px 10px" title="Deletar candidatura"
                 onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
@@ -3444,6 +3453,19 @@ function renderTimeline(stages) {
             <div class="stage-label ${labelClass}">${esc(normalizeStageName(s.name))}</div>
         </div>`;
     }).join('');
+}
+
+async function toggleArchive(id, currentlyArchived) {
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${id}`, { archived: !currentlyArchived });
+        const idx = _applications.findIndex(a => a.id === id);
+        if (idx !== -1) _applications[idx] = updated;
+        renderDrawerBody(updated);
+        openDrawer(id);
+        showToast(currentlyArchived ? 'Candidatura desarquivada.' : 'Candidatura arquivada.');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 async function deleteApplication(id) {

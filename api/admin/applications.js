@@ -92,7 +92,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id obrigatório' });
 
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao, stages, result } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao, archived, stages, result } = req.body || {};
 
         const patch = {};
         if (empresa !== undefined) {
@@ -139,6 +139,12 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: `tipo_contratacao inválido (${tipo_contratacao})` });
             }
             patch.tipo_contratacao = tipo_contratacao || null;
+        }
+        if (archived !== undefined) {
+            if (typeof archived !== 'boolean') {
+                return res.status(400).json({ error: 'archived deve ser boolean' });
+            }
+            patch.archived = archived;
         }
         if (result !== undefined) {
             if (!VALID_RESULTS.has(result)) {
