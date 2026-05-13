@@ -2350,6 +2350,13 @@
                     <span class="th-filter-count" id="vagasCount"></span>
                     <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                 </div>
+                <div class="filter-date-group">
+                    <span class="th-filter-label">De</span>
+                    <input class="th-filter-input" type="date" id="vagasDateFrom" title="Data de envio inicial" onchange="renderApplicationsTable()">
+                    <span class="th-filter-label">Até</span>
+                    <input class="th-filter-input" type="date" id="vagasDateTo" title="Data de envio final" onchange="renderApplicationsTable()">
+                    <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
             <div id="vagasTableWrap" style="overflow-x:auto">
@@ -3236,6 +3243,15 @@ function renderApplicationsTable() {
     if (_vagasFilter           !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
     if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(app => app.modalidade === _vagasModalidadeFilter);
     if (_vagasTipoFilter       !== 'all') filtered = filtered.filter(app => app.tipo_contratacao === _vagasTipoFilter);
+
+    const dateFrom = document.getElementById('vagasDateFrom')?.value;
+    const dateTo   = document.getElementById('vagasDateTo')?.value;
+    if (dateFrom) filtered = filtered.filter(app => app.data_envio && app.data_envio.slice(0,10) >= dateFrom);
+    if (dateTo)   filtered = filtered.filter(app => app.data_envio && app.data_envio.slice(0,10) <= dateTo);
+    const dateActive = dateFrom || dateTo;
+    const dateBtn = document.getElementById('vagasDateClear');
+    if (dateBtn) dateBtn.style.display = dateActive ? '' : 'none';
+
     if (search) filtered = filtered.filter(app =>
         (app.empresa || '').toLowerCase().includes(search) ||
         (app.vaga || '').toLowerCase().includes(search) ||
@@ -3299,6 +3315,13 @@ function setVagasTipoFilter(filter, btn) {
 function clearVagasSearch() {
     const el = document.getElementById('vagasSearch');
     if (el) el.value = '';
+    renderApplicationsTable();
+}
+function clearVagasDate() {
+    const from = document.getElementById('vagasDateFrom');
+    const to   = document.getElementById('vagasDateTo');
+    if (from) from.value = '';
+    if (to)   to.value   = '';
     renderApplicationsTable();
 }
 
