@@ -3260,10 +3260,14 @@ function renderApplicationsTable() {
         const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
         const selected = _openAppId === app.id ? ' selected' : '';
         const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
+        const tagBadges = [app.modalidade, app.tipo_contratacao].filter(Boolean)
+            .map(t => `<span style="display:inline-block;font-size:0.62rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);margin-right:3px">${esc(t)}</span>`)
+            .join('');
         return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
             <td>
                 <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
                 ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                ${tagBadges ? `<div style="margin-top:3px">${tagBadges}</div>` : ''}
                 ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
             </td>
             <td class="col-gestor" style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
