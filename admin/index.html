@@ -3050,23 +3050,21 @@ async function renameStage(appId, stageIdx, newName) {
     try { await patchStages(appId, stages); } catch (e) { showToast(e.message, 'error'); }
 }
 
-function deriveResult(stages, currentResult) {
+function deriveResult(stages) {
     const active = stages.filter(s => s.active !== false);
-    if (!active.length) return null;
-    if (active.some(s => stageStatus(s) === 'rejected'))  return 'recusado';
-    if (active.some(s => stageStatus(s) === 'running'))   return 'em_processo';
-    if (active.every(s => stageStatus(s) === 'done'))     return 'aprovado';
-    // Etapa pendente: reverte aprovação, mas não sobrescreve recusa manual
-    if (currentResult === 'aprovado') return 'em_processo';
-    return null;
+    if (!active.length) return 'em_processo';
+    if (active.some(s => stageStatus(s) === 'rejected')) return 'recusado';
+    if (active.some(s => stageStatus(s) === 'running'))  return 'em_processo';
+    if (active.every(s => stageStatus(s) === 'done'))    return 'aprovado';
+    return 'em_processo';
 }
 
 async function autoUpdateResult(appId, prevResult) {
     const app = _applications.find(a => a.id === appId);
     if (!app) return;
     const current = app.result || 'em_processo';
-    const derived = deriveResult(app.stages, current);
-    if (!derived || derived === current) return;
+    const derived = deriveResult(app.stages);
+    if (derived === current) return;
     try {
         const updated = await api('PUT', `/api/admin/applications?id=${appId}`, { result: derived });
         const idx = _applications.findIndex(a => a.id === appId);
@@ -3074,8 +3072,12 @@ async function autoUpdateResult(appId, prevResult) {
         const seg = document.getElementById('drawerResult');
         if (seg) seg.innerHTML = renderResultSegmented(updated);
         renderApplicationsTable();
-        const label  = derived === 'recusado' ? 'Vaga marcada como Recusada' : 'Vaga marcada como Aprovada';
-        const type   = derived === 'recusado' ? 'error' : 'success';
+        const label  = derived === 'recusado' ? 'Vaga marcada como Recusada'
+                     : derived === 'aprovado'  ? 'Vaga marcada como Aprovada'
+                     : 'Status atualizado para Em Processo';
+        const type   = derived === 'recusado' ? 'error'
+                     : derived === 'aprovado'  ? 'success'
+                     : 'info';
         showToast(label, type, {
             label: '↩ Desfazer',
             callback: async () => {
