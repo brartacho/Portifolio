@@ -1435,6 +1435,96 @@
             }
             .cv-btn-lbl { display: inline; font-size: 0.72rem; }
 
+            /* ── Token table: card redesenhado ── */
+            #tokenTable tr {
+                display: grid !important;
+                grid-template-columns: 1fr auto;
+                grid-template-areas:
+                    "label  status"
+                    "cv     cv"
+                    "usos   expira"
+                    "acts   acts";
+                gap: 0;
+                padding: 0 !important;
+                overflow: hidden;
+            }
+            #tokenTable td {
+                display: block !important;
+                border: none !important;
+                margin: 0 !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            #tokenTable td::before { display: none !important; }
+            /* Label: título do card */
+            #tokenTable td:nth-child(1) {
+                grid-area: label;
+                padding: 12px 6px 4px 14px !important;
+                font-size: 0.9rem;
+                align-self: center;
+            }
+            /* Currículo: subtítulo */
+            #tokenTable td:nth-child(2) {
+                grid-area: cv;
+                padding: 2px 14px 10px !important;
+                font-size: 0.76rem;
+                color: var(--text-dim);
+                border-bottom: 1px solid var(--border-soft) !important;
+            }
+            /* Status: badge no canto superior direito */
+            #tokenTable td:nth-child(3) {
+                grid-area: status;
+                display: flex !important;
+                justify-content: flex-end;
+                align-items: center;
+                padding: 12px 14px 4px 6px !important;
+            }
+            /* Usos: coluna esquerda com label acima */
+            #tokenTable td:nth-child(4) {
+                grid-area: usos;
+                display: flex !important;
+                flex-direction: column;
+                gap: 2px;
+                padding: 8px 6px 8px 14px !important;
+            }
+            #tokenTable td:nth-child(4)::before {
+                display: block !important;
+                font-size: 0.65rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-dim);
+            }
+            /* Expira: coluna direita com label acima */
+            #tokenTable td:nth-child(5) {
+                grid-area: expira;
+                display: flex !important;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 2px;
+                padding: 8px 14px 8px 6px !important;
+            }
+            #tokenTable td:nth-child(5)::before {
+                display: block !important;
+                font-size: 0.65rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-dim);
+            }
+            /* Ações: barra inferior */
+            #tokenTable td:nth-child(6) {
+                grid-area: acts;
+                display: flex !important;
+                justify-content: flex-end;
+                border-top: 1px solid var(--border-soft) !important;
+                padding: 8px 14px !important;
+            }
+            #tokenTable tr.skel-row {
+                display: flex !important;
+                height: 52px; overflow: hidden;
+            }
+            #tokenTable tr.skel-row td { display: none !important; }
+            #tokenTable tr.skel-row td:first-child { display: block !important; flex: 1; height: 100%; }
+
             /* ── Input font-size 16px: evita zoom automático no iOS ── */
             input, select, textarea { font-size: 16px !important; }
             .th-filter-input { font-size: 16px !important; }
