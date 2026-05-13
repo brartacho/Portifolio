@@ -36,12 +36,13 @@ test.describe('ADMIN — Gestão de etapas', () => {
     await expect(page.locator('.vagas-table')).toBeVisible();
   });
 
-  async function createTempVaga(page, empresa, { modalidade, tipoContratacao } = {}) {
+  async function createTempVaga(page, empresa, { modalidade, tipoContratacao, dataEnvio } = {}) {
     await page.locator('button', { hasText: /nova vaga/i }).click();
     await expect(page.locator('#novaVagaForm')).toBeVisible();
     await page.locator('#novaVagaForm input[name="empresa"], #novaVagaForm [id*="mpresa" i]').first().fill(empresa);
     if (modalidade)       await page.locator('#vfModalidade').selectOption(modalidade);
     if (tipoContratacao)  await page.locator('#vfTipoContratacao').selectOption(tipoContratacao);
+    if (dataEnvio)        await page.locator('#vfDataEnvio').fill(dataEnvio);
     await page.locator('#novaVagaForm button', { hasText: /salvar|criar/i }).first().click();
     // Aguarda aparecer na tabela
     await expect(page.locator('.vagas-table', { hasText: empresa })).toBeVisible({ timeout: 5000 });
@@ -255,6 +256,149 @@ test.describe('ADMIN — Gestão de etapas', () => {
     const labelsAfter = await page.locator('#drawerTimeline .stage-label').allInnerTexts();
     expect(labelsAfter).not.toContain('Teste Técnico');
 
+    await deleteOpenVaga(page);
+  });
+
+  // ─── ARQUIVAMENTO ──────────────────────────────────────────
+  test('arquivar remove vaga da listagem principal e mostra toast', async ({ page }) => {
+    const empresa = `TestArq_${Date.now()}`;
+    await createTempVaga(page, empresa);
+    await openVaga(page, empresa);
+
+    await page.locator('button[title="Arquivar candidatura"]').click();
+    await expect(page.locator('#toast.show span')).toHaveText('Candidatura arquivada.', { timeout: 5000 });
+    await expect(page.locator('#vagasDrawer.open')).toBeVisible();
+    await expect(page.locator('.vagas-table', { hasText: empresa })).toHaveCount(0);
+
+    // Cleanup via filtro Arquivadas
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="arquivadas"]').click();
+    await openVaga(page, empresa);
+    await deleteOpenVaga(page);
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="all"]').click();
+  });
+
+  test('badge "arquivada" aparece no drawerMeta após arquivar', async ({ page }) => {
+    const empresa = `TestArqBadge_${Date.now()}`;
+    await createTempVaga(page, empresa);
+    await openVaga(page, empresa);
+
+    await page.locator('button[title="Arquivar candidatura"]').click();
+    await expect(page.locator('#toast.show span')).toHaveText('Candidatura arquivada.', { timeout: 5000 });
+    await expect(page.locator('#drawerMeta')).toContainText('arquivada');
+
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="arquivadas"]').click();
+    await openVaga(page, empresa);
+    await deleteOpenVaga(page);
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="all"]').click();
+  });
+
+  test('chip Arquivadas: exibe arquivadas e oculta não-arquivadas', async ({ page }) => {
+    const empresaAtiva = `TestChipAtiva_${Date.now()}`;
+    const empresaArq   = `TestChipArq_${Date.now()}`;
+    await createTempVaga(page, empresaAtiva);
+    await createTempVaga(page, empresaArq);
+
+    await openVaga(page, empresaArq);
+    await page.locator('button[title="Arquivar candidatura"]').click();
+    await expect(page.locator('#toast.show span')).toHaveText('Candidatura arquivada.', { timeout: 5000 });
+    await page.keyboard.press('Escape');
+
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="arquivadas"]').click();
+    await expect(page.locator('.vagas-table', { hasText: empresaArq })).toBeVisible();
+    await expect(page.locator('.vagas-table', { hasText: empresaAtiva })).toHaveCount(0);
+
+    await openVaga(page, empresaArq);
+    await deleteOpenVaga(page);
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="all"]').click();
+    await openVaga(page, empresaAtiva);
+    await deleteOpenVaga(page);
+  });
+
+  test('desarquivar: toast correto, vaga volta ao filtro Todas', async ({ page }) => {
+    const empresa = `TestDesarq_${Date.now()}`;
+    await createTempVaga(page, empresa);
+    await openVaga(page, empresa);
+
+    await page.locator('button[title="Arquivar candidatura"]').click();
+    await expect(page.locator('#toast.show span')).toHaveText('Candidatura arquivada.', { timeout: 5000 });
+
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="arquivadas"]').click();
+    await openVaga(page, empresa);
+
+    await page.locator('button[title="Desarquivar candidatura"]').click();
+    await expect(page.locator('#toast.show span')).toHaveText('Candidatura desarquivada.', { timeout: 5000 });
+
+    await page.locator('#vagasFilters .vagas-filter-chip[data-filter="all"]').click();
+    await expect(page.locator('.vagas-table', { hasText: empresa })).toBeVisible();
+
+    await openVaga(page, empresa);
+    await deleteOpenVaga(page);
+  });
+
+  // ─── FILTRO DE DATAS ──────────────────────────────────────
+  test('filtro De: exibe apenas vagas com data_envio >= data informada', async ({ page }) => {
+    const empresaAntiga  = `TDateAntiga_${Date.now()}`;
+    const empresaRecente = `TDateRecente_${Date.now()}`;
+    const hoje = new Date().toISOString().slice(0, 10);
+
+    await createTempVaga(page, empresaAntiga,  { dataEnvio: '2020-01-01' });
+    await createTempVaga(page, empresaRecente, { dataEnvio: hoje });
+
+    await page.locator('#vagasDateFrom').fill('2021-01-01');
+    await page.locator('#vagasDateFrom').dispatchEvent('change');
+
+    await expect(page.locator('.vagas-table', { hasText: empresaRecente })).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.vagas-table', { hasText: empresaAntiga })).toHaveCount(0);
+
+    await page.locator('#vagasDateClear').click();
+    await openVaga(page, empresaAntiga);
+    await deleteOpenVaga(page);
+    await openVaga(page, empresaRecente);
+    await deleteOpenVaga(page);
+  });
+
+  test('filtro Até: exibe apenas vagas com data_envio <= data informada', async ({ page }) => {
+    const empresaRecente = `TDateRecente2_${Date.now()}`;
+    const empresaFutura  = `TDateFutura_${Date.now()}`;
+    const hoje  = new Date().toISOString().slice(0, 10);
+    const amanha = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+
+    await createTempVaga(page, empresaRecente, { dataEnvio: hoje });
+    await createTempVaga(page, empresaFutura,  { dataEnvio: '2099-12-31' });
+
+    await page.locator('#vagasDateTo').fill(amanha);
+    await page.locator('#vagasDateTo').dispatchEvent('change');
+
+    await expect(page.locator('.vagas-table', { hasText: empresaRecente })).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.vagas-table', { hasText: empresaFutura })).toHaveCount(0);
+
+    await page.locator('#vagasDateClear').click();
+    await openVaga(page, empresaRecente);
+    await deleteOpenVaga(page);
+    await openVaga(page, empresaFutura);
+    await deleteOpenVaga(page);
+  });
+
+  test('botão X limpa filtro de datas e restaura vagas', async ({ page }) => {
+    const empresaAntiga  = `TDateClr_${Date.now()}`;
+    const empresaRecente = `TDateClrR_${Date.now()}`;
+    const hoje = new Date().toISOString().slice(0, 10);
+
+    await createTempVaga(page, empresaAntiga,  { dataEnvio: '2020-01-01' });
+    await createTempVaga(page, empresaRecente, { dataEnvio: hoje });
+
+    await page.locator('#vagasDateFrom').fill('2021-01-01');
+    await page.locator('#vagasDateFrom').dispatchEvent('change');
+    await expect(page.locator('.vagas-table', { hasText: empresaAntiga })).toHaveCount(0);
+
+    await page.locator('#vagasDateClear').click();
+
+    await expect(page.locator('.vagas-table', { hasText: empresaAntiga })).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.vagas-table', { hasText: empresaRecente })).toBeVisible();
+
+    await openVaga(page, empresaAntiga);
+    await deleteOpenVaga(page);
+    await openVaga(page, empresaRecente);
     await deleteOpenVaga(page);
   });
 });
