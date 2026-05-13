@@ -1461,12 +1461,11 @@
             /* ── Token table: card redesenhado ── */
             #tokenTable tr {
                 display: grid !important;
-                grid-template-columns: 1fr auto;
+                grid-template-columns: auto 1fr auto;
                 grid-template-areas:
-                    "label  status"
-                    "cv     cv"
-                    "usos   expira"
-                    "acts   acts";
+                    "label  label   status"
+                    "cv     cv      cv"
+                    "usos   expira  acts";
                 gap: 0;
                 padding: 0 !important;
                 overflow: hidden;
@@ -1507,40 +1506,46 @@
                 grid-area: usos;
                 display: flex !important;
                 flex-direction: column;
-                gap: 2px;
-                padding: 8px 6px 8px 14px !important;
+                gap: 1px;
+                padding: 8px 10px 10px 14px !important;
+                border-top: 1px solid var(--border-soft) !important;
             }
             #tokenTable td:nth-child(4)::before {
                 display: block !important;
-                font-size: 0.65rem;
+                font-size: 0.62rem;
                 letter-spacing: 0.08em;
                 text-transform: uppercase;
                 color: var(--text-dim);
             }
-            /* Expira: coluna direita com label acima */
+            /* Expira: coluna central com label acima */
             #tokenTable td:nth-child(5) {
                 grid-area: expira;
                 display: flex !important;
                 flex-direction: column;
-                align-items: flex-end;
-                gap: 2px;
-                padding: 8px 14px 8px 6px !important;
+                gap: 1px;
+                padding: 8px 10px 10px !important;
+                border-top: 1px solid var(--border-soft) !important;
+                align-self: stretch;
             }
             #tokenTable td:nth-child(5)::before {
                 display: block !important;
-                font-size: 0.65rem;
+                font-size: 0.62rem;
                 letter-spacing: 0.08em;
                 text-transform: uppercase;
                 color: var(--text-dim);
             }
-            /* Ações: barra inferior */
+            /* Ações: coluna direita, alinhada com Usos/Expira */
             #tokenTable td:nth-child(6) {
                 grid-area: acts;
                 display: flex !important;
+                align-items: center;
                 justify-content: flex-end;
+                gap: 6px;
+                padding: 6px 14px 6px 6px !important;
                 border-top: 1px solid var(--border-soft) !important;
-                padding: 8px 14px !important;
             }
+            /* Botões inline: menores que o padrão de 48px, mas ainda tocáveis */
+            #tokenTable .btn.btn-sm { min-height: 38px; min-width: 38px; padding: 0 10px; }
             #tokenTable tr.skel-row {
                 display: flex !important;
                 height: 52px; overflow: hidden;
