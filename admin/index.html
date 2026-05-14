@@ -1997,14 +1997,21 @@
         .vagas-subtab-btn:hover { color:var(--text); }
         .vagas-subtab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
 
-        /* Barra de período da análise com inputs inline */
-        .vagas-analysis-period-bar {
-            display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:20px;
-        }
+        /* Barra de período da análise — 2 linhas: botões em cima, datas+toggle embaixo */
+        .vagas-analysis-period-bar { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+        .vagas-analysis-period-bar .period-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
         .vagas-analysis-period-bar .metrics-period-btn { font-size:0.78rem; padding:5px 12px; }
-        .vagas-analysis-period-bar .th-filter-input   { height:32px; }
-        .vagas-analysis-period-bar .th-filter-input[type="date"] { width:132px; flex:0 0 auto; }
-        .vagas-analysis-period-bar .th-filter-label   { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-analysis-period-bar .period-date { height:32px; width:132px !important; flex:0 0 auto; }
+        .vagas-analysis-period-bar .th-filter-label { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-analysis-period-bar .period-archived-toggle {
+            display:inline-flex; align-items:center; gap:6px;
+            font-size:0.78rem; color:var(--text-soft);
+            cursor:pointer; user-select:none; margin-left:auto;
+        }
+        @media (max-width: 540px) {
+            .vagas-analysis-period-bar .period-date { width:calc(50% - 24px) !important; min-width:120px; }
+            .vagas-analysis-period-bar .period-archived-toggle { margin-left:0; width:100%; padding-top:4px; }
+        }
         .vagas-bucket-bar { display:flex; gap:4px; }
         .vagas-bucket-bar .metrics-period-btn { font-size:0.72rem; padding:4px 10px; }
     </style>
@@ -2431,19 +2438,23 @@
             <div id="vagasAnalysisView" style="display:none">
 
                 <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
-                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
-                    <span class="th-filter-label" style="margin-left:6px">De</span>
-                    <input type="date" id="vagasAnalysisFrom" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
-                    <span class="th-filter-label">até</span>
-                    <input type="date" id="vagasAnalysisTo" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
-                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text-soft);cursor:pointer;margin-left:12px;user-select:none">
-                        <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
-                        <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
-                    </label>
+                    <div class="period-row">
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                        <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    </div>
+                    <div class="period-row">
+                        <span class="th-filter-label">De</span>
+                        <input type="date" id="vagasAnalysisFrom" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <span class="th-filter-label">até</span>
+                        <input type="date" id="vagasAnalysisTo" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <label class="period-archived-toggle">
+                            <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
+                            <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
+                        </label>
+                    </div>
                 </div>
 
                 <div class="metrics-kpis">
@@ -2506,10 +2517,11 @@
         <div id="tab-metricas" class="tab-panel">
 
             <div class="metrics-period-bar">
+                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
                 <button class="metrics-period-btn active" data-period="7" onclick="setAnalyticsPeriod(7,this)">7 dias</button>
                 <button class="metrics-period-btn" data-period="30" onclick="setAnalyticsPeriod(30,this)">30 dias</button>
                 <button class="metrics-period-btn" data-period="90" onclick="setAnalyticsPeriod(90,this)">90 dias</button>
-                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
+                <button class="metrics-period-btn" data-period="365" onclick="setAnalyticsPeriod(365,this)">Ano</button>
             </div>
 
             <!-- KPIs -->
@@ -2544,7 +2556,7 @@
 
             <!-- Gráfico de série temporal -->
             <div class="metrics-chart-card">
-                <h4>Visitas por dia</h4>
+                <h4 id="metricsChartTitle">Visitas dos últimos 7 dias</h4>
                 <div style="position:relative;height:180px">
                     <canvas id="analyticsChart"></canvas>
                 </div>
@@ -5434,9 +5446,15 @@ let _analyticsChart = null;
 
 function setAnalyticsPeriod(days, btn) {
     _analyticsPeriod = days;
-    document.querySelectorAll('.metrics-period-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.metrics-period-bar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     loadAnalytics();
+}
+
+function _metricsPeriodLabel(days) {
+    if (days === 1)   return 'Visitas hoje';
+    if (days === 365) return 'Visitas no último ano';
+    return `Visitas dos últimos ${days} dias`;
 }
 
 async function loadAnalytics() {
@@ -5444,7 +5462,7 @@ async function loadAnalytics() {
     const from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
     const fmt  = d => d.toISOString().slice(0, 10);
     try {
-        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}`);
+        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}&_=${Date.now()}`);
         renderAnalytics(data);
     } catch (e) {
         ['kpi-pageviews','kpi-unique','kpi-engaged','kpi-cv-clicks','kpi-cv-downloads','kpi-recurring']
@@ -5468,6 +5486,10 @@ function renderAnalytics(data) {
     const cnvEl = document.getElementById('kpi-conversion');
     if (cnvEl) cnvEl.textContent = kpis.conversion_rate != null ? `${kpis.conversion_rate}% conversão` : '—';
 
+    // Título dinâmico conforme o período selecionado
+    const titleEl = document.getElementById('metricsChartTitle');
+    if (titleEl) titleEl.textContent = _metricsPeriodLabel(_analyticsPeriod);
+
     // Série temporal (Chart.js) — preenche dias vazios com zero para representar o período inteiro
     const _to   = new Date();
     const _from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
@@ -5478,7 +5500,7 @@ function renderAnalytics(data) {
     const uniqData = filledSeries.map(s => s.unique_visitors ?? 0);
     const ctx = document.getElementById('analyticsChart');
     if (ctx) {
-        if (_analyticsChart) _analyticsChart.destroy();
+        if (_analyticsChart) { _analyticsChart.destroy(); _analyticsChart = null; }
         _analyticsChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -5540,13 +5562,16 @@ function renderAnalytics(data) {
         if (!top_pages.length) { pagesEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
         else {
             const maxV = top_pages[0]?.views || 1;
-            pagesEl.innerHTML = top_pages.slice(0, 8).map(p => `
+            pagesEl.innerHTML = top_pages.slice(0, 8).map(p => {
+                const path = p.path || '/';
+                const label = path === '/' ? 'Início' : path;
+                return `
                 <div class="metrics-row">
-                    <span class="metrics-row-label" title="${esc(p.path)}">${esc(p.path || '/')}</span>
+                    <span class="metrics-row-label" title="${esc(path)}">${esc(label)}</span>
                     <span class="metrics-row-value">${p.views}</span>
                 </div>
-                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(p.views/maxV*100)}%"></div></div>
-            `).join('');
+                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(p.views/maxV*100)}%"></div></div>`;
+            }).join('');
         }
     }
 
