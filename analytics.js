@@ -4,9 +4,15 @@
     var engagedTimer = null;
     var engagedFired = false;
 
+    function _isAdminSession() {
+        try { return localStorage.getItem('artacho_admin') === '1'; } catch (_) { return false; }
+    }
+
     function send(event, meta) {
         try {
             var params = new URLSearchParams(location.search);
+            var adminFlag = _isAdminSession() ? { admin: true } : null;
+            var mergedMeta = (adminFlag || meta) ? Object.assign({}, adminFlag, meta || {}) : null;
             var payload = JSON.stringify({
                 event: event,
                 path: location.pathname,
@@ -14,7 +20,7 @@
                 utm_source:   params.get('utm_source')   || null,
                 utm_medium:   params.get('utm_medium')   || null,
                 utm_campaign: params.get('utm_campaign') || null,
-                meta: meta || null,
+                meta: mergedMeta,
             });
             if (navigator.sendBeacon) {
                 navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));

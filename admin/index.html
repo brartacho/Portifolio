@@ -2602,6 +2602,11 @@
                 <button class="metrics-period-btn" data-period="30" onclick="setAnalyticsPeriod(30,this)">30 dias</button>
                 <button class="metrics-period-btn" data-period="90" onclick="setAnalyticsPeriod(90,this)">90 dias</button>
                 <button class="metrics-period-btn" data-period="365" onclick="setAnalyticsPeriod(365,this)">Ano</button>
+                <label class="period-toggle-switch" title="Excluir meus acessos das métricas" style="margin-left:auto;flex-shrink:0">
+                    <input type="checkbox" id="metricsExcludeAdmin" onchange="toggleMetricsExcludeAdmin(this)">
+                    <span class="period-toggle-track"></span>
+                </label>
+                <span style="font-size:0.75rem;color:var(--text-dim);white-space:nowrap;flex-shrink:0">Excluir meus acessos</span>
             </div>
 
             <!-- KPIs -->
@@ -3036,6 +3041,7 @@ function getJwt() { return jwtToken || sessionStorage.getItem('admin_jwt'); }
 function setJwt(t) {
     jwtToken = t;
     sessionStorage.setItem('admin_jwt', t);
+    try { localStorage.setItem('artacho_admin', '1'); } catch (_) {}
 }
 
 function logout() {
@@ -3045,6 +3051,7 @@ function logout() {
     if (tsEl) tsEl.textContent = '';
     jwtToken = null;
     sessionStorage.removeItem('admin_jwt');
+    try { localStorage.removeItem('artacho_admin'); } catch (_) {}
     document.getElementById('appScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
 
@@ -5543,6 +5550,12 @@ let _analyticsPeriod = 7;
 let _analyticsChart = null;
 let _lastAnalyticsData = null;
 
+let _metricsExcludeAdmin = false;
+function toggleMetricsExcludeAdmin(el) {
+    _metricsExcludeAdmin = el.checked;
+    loadAnalytics();
+}
+
 function setAnalyticsPeriod(days, btn) {
     _analyticsPeriod = days;
     document.querySelectorAll('.metrics-period-bar .metrics-period-btn').forEach(b => b.classList.remove('active'));
@@ -5561,7 +5574,8 @@ async function loadAnalytics() {
     const from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
     const fmt  = d => d.toISOString().slice(0, 10);
     try {
-        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}&_=${Date.now()}`);
+        const excludeParam = _metricsExcludeAdmin ? '&exclude_admin=1' : '';
+        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}${excludeParam}&_=${Date.now()}`);
         _lastAnalyticsData = data;
         renderAnalytics(data);
     } catch (e) {
@@ -5755,9 +5769,11 @@ function _kpiSection(title, html) {
 function _kpiRow(left, right) {
     return `<div class="kpi-detail-row"><span>${left}</span><span>${right}</span></div>`;
 }
-function _kpiEventRow(occurred_at, path, country, device, hash7) {
+function _kpiEventRow(occurred_at, path, country, device, hash7, isAdmin) {
+    const adminBadge = isAdmin ? `<span style="color:#4ade80;font-size:0.7rem;margin-left:5px">● você</span>` : '';
     const meta = [fmtDate(occurred_at, true), country || '?', device || '', hash7 ? `<span class="kpi-hash">#${esc(hash7)}</span>` : ''].filter(Boolean).join(' · ');
-    return `<div class="kpi-detail-row"><span>${esc(path || '/')}</span><span class="meta">${meta}</span></div>`;
+    const rowStyle = isAdmin ? ' style="background:rgba(74,222,128,0.05)"' : '';
+    return `<div class="kpi-detail-row"${rowStyle}><span>${esc(path || '/')}${adminBadge}</span><span class="meta">${meta}</span></div>`;
 }
 
 const _kpiRenderers = {
@@ -5774,7 +5790,7 @@ const _kpiRenderers = {
             return _kpiRow(esc(label), `<span class="meta">${p.views} visitas · ${p.unique_visitors} únicos</span>`);
         }).join('')}</div>` : '';
         const visitsHtml = latest_visits.length ? `<div class="kpi-detail-list">${latest_visits.map(v =>
-            _kpiEventRow(v.occurred_at, v.path === '/' ? 'Início' : v.path, v.country, v.device, v.hash7)
+            _kpiEventRow(v.occurred_at, v.path === '/' ? 'Início' : v.path, v.country, v.device, v.hash7, v.is_admin)
         ).join('')}</div>` : '';
         body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas', topHtml) + _kpiSection('Últimas visitas', visitsHtml);
     },
@@ -5819,7 +5835,7 @@ const _kpiRenderers = {
             ? cv_page_contacts.map(c => _kpiRow(labelMap[c.name] || c.name, `<strong>${c.count}</strong>`)).join('')
             : _kpiRow('Sem dados ainda', '<span class="meta">cliques na página /cv serão exibidos aqui</span>');
         const list = latest_cv_clicks.length ? `<div class="kpi-detail-list">${latest_cv_clicks.map(c =>
-            _kpiEventRow(c.occurred_at, c.path === '/' ? 'Início' : c.path, c.country, c.device, c.hash7)
+            _kpiEventRow(c.occurred_at, c.path === '/' ? 'Início' : c.path, c.country, c.device, c.hash7, c.is_admin)
         ).join('')}</div>` : '';
         body.innerHTML = _kpiSection('Resumo', resumo)
             + _kpiSection('Canal preferido na página CV', `<div class="kpi-detail-list">${canalRows}</div>`)

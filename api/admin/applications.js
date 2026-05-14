@@ -79,33 +79,36 @@ export default async function handler(req, res) {
 
         const { from = '', to = '' } = req.query;
         const { f, t } = dateRange(from, to);
+        const excAdm = req.query.exclude_admin === '1';
+
+        const adminFilter = q => excAdm ? q.not('meta->>admin', 'eq', 'true') : q;
 
         const [pageviewsRes, uniqueRes, engagedRes, cvClickRes, contactRes, caseRes,
                emailRes, downloadsRes, seriesRes, topPagesRes, referrersRes,
                utmRes, devicesRes, countriesRes, recurringRes,
                latestVisitsRes, latestClicksRes, topRecurringRes,
                projectClicksRes, contactClicksRes, adminLockRes] = await Promise.all([
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t }),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'cv_download_click').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'case_open').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'email_request').gte('occurred_at', f).lte('occurred_at', t),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t)),
+            supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'cv_download_click').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'case_open').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'email_request').gte('occurred_at', f).lte('occurred_at', t)),
             supabase.from('download_logs').select('id', { count: 'exact', head: true }).not('ip_address', 'like', 'admin-%').gte('downloaded_at', f).lte('downloaded_at', t),
-            supabase.rpc('analytics_series',            { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_top_pages',         { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_top_referrers',     { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_utm_sources',       { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_devices',           { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_countries',         { from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_recurring_visitors',{ from_ts: f, to_ts: t }),
-            supabase.rpc('analytics_latest_visits',     { from_ts: f, to_ts: t, lim: 50 }),
-            supabase.rpc('analytics_latest_cv_clicks',  { from_ts: f, to_ts: t, lim: 30 }),
-            supabase.rpc('analytics_top_recurring',     { from_ts: f, to_ts: t, lim: 10 }),
-            supabase.from('site_events').select('meta').eq('event', 'project_click').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('meta').eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t),
-            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'admin_lock_click').gte('occurred_at', f).lte('occurred_at', t),
+            supabase.rpc('analytics_series',            { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_top_pages',         { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_top_referrers',     { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_utm_sources',       { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_devices',           { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_countries',         { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_recurring_visitors',{ from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_latest_visits',     { from_ts: f, to_ts: t, lim: 50, exclude_admin: excAdm }),
+            supabase.rpc('analytics_latest_cv_clicks',  { from_ts: f, to_ts: t, lim: 30, exclude_admin: excAdm }),
+            supabase.rpc('analytics_top_recurring',     { from_ts: f, to_ts: t, lim: 10, exclude_admin: excAdm }),
+            adminFilter(supabase.from('site_events').select('meta').eq('event', 'project_click').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('meta').eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'admin_lock_click').gte('occurred_at', f).lte('occurred_at', t)),
         ]);
 
         const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
