@@ -6000,15 +6000,16 @@ function renderVagasAnalysis(data) {
         values = filled.map(s => Number(s.cnt) || 0);
     } else {
         const cfg = {
-            dow: { len: 7,  names: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],                                 title: 'Candidaturas por dia da semana' },
+            dow: { len: 7,  names: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],                                 title: 'Candidaturas por dia da semana' },
             wom: { len: 5,  names: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5'],                                  title: 'Candidaturas por semana do mês' },
             dom: { len: 31, names: Array.from({length:31}, (_, i) => String(i + 1)),                          title: 'Candidaturas por dia do mês' },
             moy: { len: 12, names: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], title: 'Candidaturas por mês' },
         }[chart.mode] || { len: 0, names: [], title: 'Candidaturas' };
         const counts = new Array(cfg.len).fill(0);
         points.forEach(p => {
-            const i = Number(p.idx) - 1;
-            if (i >= 0 && i < cfg.len) counts[i] = Number(p.cnt) || 0;
+            const idx = Number(p.idx);
+            const pos = (chart.mode === 'dow') ? (idx === 7 ? 0 : idx) : idx - 1;
+            if (pos >= 0 && pos < cfg.len) counts[pos] = Number(p.cnt) || 0;
         });
         labels = cfg.names;
         values = counts;
