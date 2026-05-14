@@ -1909,7 +1909,22 @@
         .metrics-kpi-card {
             background: var(--bg-elevated); border: 1px solid var(--border);
             border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+            cursor: pointer; transition: transform 0.12s ease, border-color 0.15s;
         }
+        .metrics-kpi-card:hover { transform: translateY(-2px); border-color: var(--cyan-soft); }
+        .kpi-detail-section { margin-bottom: 18px; }
+        .kpi-detail-section-title {
+            font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--cyan); margin-bottom: 8px;
+        }
+        .kpi-detail-list { display: flex; flex-direction: column; gap: 6px; }
+        .kpi-detail-row {
+            display: flex; justify-content: space-between; gap: 12px;
+            font-size: 0.82rem; padding: 6px 0; border-bottom: 1px solid var(--border-soft);
+        }
+        .kpi-detail-row:last-child { border-bottom: none; }
+        .kpi-detail-row .meta { color: var(--text-dim); font-size: 0.74rem; }
+        .kpi-hash { font-family: var(--font-mono); color: var(--text-soft); }
         .metrics-kpi-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, var(--violet), var(--cyan));
@@ -2526,29 +2541,29 @@
 
             <!-- KPIs -->
             <div class="metrics-kpis" id="metricsKpis">
-                <div class="metrics-kpi-card highlight">
+                <div class="metrics-kpi-card highlight" onclick="openKpiDetail('visitas')">
                     <div class="metrics-kpi-label">Visitas</div>
                     <div class="metrics-kpi-value" id="kpi-pageviews">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('unicos')">
                     <div class="metrics-kpi-label">Visitantes únicos</div>
                     <div class="metrics-kpi-value" id="kpi-unique">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('engajados')">
                     <div class="metrics-kpi-label">Engajados</div>
                     <div class="metrics-kpi-value" id="kpi-engaged">—</div>
                     <div class="metrics-kpi-sub" id="kpi-engaged-rate">—% das visitas</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('cv-clicks')">
                     <div class="metrics-kpi-label">Cliques em CV</div>
                     <div class="metrics-kpi-value" id="kpi-cv-clicks">—</div>
                 </div>
-                <div class="metrics-kpi-card highlight">
+                <div class="metrics-kpi-card highlight" onclick="openKpiDetail('cv-downloads')">
                     <div class="metrics-kpi-label">Downloads reais</div>
                     <div class="metrics-kpi-value" id="kpi-cv-downloads">—</div>
                     <div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('recorrentes')">
                     <div class="metrics-kpi-label">Recorrentes</div>
                     <div class="metrics-kpi-value" id="kpi-recurring">—</div>
                 </div>
@@ -2674,6 +2689,15 @@
             <button class="btn" id="promptCancelBtn">Cancelar</button>
             <button class="btn btn-cyan" id="promptOkBtn">OK</button>
         </div>
+    </div>
+</div>
+
+<!-- ─── KPI DETAIL MODAL ──────────────────────────── -->
+<div class="modal-overlay" id="kpiDetailModal">
+    <div class="modal" style="max-width:680px;max-height:82vh;overflow-y:auto">
+        <button class="modal-close" onclick="closeKpiDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        <p class="modal-title" id="kpiDetailTitle">—</p>
+        <div id="kpiDetailBody"><div style="text-align:center;color:var(--text-dim);padding:40px"><i class="fa-solid fa-circle-notch fa-spin fa-lg"></i></div></div>
     </div>
 </div>
 
@@ -5443,6 +5467,7 @@ function fmtDate(iso, withTime = false) {
 // ─── ANALYTICS / MÉTRICAS ─────────────────────────────────
 let _analyticsPeriod = 7;
 let _analyticsChart = null;
+let _lastAnalyticsData = null;
 
 function setAnalyticsPeriod(days, btn) {
     _analyticsPeriod = days;
@@ -5463,6 +5488,7 @@ async function loadAnalytics() {
     const fmt  = d => d.toISOString().slice(0, 10);
     try {
         const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}&_=${Date.now()}`);
+        _lastAnalyticsData = data;
         renderAnalytics(data);
     } catch (e) {
         ['kpi-pageviews','kpi-unique','kpi-engaged','kpi-cv-clicks','kpi-cv-downloads','kpi-recurring']
@@ -5628,6 +5654,127 @@ function renderAnalytics(data) {
         }
     }
 }
+
+// ─── DRILL-DOWN DOS CARDS DE MÉTRICAS ─────────────────────
+function openKpiDetail(kind) {
+    if (!_lastAnalyticsData) return;
+    document.getElementById('kpiDetailModal').classList.add('open');
+    const titles = {
+        visitas:        'Visitas — detalhes',
+        unicos:         'Visitantes únicos — detalhes',
+        engajados:      'Engajados — detalhes',
+        'cv-clicks':    'Cliques em CV — detalhes',
+        'cv-downloads': 'Downloads reais — detalhes',
+        recorrentes:   'Recorrentes — detalhes',
+    };
+    document.getElementById('kpiDetailTitle').textContent = titles[kind] || 'Detalhes';
+    (_kpiRenderers[kind] || (() => {}))(_lastAnalyticsData);
+}
+function closeKpiDetail() { document.getElementById('kpiDetailModal').classList.remove('open'); }
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('kpiDetailModal')?.classList.contains('open')) closeKpiDetail();
+});
+
+function _kpiSection(title, html) {
+    return `<div class="kpi-detail-section"><div class="kpi-detail-section-title">${esc(title)}</div>${html || '<div class="kpi-detail-row meta">Sem dados</div>'}</div>`;
+}
+function _kpiRow(left, right) {
+    return `<div class="kpi-detail-row"><span>${left}</span><span>${right}</span></div>`;
+}
+function _kpiEventRow(occurred_at, path, country, device, hash7) {
+    const meta = [fmtDate(occurred_at, true), country || '?', device || '', hash7 ? `<span class="kpi-hash">#${esc(hash7)}</span>` : ''].filter(Boolean).join(' · ');
+    return `<div class="kpi-detail-row"><span>${esc(path || '/')}</span><span class="meta">${meta}</span></div>`;
+}
+
+const _kpiRenderers = {
+    visitas: data => {
+        const { kpis = {}, top_pages = [], latest_visits = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de visitas', `<strong>${kpis.pageviews ?? 0}</strong>`)}
+            ${_kpiRow('Engajamento', `<strong>${kpis.engaged_rate ?? 0}%</strong>`)}
+            ${_kpiRow('Conversão para download', `<strong>${kpis.conversion_rate ?? 0}%</strong>`)}
+        </div>`;
+        const topHtml = top_pages.length ? `<div class="kpi-detail-list">${top_pages.slice(0, 10).map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.views} visitas · ${p.unique_visitors} únicos</span>`);
+        }).join('')}</div>` : '';
+        const visitsHtml = latest_visits.length ? `<div class="kpi-detail-list">${latest_visits.map(v =>
+            _kpiEventRow(v.occurred_at, v.path === '/' ? 'Início' : v.path, v.country, v.device, v.hash7)
+        ).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas', topHtml) + _kpiSection('Últimas visitas', visitsHtml);
+    },
+    unicos: data => {
+        const { kpis = {}, devices = [], countries = [], top_referrers = [], utm_sources = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const dList = devices.length ? `<div class="kpi-detail-list">${devices.map(d => _kpiRow(esc(d.device || '?'), `<span class="meta">${d.views} visitas</span>`)).join('')}</div>` : '';
+        const cList = countries.length ? `<div class="kpi-detail-list">${countries.slice(0, 10).map(c => _kpiRow(esc(c.country || '?'), `<span class="meta">${c.views} visitas</span>`)).join('')}</div>` : '';
+        const rList = top_referrers.length ? `<div class="kpi-detail-list">${top_referrers.slice(0, 10).map(r => _kpiRow(esc(r.referrer_host || '(direto)'), `<span class="meta">${r.views} visitas</span>`)).join('')}</div>` : '';
+        const uList = utm_sources.length ? `<div class="kpi-detail-list">${utm_sources.slice(0, 10).map(u => _kpiRow(esc(u.utm_source || '?'), `<span class="meta">${u.views} visitas</span>`)).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Total', `<div class="kpi-detail-list">${_kpiRow('Visitantes únicos', `<strong>${kpis.unique_visitors ?? 0}</strong>`)}</div>`)
+            + _kpiSection('Dispositivos', dList) + _kpiSection('Países', cList)
+            + _kpiSection('Origens', rList) + _kpiSection('UTM sources', uList);
+    },
+    engajados: data => {
+        const { kpis = {}, top_pages = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const ranked = (top_pages || []).filter(p => p.views > 0)
+            .map(p => ({ ...p, rate: p.views ? Math.round((p.engaged || 0) / p.views * 1000) / 10 : 0 }))
+            .sort((a, b) => b.rate - a.rate).slice(0, 10);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Engajados (total)', `<strong>${Math.round((kpis.engaged_rate || 0) * (kpis.pageviews || 0) / 100)}</strong>`)}
+            ${_kpiRow('Taxa de engajamento', `<strong>${kpis.engaged_rate ?? 0}%</strong> das visitas`)}
+        </div>`;
+        const rank = ranked.length ? `<div class="kpi-detail-list">${ranked.map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.rate}% · ${p.engaged}/${p.views}</span>`);
+        }).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas por engajamento', rank);
+    },
+    'cv-clicks': data => {
+        const { kpis = {}, latest_cv_clicks = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de cliques', `<strong>${kpis.cv_download_clicks ?? 0}</strong>`)}
+            ${_kpiRow('Downloads reais', `<strong>${kpis.cv_downloads ?? 0}</strong>`)}
+            ${_kpiRow('Conversão', `<strong>${kpis.conversion_rate ?? 0}%</strong>`)}
+        </div>`;
+        const list = latest_cv_clicks.length ? `<div class="kpi-detail-list">${latest_cv_clicks.map(c =>
+            _kpiEventRow(c.occurred_at, c.path === '/' ? 'Início' : c.path, c.country, c.device, c.hash7)
+        ).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Últimos cliques', list);
+    },
+    'cv-downloads': async data => {
+        const body = document.getElementById('kpiDetailBody');
+        body.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:30px"><i class="fa-solid fa-circle-notch fa-spin"></i></div>`;
+        try {
+            const result = await api('GET', `/api/admin/logs?tipo=download&page=1&page_size=30`);
+            const rows = (result.data || []).map(l => {
+                const ua = _parseUA(l.user_agent) || '';
+                const meta = [fmtDate(l.downloaded_at, true), `IP <span class="kpi-hash">${esc(l.ip_address || '?')}</span>`, ua].filter(Boolean).join(' · ');
+                return `<div class="kpi-detail-row"><span>${esc(l.cv_name_snapshot || '—')}</span><span class="meta">${meta}</span></div>`;
+            }).join('');
+            const resumo = `<div class="kpi-detail-list">
+                ${_kpiRow('Downloads reais', `<strong>${data.kpis?.cv_downloads ?? 0}</strong>`)}
+                ${_kpiRow('Conversão', `<strong>${data.kpis?.conversion_rate ?? 0}%</strong>`)}
+            </div>`;
+            body.innerHTML = _kpiSection('Resumo', resumo)
+                + _kpiSection('Últimos downloads (até 30, com IP real)', rows ? `<div class="kpi-detail-list">${rows}</div>` : '');
+        } catch (e) {
+            body.innerHTML = `<p style="color:var(--danger);padding:20px">${esc(e.message)}</p>`;
+        }
+    },
+    recorrentes: data => {
+        const { kpis = {}, top_recurring = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const list = top_recurring.length ? `<div class="kpi-detail-list">${top_recurring.map(r => {
+            const meta = [`primeira: ${fmtDate(r.first_seen, true)}`, `última: ${fmtDate(r.last_seen, true)}`, r.top_country || ''].filter(Boolean).join(' · ');
+            return `<div class="kpi-detail-row"><span><span class="kpi-hash">#${esc(r.hash7 || '???')}</span> · <strong>${r.visit_count} visitas</strong></span><span class="meta">${meta}</span></div>`;
+        }).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', `<div class="kpi-detail-list">${_kpiRow('Visitantes recorrentes', `<strong>${kpis.recurring_visitors ?? 0}</strong>`)}</div>`)
+            + _kpiSection('Top 10 (anonimizados)', list);
+    },
+};
 
 // ─── ANÁLISE DE VAGAS ─────────────────────────────────────
 let _vagasSubTab          = 'lista';

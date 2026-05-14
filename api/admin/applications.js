@@ -82,7 +82,9 @@ export default async function handler(req, res) {
 
         const [pageviewsRes, uniqueRes, engagedRes, cvClickRes, contactRes, caseRes,
                emailRes, downloadsRes, seriesRes, topPagesRes, referrersRes,
-               utmRes, devicesRes, countriesRes, recurringRes] = await Promise.all([
+               utmRes, devicesRes, countriesRes, recurringRes,
+               latestVisitsRes, latestClicksRes, topRecurringRes,
+               projectClicksRes, contactClicksRes, adminLockRes] = await Promise.all([
             supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t),
             supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t }),
             supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t),
@@ -98,7 +100,19 @@ export default async function handler(req, res) {
             supabase.rpc('analytics_devices',           { from_ts: f, to_ts: t }),
             supabase.rpc('analytics_countries',         { from_ts: f, to_ts: t }),
             supabase.rpc('analytics_recurring_visitors',{ from_ts: f, to_ts: t }),
+            supabase.rpc('analytics_latest_visits',     { from_ts: f, to_ts: t, lim: 50 }),
+            supabase.rpc('analytics_latest_cv_clicks',  { from_ts: f, to_ts: t, lim: 30 }),
+            supabase.rpc('analytics_top_recurring',     { from_ts: f, to_ts: t, lim: 10 }),
+            supabase.from('site_events').select('meta').eq('event', 'project_click').gte('occurred_at', f).lte('occurred_at', t),
+            supabase.from('site_events').select('meta').eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t),
+            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'admin_lock_click').gte('occurred_at', f).lte('occurred_at', t),
         ]);
+
+        const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
+            const k = (r.meta && r.meta[key]) || 'unknown';
+            acc[k] = (acc[k] || 0) + 1;
+            return acc;
+        }, {})).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
 
         const pageviews       = pageviewsRes.count ?? 0;
         const unique_visitors = uniqueRes.data?.[0]?.count ?? 0;
@@ -125,6 +139,15 @@ export default async function handler(req, res) {
             utm_sources:   utmRes.data       ?? [],
             devices:       devicesRes.data   ?? [],
             countries:     countriesRes.data ?? [],
+            latest_visits:    latestVisitsRes.data ?? [],
+            latest_cv_clicks: latestClicksRes.data ?? [],
+            top_recurring:    topRecurringRes.data ?? [],
+            project_clicks:   aggBy(projectClicksRes.data, 'project'),
+            contact_clicks_breakdown: {
+                by_target:   aggBy(contactClicksRes.data, 'target'),
+                by_location: aggBy(contactClicksRes.data, 'location'),
+            },
+            admin_lock_clicks: adminLockRes.count ?? 0,
             funnel: {
                 pageview:    pageviews,
                 engaged,
