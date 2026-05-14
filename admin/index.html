@@ -1973,6 +1973,31 @@
             .metrics-panels-grid { grid-template-columns: 1fr; }
             .metrics-funnel-step-label { width: 100px; font-size: 0.72rem; }
         }
+
+        /* ─── Sub-abas Vagas ───────────────────────────────── */
+        .vagas-subtabs {
+            display:flex; gap:0; margin-bottom:16px;
+            border-bottom:1px solid var(--border);
+        }
+        .vagas-subtab-btn {
+            background:none; border:none; border-bottom:2px solid transparent;
+            margin-bottom:-1px; cursor:pointer;
+            font-family:var(--font-display); font-size:0.82rem; font-weight:600;
+            color:var(--text-dim); padding:8px 16px 10px;
+            transition:color 0.15s, border-color 0.15s;
+        }
+        .vagas-subtab-btn:hover { color:var(--text); }
+        .vagas-subtab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+        /* Barra de período da análise com inputs inline */
+        .vagas-analysis-period-bar {
+            display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:20px;
+        }
+        .vagas-analysis-period-bar .metrics-period-btn { font-size:0.78rem; padding:5px 12px; }
+        .vagas-analysis-period-bar .th-filter-input   { height:32px; }
+        .vagas-analysis-period-bar .th-filter-label   { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-bucket-bar { display:flex; gap:4px; }
+        .vagas-bucket-bar .metrics-period-btn { font-size:0.72rem; padding:4px 10px; }
     </style>
 </head>
 <body>
@@ -2320,6 +2345,12 @@
         <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
         <div id="tab-vagas" class="tab-panel">
 
+            <div class="vagas-subtabs">
+                <button class="vagas-subtab-btn active" onclick="switchVagasSubTab('lista',this)">Lista</button>
+                <button class="vagas-subtab-btn" onclick="switchVagasSubTab('analise',this)">Análise</button>
+            </div>
+
+            <div id="vagasListView">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
                 <div style="display:flex;flex-direction:column;gap:6px">
                     <div class="vagas-filters" id="vagasFilters">
@@ -2378,6 +2409,77 @@
                     </tbody>
                 </table>
             </div>
+            </div><!-- /vagasListView -->
+
+            <!-- ─── ANÁLISE DE VAGAS ──────────────────────── -->
+            <div id="vagasAnalysisView" style="display:none">
+
+                <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    <span class="th-filter-label" style="margin-left:6px">De</span>
+                    <input type="date" id="vagasAnalysisFrom" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                    <span class="th-filter-label">até</span>
+                    <input type="date" id="vagasAnalysisTo" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                </div>
+
+                <div class="metrics-kpis">
+                    <div class="metrics-kpi-card highlight">
+                        <div class="metrics-kpi-label">Total</div>
+                        <div class="metrics-kpi-value" id="vkpi-total">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Em processo</div>
+                        <div class="metrics-kpi-value" id="vkpi-em-processo" style="color:#eab308">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Aprovadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-aprovado" style="color:#22c55e">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Recusadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-recusado" style="color:#ef4444">—</div>
+                    </div>
+                </div>
+
+                <div class="metrics-chart-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h4 style="margin:0">Candidaturas ao longo do tempo</h4>
+                        <div class="vagas-bucket-bar" id="vagasBucketBar">
+                            <button class="metrics-period-btn" onclick="setVagasBucket('day',this)">Dia</button>
+                            <button class="metrics-period-btn active" onclick="setVagasBucket('week',this)">Semana</button>
+                            <button class="metrics-period-btn" onclick="setVagasBucket('month',this)">Mês</button>
+                        </div>
+                    </div>
+                    <div style="position:relative;height:180px">
+                        <canvas id="vagasChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="metrics-panels-grid">
+                    <div class="metrics-panel">
+                        <h4>Resultado</h4>
+                        <div id="vagasDistResult"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Modalidade</h4>
+                        <div id="vagasDistModalidade"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Tipo de contratação</h4>
+                        <div id="vagasDistTipo"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Etapa atual</h4>
+                        <div id="vagasDistStage"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                </div>
+
+            </div><!-- /vagasAnalysisView -->
+
         </div>
 
         <!-- ─── TAB: MÉTRICAS ────────────────────────────────────────── -->
@@ -3155,7 +3257,7 @@ function _getTabLoader() {
     if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
     if (_activeTab === 'tokens') return loadTokens;
     if (_activeTab === 'logs')   return loadLogs;
-    if (_activeTab === 'vagas')  return loadApplications;
+    if (_activeTab === 'vagas')  return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
     return loadCVs;
 }
 
@@ -5456,6 +5558,139 @@ function renderAnalytics(data) {
             `).join('');
         }
     }
+}
+
+// ─── ANÁLISE DE VAGAS ─────────────────────────────────────
+let _vagasSubTab         = 'lista';
+let _vagasAnalysisPeriod = 'month';
+let _vagasBucket         = 'week';
+let _vagasAnalysisChart  = null;
+let _vagasAnalysisLoaded = false;
+
+function switchVagasSubTab(tab, btn) {
+    _vagasSubTab = tab;
+    document.querySelectorAll('.vagas-subtab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('vagasListView').style.display    = tab === 'lista'   ? '' : 'none';
+    document.getElementById('vagasAnalysisView').style.display = tab === 'analise' ? '' : 'none';
+    if (tab === 'analise' && !_vagasAnalysisLoaded) loadVagasAnalysis();
+}
+
+function setVagasAnalysisPeriod(period, btn) {
+    _vagasAnalysisPeriod = period;
+    if (btn) {
+        document.querySelectorAll('#vagasAnalysisPeriodBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    if (period !== 'custom') {
+        const from = document.getElementById('vagasAnalysisFrom');
+        const to   = document.getElementById('vagasAnalysisTo');
+        if (from) from.value = '';
+        if (to)   to.value   = '';
+    }
+    loadVagasAnalysis();
+}
+
+function setVagasBucket(bucket, btn) {
+    _vagasBucket = bucket;
+    document.querySelectorAll('#vagasBucketBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    loadVagasAnalysis();
+}
+
+function _vagasDateRange() {
+    const now = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    if (_vagasAnalysisPeriod === 'all') return { from: '', to: '' };
+    if (_vagasAnalysisPeriod === 'custom') {
+        return {
+            from: document.getElementById('vagasAnalysisFrom')?.value || '',
+            to:   document.getElementById('vagasAnalysisTo')?.value   || fmt(now),
+        };
+    }
+    const days = { today: 0, week: 6, month: 29, year: 364 }[_vagasAnalysisPeriod] ?? 29;
+    return { from: fmt(new Date(Date.now() - days * 86400000)), to: fmt(now) };
+}
+
+async function loadVagasAnalysis() {
+    const { from, to } = _vagasDateRange();
+    const params = new URLSearchParams({ scope: 'vagas', bucket: _vagasBucket });
+    if (from) params.set('from', from);
+    if (to)   params.set('to',   to);
+    try {
+        const data = await api('GET', `/api/admin/analytics?${params}`);
+        renderVagasAnalysis(data);
+        _vagasAnalysisLoaded = true;
+    } catch (e) {
+        ['vkpi-total','vkpi-em-processo','vkpi-aprovado','vkpi-recusado']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '—'; });
+    }
+}
+
+function renderVagasAnalysis(data) {
+    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], series = [], by_stage = [] } = data;
+
+    const byResult = Object.fromEntries((by_result || []).map(r => [r.result, r.cnt]));
+    document.getElementById('vkpi-total').textContent       = total ?? '—';
+    document.getElementById('vkpi-em-processo').textContent = byResult.em_processo ?? 0;
+    document.getElementById('vkpi-aprovado').textContent    = byResult.aprovado    ?? 0;
+    document.getElementById('vkpi-recusado').textContent    = byResult.recusado    ?? 0;
+
+    const ctx = document.getElementById('vagasChart');
+    if (ctx) {
+        if (_vagasAnalysisChart) _vagasAnalysisChart.destroy();
+        const labels = (series || []).map(s => {
+            const d = new Date(s.bucket);
+            if (_vagasBucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
+            if (_vagasBucket === 'year')  return String(d.getFullYear());
+            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+        });
+        _vagasAnalysisChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Candidaturas',
+                    data: (series || []).map(s => s.cnt ?? 0),
+                    backgroundColor: 'rgba(124,58,237,0.35)',
+                    borderColor: 'rgba(124,58,237,0.8)',
+                    borderWidth: 1.5,
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    function renderDist(elId, rows, labelKey, valueKey) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!rows || !rows.length) { el.innerHTML = '<div class="metrics-empty">Sem dados</div>'; return; }
+        const maxV = Math.max(...rows.map(r => Number(r[valueKey]) || 0)) || 1;
+        el.innerHTML = rows.map(r => `
+            <div class="metrics-row">
+                <span class="metrics-row-label">${esc(String(r[labelKey] ?? '—'))}</span>
+                <span class="metrics-row-value">${r[valueKey] ?? 0}</span>
+            </div>
+            <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round((Number(r[valueKey])||0)/maxV*100)}%"></div></div>
+        `).join('');
+    }
+
+    const resultLabel = { em_processo: 'Em processo', aprovado: 'Aprovado', recusado: 'Recusado' };
+    renderDist('vagasDistResult',
+        (by_result || []).map(r => ({ ...r, _label: resultLabel[r.result] || r.result })),
+        '_label', 'cnt');
+    renderDist('vagasDistModalidade', by_modalidade, 'modalidade',       'cnt');
+    renderDist('vagasDistTipo',       by_tipo,       'tipo_contratacao', 'cnt');
+    renderDist('vagasDistStage',      by_stage,      'stage_name',       'cnt');
 }
 
 // ─── INIT ─────────────────────────────────────────────────

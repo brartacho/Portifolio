@@ -18,6 +18,41 @@ export default async function handler(req, res) {
 
     const supabase = getSupabase();
 
+    // ── Escopo: análise de candidaturas ────────────────────────────
+    if (req.query.scope === 'vagas') {
+        const fromStr = req.query.from || '';
+        const toStr   = req.query.to   || '';
+        const f = fromStr ? `${fromStr}T00:00:00.000Z` : null;
+        const t = toStr   ? `${toStr}T23:59:59.999Z`   : null;
+        const bucket = ['day','week','month','year'].includes(req.query.bucket) ? req.query.bucket : 'week';
+
+        const rpcArgs = { from_ts: f, to_ts: t };
+        let totalQ = supabase.from('job_applications')
+            .select('id', { count: 'exact', head: true })
+            .not('archived', 'eq', true);
+        if (f) totalQ = totalQ.gte('created_at', f);
+        if (t) totalQ = totalQ.lte('created_at', t);
+
+        const [totalRes, byResultRes, byModalidadeRes, byTipoRes, seriesRes, byStageRes] = await Promise.all([
+            totalQ,
+            supabase.rpc('vagas_by_result',           rpcArgs),
+            supabase.rpc('vagas_by_modalidade',        rpcArgs),
+            supabase.rpc('vagas_by_tipo',              rpcArgs),
+            supabase.rpc('vagas_series', { ...rpcArgs, bucket_size: bucket }),
+            supabase.rpc('vagas_stages_distribution',  rpcArgs),
+        ]);
+
+        res.setHeader('Cache-Control', 'private, max-age=60');
+        return res.status(200).json({
+            total:         totalRes.count       ?? 0,
+            by_result:     byResultRes.data     ?? [],
+            by_modalidade: byModalidadeRes.data ?? [],
+            by_tipo:       byTipoRes.data       ?? [],
+            series:        seriesRes.data       ?? [],
+            by_stage:      byStageRes.data      ?? [],
+        });
+    }
+
     // ── Queries paralelas ──────────────────────────────────────────
     const [
         pageviewsRes,
