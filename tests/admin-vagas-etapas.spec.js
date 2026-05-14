@@ -401,4 +401,63 @@ test.describe('ADMIN — Gestão de etapas', () => {
     await openVaga(page, empresaRecente);
     await deleteOpenVaga(page);
   });
+
+  // ─── Sub-aba Análise ────────────────────────────────────────
+
+  test('análise: clicar em Análise mostra view de análise e oculta lista', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await expect(page.locator('#vagasAnalysisView')).toBeVisible();
+    await expect(page.locator('#vagasListView')).toBeHidden();
+  });
+
+  test('análise: clicar em Lista restaura tabela de candidaturas', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await page.locator('.vagas-subtab-btn', { hasText: 'Lista' }).click();
+    await expect(page.locator('#vagasListView')).toBeVisible();
+    await expect(page.locator('#vagasAnalysisView')).toBeHidden();
+  });
+
+  test('análise: KPI Total exibe valor numérico após carregamento', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await expect(page.locator('#vagasAnalysisView')).toBeVisible();
+    await expect(page.locator('#vkpi-total')).not.toHaveText('—', { timeout: 10000 });
+  });
+
+  test('análise: botões de período atualizam estado ativo', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await page.locator('#vagasAnalysisPeriodBar .metrics-period-btn', { hasText: 'Ano' }).click();
+    await expect(page.locator('#vagasAnalysisPeriodBar .metrics-period-btn', { hasText: 'Ano' })).toHaveClass(/active/);
+    await expect(page.locator('#vagasAnalysisPeriodBar .metrics-period-btn', { hasText: 'Mês' })).not.toHaveClass(/active/);
+  });
+
+  test('análise: botões de granularidade (Dia/Semana/Mês) atualizam estado ativo', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Mês' }).click();
+    await expect(page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Mês' })).toHaveClass(/active/);
+    await expect(page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Semana' })).not.toHaveClass(/active/);
+  });
+
+  test('análise: período Tudo carrega painéis de distribuição sem "Carregando"', async ({ page }) => {
+    const empresa = `Anal_Tudo_${Date.now()}`;
+    await createTempVaga(page, empresa);
+
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    await page.locator('#vagasAnalysisPeriodBar .metrics-period-btn', { hasText: 'Tudo' }).click();
+    await expect(page.locator('#vkpi-total')).not.toHaveText('—', { timeout: 10000 });
+    await expect(page.locator('#vagasDistResult')).not.toContainText('Carregando');
+    await expect(page.locator('#vagasDistStage')).not.toContainText('Carregando');
+
+    await page.locator('.vagas-subtab-btn', { hasText: 'Lista' }).click();
+    await openVaga(page, empresa);
+    await deleteOpenVaga(page);
+  });
+
+  test('análise: campo De/Até customizado ativa modo custom sem marcar botão de período', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+    const hoje = new Date().toISOString().slice(0, 10);
+    await page.locator('#vagasAnalysisFrom').fill(hoje);
+    // Nenhum botão de período padrão deve estar ativo
+    const activeBtns = page.locator('#vagasAnalysisPeriodBar .metrics-period-btn.active');
+    await expect(activeBtns).toHaveCount(0);
+  });
 });
