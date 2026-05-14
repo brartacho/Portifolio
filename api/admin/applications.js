@@ -147,6 +147,10 @@ export default async function handler(req, res) {
                 by_target:   aggBy(contactClicksRes.data, 'target'),
                 by_location: aggBy(contactClicksRes.data, 'location'),
             },
+            cv_page_contacts: aggBy(
+                (contactClicksRes.data || []).filter(r => r.meta && r.meta.location === 'cv-page'),
+                'target'
+            ),
             admin_lock_clicks: adminLockRes.count ?? 0,
             funnel: {
                 pageview:    pageviews,

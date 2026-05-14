@@ -5732,17 +5732,23 @@ const _kpiRenderers = {
         body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas por engajamento', rank);
     },
     'cv-clicks': data => {
-        const { kpis = {}, latest_cv_clicks = [] } = data;
+        const { kpis = {}, latest_cv_clicks = [], cv_page_contacts = [] } = data;
         const body = document.getElementById('kpiDetailBody');
         const resumo = `<div class="kpi-detail-list">
             ${_kpiRow('Total de cliques', `<strong>${kpis.cv_download_clicks ?? 0}</strong>`)}
             ${_kpiRow('Downloads reais', `<strong>${kpis.cv_downloads ?? 0}</strong>`)}
             ${_kpiRow('Conversão', `<strong>${kpis.conversion_rate ?? 0}%</strong>`)}
         </div>`;
+        const labelMap = { whatsapp: 'WhatsApp', email: 'E-mail' };
+        const canalRows = cv_page_contacts.length
+            ? cv_page_contacts.map(c => _kpiRow(labelMap[c.name] || c.name, `<strong>${c.count}</strong>`)).join('')
+            : _kpiRow('Sem dados ainda', '<span class="meta">cliques na página /cv serão exibidos aqui</span>');
         const list = latest_cv_clicks.length ? `<div class="kpi-detail-list">${latest_cv_clicks.map(c =>
             _kpiEventRow(c.occurred_at, c.path === '/' ? 'Início' : c.path, c.country, c.device, c.hash7)
         ).join('')}</div>` : '';
-        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Últimos cliques', list);
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Canal preferido na página CV', `<div class="kpi-detail-list">${canalRows}</div>`)
+            + _kpiSection('Últimos cliques em CV', list);
     },
     'cv-downloads': async data => {
         const body = document.getElementById('kpiDetailBody');

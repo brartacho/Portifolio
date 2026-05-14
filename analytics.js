@@ -89,6 +89,9 @@
         // Botão "Solicitar por email" em cv.html
         if (el.classList.contains('cv-btn--email') || el.closest('[data-analytics="email-request"]')) {
             send('email_request');
+            // dispara contact_click com location para análise de funil cv-page → canal
+            var loc = (el.closest && el.closest('[data-track-location]') && el.closest('[data-track-location]').getAttribute('data-track-location')) || null;
+            if (loc) send('contact_click', { target: 'email', location: loc });
         }
     }
 
