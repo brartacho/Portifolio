@@ -4916,7 +4916,8 @@ async function sendCV() {
                     + (linkVaga             ? `&link_vaga=${encodeURIComponent(linkVaga)}`                         : '')
                     + (observacoes          ? `&observacoes=${encodeURIComponent(observacoes)}`                   : '')
                     + (_waModalidade        ? `&modalidade=${encodeURIComponent(_waModalidade)}`                  : '')
-                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '');
+                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '')
+                    + (phone               ? `&contato=${encodeURIComponent(phone)}`                             : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
@@ -5226,7 +5227,7 @@ function renderLogDetail({ log, accesses }) {
         html += `<div class="ld-section"><div class="ld-section-title">Contexto da vaga</div>
             ${row('Empresa', meta.empresa ? esc(meta.empresa) : null)}
             ${row('Vaga',    meta.vaga    ? esc(meta.vaga)    : null)}
-            ${meta.contato ? `<div class="ld-row"><span class="ld-label">Contato</span><span class="ld-value"><a href="${meta.contato.startsWith('http') ? esc(meta.contato) : 'mailto:' + esc(meta.contato)}" target="_blank" style="color:var(--cyan)">${esc(meta.contato)}</a></span></div>` : ''}
+            ${meta.contato ? (() => { const c = meta.contato; const href = c.startsWith('http') ? esc(c) : /^\+?\d{6,}$/.test(c) ? `https://wa.me/${c.replace(/\D/g,'')}` : `mailto:${esc(c)}`; return `<div class="ld-row"><span class="ld-label">Contato</span><span class="ld-value"><a href="${href}" target="_blank" rel="noreferrer" style="color:var(--cyan)">${esc(c)}</a></span></div>`; })() : ''}
             ${row('Notas',   meta.notas   ? `<em style="color:var(--text-soft)">${esc(meta.notas)}</em>` : null)}
         </div>`;
     }
