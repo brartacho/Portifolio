@@ -2439,6 +2439,10 @@
                     <input type="date" id="vagasAnalysisFrom" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
                     <span class="th-filter-label">até</span>
                     <input type="date" id="vagasAnalysisTo" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                    <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--text-soft);cursor:pointer;margin-left:12px;user-select:none">
+                        <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
+                        <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
+                    </label>
                 </div>
 
                 <div class="metrics-kpis">
@@ -5463,10 +5467,14 @@ function renderAnalytics(data) {
     const cnvEl = document.getElementById('kpi-conversion');
     if (cnvEl) cnvEl.textContent = kpis.conversion_rate != null ? `${kpis.conversion_rate}% conversão` : '—';
 
-    // Série temporal (Chart.js)
-    const labels  = series.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
-    const pvData  = series.map(s => s.pageviews ?? 0);
-    const uniqData = series.map(s => s.unique_visitors ?? 0);
+    // Série temporal (Chart.js) — preenche dias vazios com zero para representar o período inteiro
+    const _to   = new Date();
+    const _from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
+    const _fmt  = d => d.toISOString().slice(0, 10);
+    const filledSeries = _fillTimelineGaps(series, 'day', _fmt(_from), _fmt(_to), ['pageviews', 'unique_visitors']);
+    const labels  = filledSeries.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
+    const pvData  = filledSeries.map(s => s.pageviews ?? 0);
+    const uniqData = filledSeries.map(s => s.unique_visitors ?? 0);
     const ctx = document.getElementById('analyticsChart');
     if (ctx) {
         if (_analyticsChart) _analyticsChart.destroy();
@@ -5596,11 +5604,12 @@ function renderAnalytics(data) {
 }
 
 // ─── ANÁLISE DE VAGAS ─────────────────────────────────────
-let _vagasSubTab         = 'lista';
-let _vagasAnalysisPeriod = 'month';
-let _vagasChartMode      = 'dow';
-let _vagasAnalysisChart  = null;
-let _vagasAnalysisLoaded = false;
+let _vagasSubTab          = 'lista';
+let _vagasAnalysisPeriod  = 'month';
+let _vagasChartMode       = 'dow';
+let _vagasAnalysisChart   = null;
+let _vagasAnalysisLoaded  = false;
+let _vagasIncludeArchived = false;
 
 function switchVagasSubTab(tab, btn) {
     _vagasSubTab = tab;
@@ -5633,6 +5642,11 @@ function setVagasChartMode(mode, btn) {
     loadVagasAnalysis();
 }
 
+function setVagasIncludeArchived(checked) {
+    _vagasIncludeArchived = !!checked;
+    loadVagasAnalysis();
+}
+
 function _vagasTimelineBucket(from, to) {
     if (!from || !to) return 'month';
     const days = Math.round((new Date(to) - new Date(from)) / 86400000);
@@ -5640,6 +5654,44 @@ function _vagasTimelineBucket(from, to) {
     if (days <= 180) return 'week';
     if (days <= 730) return 'month';
     return 'year';
+}
+
+// Preenche buckets vazios entre `from` e `to` com count 0.
+// `valueKeys` define quais campos copiar do bucket existente (default: ['cnt']).
+function _fillTimelineGaps(points, bucketType, from, to, valueKeys = ['cnt']) {
+    if (!from || !to) return points || [];
+    const map = new Map((points || []).map(p => [String(p.bucket).slice(0, 10), p]));
+    const result = [];
+    let cur = new Date(`${from}T00:00:00Z`);
+    const end = new Date(`${to}T23:59:59Z`);
+
+    if (bucketType === 'week') {
+        const day = cur.getUTCDay();
+        cur.setUTCDate(cur.getUTCDate() + (day === 0 ? -6 : 1 - day));
+    } else if (bucketType === 'month') {
+        cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), 1));
+    } else if (bucketType === 'year') {
+        cur = new Date(Date.UTC(cur.getUTCFullYear(), 0, 1));
+    }
+
+    let guard = 0;
+    while (cur <= end && guard++ < 400) {
+        const key = cur.toISOString().slice(0, 10);
+        const found = map.get(key);
+        if (found) {
+            result.push({ ...found, bucket: key });
+        } else {
+            const zero = { bucket: key };
+            valueKeys.forEach(k => { zero[k] = 0; });
+            result.push(zero);
+        }
+        if (bucketType === 'day')        cur.setUTCDate(cur.getUTCDate() + 1);
+        else if (bucketType === 'week')  cur.setUTCDate(cur.getUTCDate() + 7);
+        else if (bucketType === 'month') cur.setUTCMonth(cur.getUTCMonth() + 1);
+        else if (bucketType === 'year')  cur.setUTCFullYear(cur.getUTCFullYear() + 1);
+        else break;
+    }
+    return result;
 }
 
 function _vagasDateRange() {
@@ -5662,6 +5714,7 @@ async function loadVagasAnalysis() {
     if (_vagasChartMode === 'timeline') params.set('bucket', _vagasTimelineBucket(from, to));
     if (from) params.set('from', from);
     if (to)   params.set('to',   to);
+    if (_vagasIncludeArchived) params.set('include_archived', '1');
     try {
         const data = await api('GET', `/api/admin/analytics?${params}`);
         renderVagasAnalysis(data);
@@ -5686,13 +5739,15 @@ function renderVagasAnalysis(data) {
     let labels, values, title;
     if (chart.mode === 'timeline') {
         title = 'Candidaturas ao longo do tempo';
-        labels = points.map(s => {
+        const { from, to } = _vagasDateRange();
+        const filled = _fillTimelineGaps(points, chart.bucket || 'day', from, to);
+        labels = filled.map(s => {
             const d = new Date(s.bucket);
             if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
             if (chart.bucket === 'year')  return String(d.getFullYear());
             return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
         });
-        values = points.map(s => Number(s.cnt) || 0);
+        values = filled.map(s => Number(s.cnt) || 0);
     } else {
         const cfg = {
             dow: { len: 7,  names: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],                                 title: 'Candidaturas por dia da semana' },

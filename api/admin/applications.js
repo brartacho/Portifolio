@@ -41,11 +41,11 @@ export default async function handler(req, res) {
             const t = toStr   ? `${toStr}T23:59:59.999Z`   : null;
             const mode   = ['timeline','dow','wom','dom','moy'].includes(req.query.mode)   ? req.query.mode   : 'dow';
             const bucket = ['day','week','month','year'].includes(req.query.bucket)         ? req.query.bucket : 'week';
+            const includeArchived = req.query.include_archived === '1';
 
-            const rpcArgs = { from_ts: f, to_ts: t };
-            let totalQ = supabase.from('job_applications')
-                .select('id', { count: 'exact', head: true })
-                .not('archived', 'eq', true);
+            const rpcArgs = { from_ts: f, to_ts: t, include_archived: includeArchived };
+            let totalQ = supabase.from('job_applications').select('id', { count: 'exact', head: true });
+            if (!includeArchived) totalQ = totalQ.not('archived', 'eq', true);
             if (f) totalQ = totalQ.gte('created_at', f);
             if (t) totalQ = totalQ.lte('created_at', t);
 
