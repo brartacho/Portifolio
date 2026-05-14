@@ -6008,9 +6008,32 @@ function renderVagasAnalysis(data) {
             const pos = (chart.mode === 'dow') ? (idx === 7 ? 0 : idx) : idx - 1;
             if (pos >= 0 && pos < cfg.len) counts[pos] = Number(p.cnt) || 0;
         });
-        labels = cfg.names;
-        values = counts;
-        title  = cfg.title;
+        title = cfg.title;
+        if (chart.mode === 'dow') {
+            const { from, to } = _vagasDateRange();
+            const fromMs = from ? new Date(from + 'T00:00:00Z').getTime() : null;
+            const toMs   = to   ? new Date(to   + 'T23:59:59Z').getTime() : null;
+            if (fromMs && toMs) {
+                const totalDays = Math.round((toMs - fromMs) / 86400000) + 1;
+                if (totalDays <= 7) {
+                    const orderedPos = [];
+                    for (let i = 0; i < totalDays; i++) {
+                        orderedPos.push(new Date(fromMs + i * 86400000).getUTCDay());
+                    }
+                    labels = orderedPos.map(p => cfg.names[p]);
+                    values = orderedPos.map(p => counts[p]);
+                } else {
+                    labels = cfg.names;
+                    values = counts;
+                }
+            } else {
+                labels = cfg.names;
+                values = counts;
+            }
+        } else {
+            labels = cfg.names;
+            values = counts;
+        }
     }
 
     const titleEl = document.getElementById('vagasChartTitle');
