@@ -430,11 +430,30 @@ test.describe('ADMIN — Gestão de etapas', () => {
     await expect(page.locator('#vagasAnalysisPeriodBar .metrics-period-btn', { hasText: 'Mês' })).not.toHaveClass(/active/);
   });
 
-  test('análise: botões de granularidade (Dia/Semana/Mês) atualizam estado ativo', async ({ page }) => {
+  test('análise: modo default é "Dia da semana" e título reflete o modo', async ({ page }) => {
     await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
-    await page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Mês' }).click();
-    await expect(page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Mês' })).toHaveClass(/active/);
-    await expect(page.locator('#vagasBucketBar .metrics-period-btn', { hasText: 'Semana' })).not.toHaveClass(/active/);
+    await expect(page.locator('#vagasChartModeBar .metrics-period-btn[data-mode="dow"]')).toHaveClass(/active/);
+    await expect(page.locator('#vagasChartTitle')).toHaveText('Candidaturas por dia da semana');
+  });
+
+  test('análise: trocar entre os 5 modos atualiza estado ativo e título do gráfico', async ({ page }) => {
+    await page.locator('.vagas-subtab-btn', { hasText: 'Análise' }).click();
+
+    const modes = [
+      { btn: 'timeline', title: 'Candidaturas ao longo do tempo' },
+      { btn: 'wom',      title: 'Candidaturas por semana do mês' },
+      { btn: 'dom',      title: 'Candidaturas por dia do mês' },
+      { btn: 'moy',      title: 'Candidaturas por mês' },
+      { btn: 'dow',      title: 'Candidaturas por dia da semana' },
+    ];
+
+    for (const { btn, title } of modes) {
+      await page.locator(`#vagasChartModeBar .metrics-period-btn[data-mode="${btn}"]`).click();
+      await expect(page.locator(`#vagasChartModeBar .metrics-period-btn[data-mode="${btn}"]`)).toHaveClass(/active/);
+      await expect(page.locator('#vagasChartTitle')).toHaveText(title, { timeout: 10000 });
+      // Confirma que apenas um botão fica ativo
+      await expect(page.locator('#vagasChartModeBar .metrics-period-btn.active')).toHaveCount(1);
+    }
   });
 
   test('análise: período Tudo carrega painéis de distribuição sem "Carregando"', async ({ page }) => {

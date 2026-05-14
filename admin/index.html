@@ -2446,13 +2446,13 @@
                 </div>
 
                 <div class="metrics-chart-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h4 style="margin:0">Candidaturas ao longo do tempo</h4>
-                        <div class="vagas-bucket-bar" id="vagasBucketBar">
-                            <button class="metrics-period-btn" onclick="setVagasBucket('day',this)">Dia</button>
-                            <button class="metrics-period-btn active" onclick="setVagasBucket('week',this)">Semana</button>
-                            <button class="metrics-period-btn" onclick="setVagasBucket('month',this)">Mês</button>
-                        </div>
+                    <h4 id="vagasChartTitle" style="margin:0 0 12px">Candidaturas por dia da semana</h4>
+                    <div class="vagas-bucket-bar" id="vagasChartModeBar" style="flex-wrap:wrap;gap:6px;margin-bottom:16px">
+                        <button class="metrics-period-btn"        data-mode="timeline" onclick="setVagasChartMode('timeline',this)">Tempo</button>
+                        <button class="metrics-period-btn active" data-mode="dow"      onclick="setVagasChartMode('dow',this)">Dia da semana</button>
+                        <button class="metrics-period-btn"        data-mode="wom"      onclick="setVagasChartMode('wom',this)">Semana do mês</button>
+                        <button class="metrics-period-btn"        data-mode="dom"      onclick="setVagasChartMode('dom',this)">Dia do mês</button>
+                        <button class="metrics-period-btn"        data-mode="moy"      onclick="setVagasChartMode('moy',this)">Mês</button>
                     </div>
                     <div style="position:relative;height:180px">
                         <canvas id="vagasChart"></canvas>
@@ -3254,10 +3254,11 @@ let _lastRefreshAt  = null;
 const AUTO_REFRESH_MS = 60_000;
 
 function _getTabLoader() {
-    if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
-    if (_activeTab === 'tokens') return loadTokens;
-    if (_activeTab === 'logs')   return loadLogs;
-    if (_activeTab === 'vagas')  return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
+    if (_activeTab === 'cvs')      return () => Promise.all([loadCVs(), loadStorageStats()]);
+    if (_activeTab === 'tokens')   return loadTokens;
+    if (_activeTab === 'logs')     return loadLogs;
+    if (_activeTab === 'vagas')    return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
+    if (_activeTab === 'metricas') return loadAnalytics;
     return loadCVs;
 }
 
@@ -5563,7 +5564,7 @@ function renderAnalytics(data) {
 // ─── ANÁLISE DE VAGAS ─────────────────────────────────────
 let _vagasSubTab         = 'lista';
 let _vagasAnalysisPeriod = 'month';
-let _vagasBucket         = 'week';
+let _vagasChartMode      = 'dow';
 let _vagasAnalysisChart  = null;
 let _vagasAnalysisLoaded = false;
 
@@ -5591,11 +5592,20 @@ function setVagasAnalysisPeriod(period, btn) {
     loadVagasAnalysis();
 }
 
-function setVagasBucket(bucket, btn) {
-    _vagasBucket = bucket;
-    document.querySelectorAll('#vagasBucketBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+function setVagasChartMode(mode, btn) {
+    _vagasChartMode = mode;
+    document.querySelectorAll('#vagasChartModeBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     loadVagasAnalysis();
+}
+
+function _vagasTimelineBucket(from, to) {
+    if (!from || !to) return 'month';
+    const days = Math.round((new Date(to) - new Date(from)) / 86400000);
+    if (days <= 31)  return 'day';
+    if (days <= 180) return 'week';
+    if (days <= 730) return 'month';
+    return 'year';
 }
 
 function _vagasDateRange() {
@@ -5614,7 +5624,8 @@ function _vagasDateRange() {
 
 async function loadVagasAnalysis() {
     const { from, to } = _vagasDateRange();
-    const params = new URLSearchParams({ scope: 'vagas', bucket: _vagasBucket });
+    const params = new URLSearchParams({ scope: 'vagas', mode: _vagasChartMode });
+    if (_vagasChartMode === 'timeline') params.set('bucket', _vagasTimelineBucket(from, to));
     if (from) params.set('from', from);
     if (to)   params.set('to',   to);
     try {
@@ -5628,7 +5639,8 @@ async function loadVagasAnalysis() {
 }
 
 function renderVagasAnalysis(data) {
-    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], series = [], by_stage = [] } = data;
+    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], by_stage = [] } = data;
+    const chart = data.chart || { mode: 'timeline', bucket: 'week', points: data.series || [] };
 
     const byResult = Object.fromEntries((by_result || []).map(r => [r.result, r.cnt]));
     document.getElementById('vkpi-total').textContent       = total ?? '—';
@@ -5636,22 +5648,47 @@ function renderVagasAnalysis(data) {
     document.getElementById('vkpi-aprovado').textContent    = byResult.aprovado    ?? 0;
     document.getElementById('vkpi-recusado').textContent    = byResult.recusado    ?? 0;
 
+    const points = chart.points || [];
+    let labels, values, title;
+    if (chart.mode === 'timeline') {
+        title = 'Candidaturas ao longo do tempo';
+        labels = points.map(s => {
+            const d = new Date(s.bucket);
+            if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
+            if (chart.bucket === 'year')  return String(d.getFullYear());
+            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+        });
+        values = points.map(s => Number(s.cnt) || 0);
+    } else {
+        const cfg = {
+            dow: { len: 7,  names: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],                                 title: 'Candidaturas por dia da semana' },
+            wom: { len: 5,  names: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5'],                                  title: 'Candidaturas por semana do mês' },
+            dom: { len: 31, names: Array.from({length:31}, (_, i) => String(i + 1)),                          title: 'Candidaturas por dia do mês' },
+            moy: { len: 12, names: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], title: 'Candidaturas por mês' },
+        }[chart.mode] || { len: 0, names: [], title: 'Candidaturas' };
+        const counts = new Array(cfg.len).fill(0);
+        points.forEach(p => {
+            const i = Number(p.idx) - 1;
+            if (i >= 0 && i < cfg.len) counts[i] = Number(p.cnt) || 0;
+        });
+        labels = cfg.names;
+        values = counts;
+        title  = cfg.title;
+    }
+
+    const titleEl = document.getElementById('vagasChartTitle');
+    if (titleEl) titleEl.textContent = title;
+
     const ctx = document.getElementById('vagasChart');
     if (ctx) {
         if (_vagasAnalysisChart) _vagasAnalysisChart.destroy();
-        const labels = (series || []).map(s => {
-            const d = new Date(s.bucket);
-            if (_vagasBucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
-            if (_vagasBucket === 'year')  return String(d.getFullYear());
-            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-        });
         _vagasAnalysisChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels,
                 datasets: [{
                     label: 'Candidaturas',
-                    data: (series || []).map(s => s.cnt ?? 0),
+                    data: values,
                     backgroundColor: 'rgba(124,58,237,0.35)',
                     borderColor: 'rgba(124,58,237,0.8)',
                     borderWidth: 1.5,
@@ -5663,7 +5700,7 @@ function renderVagasAnalysis(data) {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    x: { ticks: { color: '#5c5c80', font: { size: 10 }, autoSkip: true, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } },
                     y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
                 },
             },
