@@ -26,6 +26,20 @@ function isUsernameValid(input) {
     return false;
 }
 
+async function logAttempt(req, supabase, success, usernameHint) {
+    try {
+        const fwd = req.headers['x-forwarded-for'];
+        const ip  = fwd ? fwd.split(',')[0].trim() : (req.headers['x-real-ip'] || null);
+        const ua  = (req.headers['user-agent'] || '').slice(0, 300) || null;
+        await supabase.from('admin_login_attempts').insert({
+            ip_address:    ip,
+            user_agent:    ua,
+            success,
+            username_hint: usernameHint ? String(usernameHint).slice(0, 4) : null,
+        });
+    } catch { /* fire-and-forget — nunca bloqueia o fluxo de auth */ }
+}
+
 export default async function handler(req, res) {
     cors(res);
     if (req.method === 'OPTIONS') return res.status(204).end();
@@ -46,8 +60,8 @@ export default async function handler(req, res) {
 
     // Prefer DB-backed credentials (set via password reset). Fallback to env hash.
     let hash = null;
+    const supabase = getSupabase();
     try {
-        const supabase = getSupabase();
         const { data } = await supabase
             .from('admin_credentials')
             .select('password_hash')
@@ -65,8 +79,12 @@ export default async function handler(req, res) {
     // timing attack que diferencia usuário válido vs inválido.
     const passOk = await bcrypt.compare(password, hash);
 
-    if (!userOk || !passOk) return res.status(401).json({ error: GENERIC_AUTH_ERROR });
+    if (!userOk || !passOk) {
+        await logAttempt(req, supabase, false, username);
+        return res.status(401).json({ error: GENERIC_AUTH_ERROR });
+    }
 
+    await logAttempt(req, supabase, true, username);
     const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' });
     return res.status(200).json({ token });
 }
