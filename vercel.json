@@ -6,7 +6,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/admin/analytics", "destination": "/api/admin/applications?__h=analytics" },
+    { "source": "/api/admin/analytics",       "destination": "/api/admin/applications?__h=analytics" },
+    { "source": "/api/admin/login-attempts",  "destination": "/api/admin/applications?__h=login-attempts" },
     { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },

@@ -161,6 +161,23 @@ export default async function handler(req, res) {
         });
     }
 
+    // Login attempts — roteado de /api/admin/login-attempts via rewrite
+    if (req.query.__h === 'login-attempts') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        const lim = Math.min(Math.max(1, parseInt(req.query.lim || '50', 10)), 200);
+        const { data, error } = await supabase.rpc('admin_login_recent', { lim });
+        if (error) return res.status(500).json({ error: error.message });
+
+        const attempts = data || [];
+        const alertIps = [...new Set(
+            attempts
+                .filter(a => !a.success && Number(a.recent_failures_from_ip) >= 3)
+                .map(a => a.ip_address)
+                .filter(Boolean)
+        )];
+        return res.status(200).json({ attempts, alert_ips: alertIps });
+    }
+
     // GET — lista candidaturas ou detalhe individual (?id=)
     if (req.method === 'GET') {
         if (req.query.id) {
