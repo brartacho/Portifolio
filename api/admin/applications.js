@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { DEFAULT_STAGES } from '../_lib/stages.js';
@@ -179,6 +180,29 @@ export default async function handler(req, res) {
                 .filter(Boolean)
         )];
         return res.status(200).json({ attempts, alert_ips: alertIps });
+    }
+
+    // Marcar visitas históricas do admin — pontual, por dispositivo
+    if (req.query.__h === 'mark-my-visits') {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+        const ip   = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
+        const ua   = req.headers['user-agent'] || '';
+        const SALT = process.env.ANALYTICS_SALT || 'dev-salt';
+
+        // Gera hashes para os últimos 366 dias (mesmo algoritmo do track.js)
+        const hashes = [];
+        for (let i = 0; i < 366; i++) {
+            const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10).replace(/-/g, '');
+            hashes.push(createHash('sha256').update(ip + ua + SALT + d).digest('hex'));
+        }
+
+        const { data, error } = await supabase.rpc('mark_admin_visits', { hashes });
+        if (error) return res.status(500).json({ error: error.message });
+
+        const browser = /Edg\//i.test(ua) ? 'Edge' : /Firefox\//i.test(ua) ? 'Firefox' : /Chrome\//i.test(ua) ? 'Chrome' : /Safari\//i.test(ua) ? 'Safari' : 'Other';
+        const device  = /Mobile|Android.*Mobile|iPhone/i.test(ua) ? 'mobile' : /iPad|Tablet/i.test(ua) ? 'tablet' : 'desktop';
+        return res.status(200).json({ updated: data ?? 0, device, browser });
     }
 
     // GET — lista candidaturas ou detalhe individual (?id=)
