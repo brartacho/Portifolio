@@ -1909,7 +1909,22 @@
         .metrics-kpi-card {
             background: var(--bg-elevated); border: 1px solid var(--border);
             border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+            cursor: pointer; transition: transform 0.12s ease, border-color 0.15s;
         }
+        .metrics-kpi-card:hover { transform: translateY(-2px); border-color: var(--cyan-soft); }
+        .kpi-detail-section { margin-bottom: 18px; }
+        .kpi-detail-section-title {
+            font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--cyan); margin-bottom: 8px;
+        }
+        .kpi-detail-list { display: flex; flex-direction: column; gap: 6px; }
+        .kpi-detail-row {
+            display: flex; justify-content: space-between; gap: 12px;
+            font-size: 0.82rem; padding: 6px 0; border-bottom: 1px solid var(--border-soft);
+        }
+        .kpi-detail-row:last-child { border-bottom: none; }
+        .kpi-detail-row .meta { color: var(--text-dim); font-size: 0.74rem; }
+        .kpi-hash { font-family: var(--font-mono); color: var(--text-soft); }
         .metrics-kpi-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, var(--violet), var(--cyan));
@@ -1997,13 +2012,21 @@
         .vagas-subtab-btn:hover { color:var(--text); }
         .vagas-subtab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
 
-        /* Barra de período da análise com inputs inline */
-        .vagas-analysis-period-bar {
-            display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:20px;
-        }
+        /* Barra de período da análise — 2 linhas: botões em cima, datas+toggle embaixo */
+        .vagas-analysis-period-bar { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+        .vagas-analysis-period-bar .period-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
         .vagas-analysis-period-bar .metrics-period-btn { font-size:0.78rem; padding:5px 12px; }
-        .vagas-analysis-period-bar .th-filter-input   { height:32px; }
-        .vagas-analysis-period-bar .th-filter-label   { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-analysis-period-bar .period-date { height:32px; width:132px !important; flex:0 0 auto; }
+        .vagas-analysis-period-bar .th-filter-label { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-analysis-period-bar .period-archived-toggle {
+            display:inline-flex; align-items:center; gap:6px;
+            font-size:0.78rem; color:var(--text-soft);
+            cursor:pointer; user-select:none; margin-left:auto;
+        }
+        @media (max-width: 540px) {
+            .vagas-analysis-period-bar .period-date { width:calc(50% - 24px) !important; min-width:120px; }
+            .vagas-analysis-period-bar .period-archived-toggle { margin-left:0; width:100%; padding-top:4px; }
+        }
         .vagas-bucket-bar { display:flex; gap:4px; }
         .vagas-bucket-bar .metrics-period-btn { font-size:0.72rem; padding:4px 10px; }
     </style>
@@ -2430,15 +2453,23 @@
             <div id="vagasAnalysisView" style="display:none">
 
                 <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
-                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
-                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
-                    <span class="th-filter-label" style="margin-left:6px">De</span>
-                    <input type="date" id="vagasAnalysisFrom" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
-                    <span class="th-filter-label">até</span>
-                    <input type="date" id="vagasAnalysisTo" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                    <div class="period-row">
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                        <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    </div>
+                    <div class="period-row">
+                        <span class="th-filter-label">De</span>
+                        <input type="date" id="vagasAnalysisFrom" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <span class="th-filter-label">até</span>
+                        <input type="date" id="vagasAnalysisTo" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <label class="period-archived-toggle">
+                            <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
+                            <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
+                        </label>
+                    </div>
                 </div>
 
                 <div class="metrics-kpis">
@@ -2501,37 +2532,38 @@
         <div id="tab-metricas" class="tab-panel">
 
             <div class="metrics-period-bar">
+                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
                 <button class="metrics-period-btn active" data-period="7" onclick="setAnalyticsPeriod(7,this)">7 dias</button>
                 <button class="metrics-period-btn" data-period="30" onclick="setAnalyticsPeriod(30,this)">30 dias</button>
                 <button class="metrics-period-btn" data-period="90" onclick="setAnalyticsPeriod(90,this)">90 dias</button>
-                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
+                <button class="metrics-period-btn" data-period="365" onclick="setAnalyticsPeriod(365,this)">Ano</button>
             </div>
 
             <!-- KPIs -->
             <div class="metrics-kpis" id="metricsKpis">
-                <div class="metrics-kpi-card highlight">
+                <div class="metrics-kpi-card highlight" onclick="openKpiDetail('visitas')">
                     <div class="metrics-kpi-label">Visitas</div>
                     <div class="metrics-kpi-value" id="kpi-pageviews">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('unicos')">
                     <div class="metrics-kpi-label">Visitantes únicos</div>
                     <div class="metrics-kpi-value" id="kpi-unique">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('engajados')">
                     <div class="metrics-kpi-label">Engajados</div>
                     <div class="metrics-kpi-value" id="kpi-engaged">—</div>
                     <div class="metrics-kpi-sub" id="kpi-engaged-rate">—% das visitas</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('cv-clicks')">
                     <div class="metrics-kpi-label">Cliques em CV</div>
                     <div class="metrics-kpi-value" id="kpi-cv-clicks">—</div>
                 </div>
-                <div class="metrics-kpi-card highlight">
+                <div class="metrics-kpi-card highlight" onclick="openKpiDetail('cv-downloads')">
                     <div class="metrics-kpi-label">Downloads reais</div>
                     <div class="metrics-kpi-value" id="kpi-cv-downloads">—</div>
                     <div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('recorrentes')">
                     <div class="metrics-kpi-label">Recorrentes</div>
                     <div class="metrics-kpi-value" id="kpi-recurring">—</div>
                 </div>
@@ -2539,7 +2571,7 @@
 
             <!-- Gráfico de série temporal -->
             <div class="metrics-chart-card">
-                <h4>Visitas por dia</h4>
+                <h4 id="metricsChartTitle">Visitas dos últimos 7 dias</h4>
                 <div style="position:relative;height:180px">
                     <canvas id="analyticsChart"></canvas>
                 </div>
@@ -2657,6 +2689,15 @@
             <button class="btn" id="promptCancelBtn">Cancelar</button>
             <button class="btn btn-cyan" id="promptOkBtn">OK</button>
         </div>
+    </div>
+</div>
+
+<!-- ─── KPI DETAIL MODAL ──────────────────────────── -->
+<div class="modal-overlay" id="kpiDetailModal">
+    <div class="modal" style="max-width:680px;max-height:82vh;overflow-y:auto">
+        <button class="modal-close" onclick="closeKpiDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        <p class="modal-title" id="kpiDetailTitle">—</p>
+        <div id="kpiDetailBody"><div style="text-align:center;color:var(--text-dim);padding:40px"><i class="fa-solid fa-circle-notch fa-spin fa-lg"></i></div></div>
     </div>
 </div>
 
@@ -5426,12 +5467,19 @@ function fmtDate(iso, withTime = false) {
 // ─── ANALYTICS / MÉTRICAS ─────────────────────────────────
 let _analyticsPeriod = 7;
 let _analyticsChart = null;
+let _lastAnalyticsData = null;
 
 function setAnalyticsPeriod(days, btn) {
     _analyticsPeriod = days;
-    document.querySelectorAll('.metrics-period-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.metrics-period-bar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     loadAnalytics();
+}
+
+function _metricsPeriodLabel(days) {
+    if (days === 1)   return 'Visitas hoje';
+    if (days === 365) return 'Visitas no último ano';
+    return `Visitas dos últimos ${days} dias`;
 }
 
 async function loadAnalytics() {
@@ -5439,7 +5487,8 @@ async function loadAnalytics() {
     const from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
     const fmt  = d => d.toISOString().slice(0, 10);
     try {
-        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}`);
+        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}&_=${Date.now()}`);
+        _lastAnalyticsData = data;
         renderAnalytics(data);
     } catch (e) {
         ['kpi-pageviews','kpi-unique','kpi-engaged','kpi-cv-clicks','kpi-cv-downloads','kpi-recurring']
@@ -5463,13 +5512,21 @@ function renderAnalytics(data) {
     const cnvEl = document.getElementById('kpi-conversion');
     if (cnvEl) cnvEl.textContent = kpis.conversion_rate != null ? `${kpis.conversion_rate}% conversão` : '—';
 
-    // Série temporal (Chart.js)
-    const labels  = series.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
-    const pvData  = series.map(s => s.pageviews ?? 0);
-    const uniqData = series.map(s => s.unique_visitors ?? 0);
+    // Título dinâmico conforme o período selecionado
+    const titleEl = document.getElementById('metricsChartTitle');
+    if (titleEl) titleEl.textContent = _metricsPeriodLabel(_analyticsPeriod);
+
+    // Série temporal (Chart.js) — preenche dias vazios com zero para representar o período inteiro
+    const _to   = new Date();
+    const _from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
+    const _fmt  = d => d.toISOString().slice(0, 10);
+    const filledSeries = _fillTimelineGaps(series, 'day', _fmt(_from), _fmt(_to), ['pageviews', 'unique_visitors']);
+    const labels  = filledSeries.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
+    const pvData  = filledSeries.map(s => s.pageviews ?? 0);
+    const uniqData = filledSeries.map(s => s.unique_visitors ?? 0);
     const ctx = document.getElementById('analyticsChart');
     if (ctx) {
-        if (_analyticsChart) _analyticsChart.destroy();
+        if (_analyticsChart) { _analyticsChart.destroy(); _analyticsChart = null; }
         _analyticsChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -5531,13 +5588,16 @@ function renderAnalytics(data) {
         if (!top_pages.length) { pagesEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
         else {
             const maxV = top_pages[0]?.views || 1;
-            pagesEl.innerHTML = top_pages.slice(0, 8).map(p => `
+            pagesEl.innerHTML = top_pages.slice(0, 8).map(p => {
+                const path = p.path || '/';
+                const label = path === '/' ? 'Início' : path;
+                return `
                 <div class="metrics-row">
-                    <span class="metrics-row-label" title="${esc(p.path)}">${esc(p.path || '/')}</span>
+                    <span class="metrics-row-label" title="${esc(path)}">${esc(label)}</span>
                     <span class="metrics-row-value">${p.views}</span>
                 </div>
-                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(p.views/maxV*100)}%"></div></div>
-            `).join('');
+                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(p.views/maxV*100)}%"></div></div>`;
+            }).join('');
         }
     }
 
@@ -5595,12 +5655,140 @@ function renderAnalytics(data) {
     }
 }
 
+// ─── DRILL-DOWN DOS CARDS DE MÉTRICAS ─────────────────────
+function openKpiDetail(kind) {
+    if (!_lastAnalyticsData) return;
+    document.getElementById('kpiDetailModal').classList.add('open');
+    const titles = {
+        visitas:        'Visitas — detalhes',
+        unicos:         'Visitantes únicos — detalhes',
+        engajados:      'Engajados — detalhes',
+        'cv-clicks':    'Cliques em CV — detalhes',
+        'cv-downloads': 'Downloads reais — detalhes',
+        recorrentes:   'Recorrentes — detalhes',
+    };
+    document.getElementById('kpiDetailTitle').textContent = titles[kind] || 'Detalhes';
+    (_kpiRenderers[kind] || (() => {}))(_lastAnalyticsData);
+}
+function closeKpiDetail() { document.getElementById('kpiDetailModal').classList.remove('open'); }
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('kpiDetailModal')?.classList.contains('open')) closeKpiDetail();
+});
+
+function _kpiSection(title, html) {
+    return `<div class="kpi-detail-section"><div class="kpi-detail-section-title">${esc(title)}</div>${html || '<div class="kpi-detail-row meta">Sem dados</div>'}</div>`;
+}
+function _kpiRow(left, right) {
+    return `<div class="kpi-detail-row"><span>${left}</span><span>${right}</span></div>`;
+}
+function _kpiEventRow(occurred_at, path, country, device, hash7) {
+    const meta = [fmtDate(occurred_at, true), country || '?', device || '', hash7 ? `<span class="kpi-hash">#${esc(hash7)}</span>` : ''].filter(Boolean).join(' · ');
+    return `<div class="kpi-detail-row"><span>${esc(path || '/')}</span><span class="meta">${meta}</span></div>`;
+}
+
+const _kpiRenderers = {
+    visitas: data => {
+        const { kpis = {}, top_pages = [], latest_visits = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de visitas', `<strong>${kpis.pageviews ?? 0}</strong>`)}
+            ${_kpiRow('Engajamento', `<strong>${kpis.engaged_rate ?? 0}%</strong>`)}
+            ${_kpiRow('Conversão para download', `<strong>${kpis.conversion_rate ?? 0}%</strong>`)}
+        </div>`;
+        const topHtml = top_pages.length ? `<div class="kpi-detail-list">${top_pages.slice(0, 10).map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.views} visitas · ${p.unique_visitors} únicos</span>`);
+        }).join('')}</div>` : '';
+        const visitsHtml = latest_visits.length ? `<div class="kpi-detail-list">${latest_visits.map(v =>
+            _kpiEventRow(v.occurred_at, v.path === '/' ? 'Início' : v.path, v.country, v.device, v.hash7)
+        ).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas', topHtml) + _kpiSection('Últimas visitas', visitsHtml);
+    },
+    unicos: data => {
+        const { kpis = {}, devices = [], countries = [], top_referrers = [], utm_sources = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const dList = devices.length ? `<div class="kpi-detail-list">${devices.map(d => _kpiRow(esc(d.device || '?'), `<span class="meta">${d.views} visitas</span>`)).join('')}</div>` : '';
+        const cList = countries.length ? `<div class="kpi-detail-list">${countries.slice(0, 10).map(c => _kpiRow(esc(c.country || '?'), `<span class="meta">${c.views} visitas</span>`)).join('')}</div>` : '';
+        const rList = top_referrers.length ? `<div class="kpi-detail-list">${top_referrers.slice(0, 10).map(r => _kpiRow(esc(r.referrer_host || '(direto)'), `<span class="meta">${r.views} visitas</span>`)).join('')}</div>` : '';
+        const uList = utm_sources.length ? `<div class="kpi-detail-list">${utm_sources.slice(0, 10).map(u => _kpiRow(esc(u.utm_source || '?'), `<span class="meta">${u.views} visitas</span>`)).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Total', `<div class="kpi-detail-list">${_kpiRow('Visitantes únicos', `<strong>${kpis.unique_visitors ?? 0}</strong>`)}</div>`)
+            + _kpiSection('Dispositivos', dList) + _kpiSection('Países', cList)
+            + _kpiSection('Origens', rList) + _kpiSection('UTM sources', uList);
+    },
+    engajados: data => {
+        const { kpis = {}, top_pages = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const ranked = (top_pages || []).filter(p => p.views > 0)
+            .map(p => ({ ...p, rate: p.views ? Math.round((p.engaged || 0) / p.views * 1000) / 10 : 0 }))
+            .sort((a, b) => b.rate - a.rate).slice(0, 10);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Engajados (total)', `<strong>${Math.round((kpis.engaged_rate || 0) * (kpis.pageviews || 0) / 100)}</strong>`)}
+            ${_kpiRow('Taxa de engajamento', `<strong>${kpis.engaged_rate ?? 0}%</strong> das visitas`)}
+        </div>`;
+        const rank = ranked.length ? `<div class="kpi-detail-list">${ranked.map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.rate}% · ${p.engaged}/${p.views}</span>`);
+        }).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas por engajamento', rank);
+    },
+    'cv-clicks': data => {
+        const { kpis = {}, latest_cv_clicks = [], cv_page_contacts = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de cliques', `<strong>${kpis.cv_download_clicks ?? 0}</strong>`)}
+            ${_kpiRow('Downloads reais', `<strong>${kpis.cv_downloads ?? 0}</strong>`)}
+            ${_kpiRow('Conversão', `<strong>${kpis.conversion_rate ?? 0}%</strong>`)}
+        </div>`;
+        const labelMap = { whatsapp: 'WhatsApp', email: 'E-mail' };
+        const canalRows = cv_page_contacts.length
+            ? cv_page_contacts.map(c => _kpiRow(labelMap[c.name] || c.name, `<strong>${c.count}</strong>`)).join('')
+            : _kpiRow('Sem dados ainda', '<span class="meta">cliques na página /cv serão exibidos aqui</span>');
+        const list = latest_cv_clicks.length ? `<div class="kpi-detail-list">${latest_cv_clicks.map(c =>
+            _kpiEventRow(c.occurred_at, c.path === '/' ? 'Início' : c.path, c.country, c.device, c.hash7)
+        ).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Canal preferido na página CV', `<div class="kpi-detail-list">${canalRows}</div>`)
+            + _kpiSection('Últimos cliques em CV', list);
+    },
+    'cv-downloads': async data => {
+        const body = document.getElementById('kpiDetailBody');
+        body.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:30px"><i class="fa-solid fa-circle-notch fa-spin"></i></div>`;
+        try {
+            const result = await api('GET', `/api/admin/logs?tipo=download&page=1&page_size=30`);
+            const rows = (result.data || []).map(l => {
+                const ua = _parseUA(l.user_agent) || '';
+                const meta = [fmtDate(l.downloaded_at, true), `IP <span class="kpi-hash">${esc(l.ip_address || '?')}</span>`, ua].filter(Boolean).join(' · ');
+                return `<div class="kpi-detail-row"><span>${esc(l.cv_name_snapshot || '—')}</span><span class="meta">${meta}</span></div>`;
+            }).join('');
+            const resumo = `<div class="kpi-detail-list">
+                ${_kpiRow('Downloads reais', `<strong>${data.kpis?.cv_downloads ?? 0}</strong>`)}
+                ${_kpiRow('Conversão', `<strong>${data.kpis?.conversion_rate ?? 0}%</strong>`)}
+            </div>`;
+            body.innerHTML = _kpiSection('Resumo', resumo)
+                + _kpiSection('Últimos downloads (até 30, com IP real)', rows ? `<div class="kpi-detail-list">${rows}</div>` : '');
+        } catch (e) {
+            body.innerHTML = `<p style="color:var(--danger);padding:20px">${esc(e.message)}</p>`;
+        }
+    },
+    recorrentes: data => {
+        const { kpis = {}, top_recurring = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const list = top_recurring.length ? `<div class="kpi-detail-list">${top_recurring.map(r => {
+            const meta = [`primeira: ${fmtDate(r.first_seen, true)}`, `última: ${fmtDate(r.last_seen, true)}`, r.top_country || ''].filter(Boolean).join(' · ');
+            return `<div class="kpi-detail-row"><span><span class="kpi-hash">#${esc(r.hash7 || '???')}</span> · <strong>${r.visit_count} visitas</strong></span><span class="meta">${meta}</span></div>`;
+        }).join('')}</div>` : '';
+        body.innerHTML = _kpiSection('Resumo', `<div class="kpi-detail-list">${_kpiRow('Visitantes recorrentes', `<strong>${kpis.recurring_visitors ?? 0}</strong>`)}</div>`)
+            + _kpiSection('Top 10 (anonimizados)', list);
+    },
+};
+
 // ─── ANÁLISE DE VAGAS ─────────────────────────────────────
-let _vagasSubTab         = 'lista';
-let _vagasAnalysisPeriod = 'month';
-let _vagasChartMode      = 'dow';
-let _vagasAnalysisChart  = null;
-let _vagasAnalysisLoaded = false;
+let _vagasSubTab          = 'lista';
+let _vagasAnalysisPeriod  = 'month';
+let _vagasChartMode       = 'dow';
+let _vagasAnalysisChart   = null;
+let _vagasAnalysisLoaded  = false;
+let _vagasIncludeArchived = false;
 
 function switchVagasSubTab(tab, btn) {
     _vagasSubTab = tab;
@@ -5633,6 +5821,11 @@ function setVagasChartMode(mode, btn) {
     loadVagasAnalysis();
 }
 
+function setVagasIncludeArchived(checked) {
+    _vagasIncludeArchived = !!checked;
+    loadVagasAnalysis();
+}
+
 function _vagasTimelineBucket(from, to) {
     if (!from || !to) return 'month';
     const days = Math.round((new Date(to) - new Date(from)) / 86400000);
@@ -5640,6 +5833,44 @@ function _vagasTimelineBucket(from, to) {
     if (days <= 180) return 'week';
     if (days <= 730) return 'month';
     return 'year';
+}
+
+// Preenche buckets vazios entre `from` e `to` com count 0.
+// `valueKeys` define quais campos copiar do bucket existente (default: ['cnt']).
+function _fillTimelineGaps(points, bucketType, from, to, valueKeys = ['cnt']) {
+    if (!from || !to) return points || [];
+    const map = new Map((points || []).map(p => [String(p.bucket).slice(0, 10), p]));
+    const result = [];
+    let cur = new Date(`${from}T00:00:00Z`);
+    const end = new Date(`${to}T23:59:59Z`);
+
+    if (bucketType === 'week') {
+        const day = cur.getUTCDay();
+        cur.setUTCDate(cur.getUTCDate() + (day === 0 ? -6 : 1 - day));
+    } else if (bucketType === 'month') {
+        cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), 1));
+    } else if (bucketType === 'year') {
+        cur = new Date(Date.UTC(cur.getUTCFullYear(), 0, 1));
+    }
+
+    let guard = 0;
+    while (cur <= end && guard++ < 400) {
+        const key = cur.toISOString().slice(0, 10);
+        const found = map.get(key);
+        if (found) {
+            result.push({ ...found, bucket: key });
+        } else {
+            const zero = { bucket: key };
+            valueKeys.forEach(k => { zero[k] = 0; });
+            result.push(zero);
+        }
+        if (bucketType === 'day')        cur.setUTCDate(cur.getUTCDate() + 1);
+        else if (bucketType === 'week')  cur.setUTCDate(cur.getUTCDate() + 7);
+        else if (bucketType === 'month') cur.setUTCMonth(cur.getUTCMonth() + 1);
+        else if (bucketType === 'year')  cur.setUTCFullYear(cur.getUTCFullYear() + 1);
+        else break;
+    }
+    return result;
 }
 
 function _vagasDateRange() {
@@ -5662,6 +5893,7 @@ async function loadVagasAnalysis() {
     if (_vagasChartMode === 'timeline') params.set('bucket', _vagasTimelineBucket(from, to));
     if (from) params.set('from', from);
     if (to)   params.set('to',   to);
+    if (_vagasIncludeArchived) params.set('include_archived', '1');
     try {
         const data = await api('GET', `/api/admin/analytics?${params}`);
         renderVagasAnalysis(data);
@@ -5686,13 +5918,15 @@ function renderVagasAnalysis(data) {
     let labels, values, title;
     if (chart.mode === 'timeline') {
         title = 'Candidaturas ao longo do tempo';
-        labels = points.map(s => {
+        const { from, to } = _vagasDateRange();
+        const filled = _fillTimelineGaps(points, chart.bucket || 'day', from, to);
+        labels = filled.map(s => {
             const d = new Date(s.bucket);
             if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
             if (chart.bucket === 'year')  return String(d.getFullYear());
             return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
         });
-        values = points.map(s => Number(s.cnt) || 0);
+        values = filled.map(s => Number(s.cnt) || 0);
     } else {
         const cfg = {
             dow: { len: 7,  names: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],                                 title: 'Candidaturas por dia da semana' },

@@ -42,6 +42,22 @@
 
         var href = el.getAttribute('href') || '';
 
+        // Admin lock — cadeado do footer (rastreia tentativa de acesso ao painel)
+        if (el.classList.contains('footer-admin-link') || (el.closest && el.closest('.footer-admin-link'))) {
+            send('admin_lock_click');
+            // não retorna — deixa a navegação seguir para /admin
+        }
+
+        // Project click — qualquer link dentro de um .project-card
+        var projectCard = el.closest && el.closest('.project-card');
+        if (projectCard) {
+            var slug = projectCard.getAttribute('data-track-project') || 'unknown';
+            var isInternal = href.startsWith('/') || (href.indexOf(location.host) !== -1 && /^https?:/.test(href));
+            var sub = (el.matches && el.matches('.project-repo-link')) ? 'repo' : 'main';
+            send('project_click', { project: slug, type: isInternal ? 'internal' : 'external', sub: sub });
+            // segue para handlers seguintes (case_open continua disparando para os 2 internos)
+        }
+
         // CV download click: links para /cv ou tokens de download
         if (href === '/cv' || href.startsWith('/cv') || /\/api\/cv\/download/i.test(href)) {
             send('cv_download_click');
@@ -54,10 +70,13 @@
             return;
         }
 
-        // Contact click: redes sociais, email, github
+        // Contact click: redes sociais, email, github (com location se anotado)
         var target = getLinkTarget(el);
         if (target) {
-            send('contact_click', { target: target });
+            var loc = el.getAttribute('data-track-location')
+                || (el.closest && el.closest('[data-track-location]') && el.closest('[data-track-location]').getAttribute('data-track-location'))
+                || 'unknown';
+            send('contact_click', { target: target, location: loc });
             return;
         }
     }
@@ -70,6 +89,9 @@
         // Botão "Solicitar por email" em cv.html
         if (el.classList.contains('cv-btn--email') || el.closest('[data-analytics="email-request"]')) {
             send('email_request');
+            // dispara contact_click com location para análise de funil cv-page → canal
+            var loc = (el.closest && el.closest('[data-track-location]') && el.closest('[data-track-location]').getAttribute('data-track-location')) || null;
+            if (loc) send('contact_click', { target: 'email', location: loc });
         }
     }
 
