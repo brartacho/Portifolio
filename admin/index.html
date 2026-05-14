@@ -5577,7 +5577,7 @@ function renderAnalytics(data) {
     const _from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
     const _fmt  = d => d.toISOString().slice(0, 10);
     const filledSeries = _fillTimelineGaps(series, 'day', _fmt(_from), _fmt(_to), ['pageviews', 'unique_visitors']);
-    const labels  = filledSeries.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
+    const labels  = filledSeries.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', timeZone: 'UTC' }));
     const pvData  = filledSeries.map(s => s.pageviews ?? 0);
     const uniqData = filledSeries.map(s => s.unique_visitors ?? 0);
     const ctx = document.getElementById('analyticsChart');
@@ -5978,9 +5978,9 @@ function renderVagasAnalysis(data) {
         const filled = _fillTimelineGaps(points, chart.bucket || 'day', from, to);
         labels = filled.map(s => {
             const d = new Date(s.bucket);
-            if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
-            if (chart.bucket === 'year')  return String(d.getFullYear());
-            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+            if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit', timeZone: 'UTC' });
+            if (chart.bucket === 'year')  return String(d.getUTCFullYear());
+            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', timeZone: 'UTC' });
         });
         values = filled.map(s => Number(s.cnt) || 0);
     } else {
