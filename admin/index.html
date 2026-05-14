@@ -1652,6 +1652,14 @@
         }
 
         /* ─── GESTÃO DE VAGAS ───────────────────────── */
+        #vagasFiltersPanel { overflow:hidden; max-height:300px; opacity:1; transition:max-height 0.25s ease, opacity 0.18s ease; }
+        #vagasFiltersPanel.collapsed { max-height:0; opacity:0; }
+        .vagas-filters-badge {
+            display:inline-flex; align-items:center; justify-content:center;
+            background:var(--cyan); color:var(--bg); border-radius:10px;
+            font-size:0.65rem; font-weight:700; min-width:16px; height:16px;
+            padding:0 4px; margin-left:3px; line-height:1;
+        }
         .vagas-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
         .vagas-filter-chip {
             font-size:0.75rem; padding:5px 14px; border-radius:20px; border:1px solid var(--border-soft);
@@ -2352,28 +2360,35 @@
 
             <div id="vagasListView">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-                <div style="display:flex;flex-direction:column;gap:6px">
-                    <div class="vagas-filters" id="vagasFilters">
-                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
-                        <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
-                        <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
-                        <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
-                        <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
-                    </div>
-                    <div class="vagas-filters" id="vagasFiltersModalidade">
-                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
-                        <button class="vagas-filter-chip" data-filter="Presencial" onclick="setVagasModalidadeFilter('Presencial',this)">Presencial</button>
-                        <button class="vagas-filter-chip" data-filter="Híbrida" onclick="setVagasModalidadeFilter('Híbrida',this)">Híbrida</button>
-                        <button class="vagas-filter-chip" data-filter="Remota" onclick="setVagasModalidadeFilter('Remota',this)">Remota</button>
-                    </div>
-                    <div class="vagas-filters" id="vagasFiltersTipo">
-                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasTipoFilter('all',this)">Contratação</button>
-                        <button class="vagas-filter-chip" data-filter="CLT" onclick="setVagasTipoFilter('CLT',this)">CLT</button>
-                        <button class="vagas-filter-chip" data-filter="PJ" onclick="setVagasTipoFilter('PJ',this)">PJ</button>
-                        <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
+                <div id="vagasFiltersPanel">
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                        <div class="vagas-filters" id="vagasFilters">
+                            <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
+                            <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
+                            <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
+                            <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                            <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                        </div>
+                        <div class="vagas-filters" id="vagasFiltersModalidade">
+                            <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
+                            <button class="vagas-filter-chip" data-filter="Presencial" onclick="setVagasModalidadeFilter('Presencial',this)">Presencial</button>
+                            <button class="vagas-filter-chip" data-filter="Híbrida" onclick="setVagasModalidadeFilter('Híbrida',this)">Híbrida</button>
+                            <button class="vagas-filter-chip" data-filter="Remota" onclick="setVagasModalidadeFilter('Remota',this)">Remota</button>
+                        </div>
+                        <div class="vagas-filters" id="vagasFiltersTipo">
+                            <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasTipoFilter('all',this)">Contratação</button>
+                            <button class="vagas-filter-chip" data-filter="CLT" onclick="setVagasTipoFilter('CLT',this)">CLT</button>
+                            <button class="vagas-filter-chip" data-filter="PJ" onclick="setVagasTipoFilter('PJ',this)">PJ</button>
+                            <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex;gap:8px">
+                    <button class="btn btn-sm" id="vagasFiltersToggleBtn" onclick="toggleVagasFilters()" title="Mostrar/ocultar filtros" style="display:inline-flex;align-items:center;gap:5px">
+                        <i class="fa-solid fa-sliders"></i> Filtros
+                        <span id="vagasFiltersBadge" class="vagas-filters-badge" style="display:none"></span>
+                        <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;transition:transform 0.2s"></i>
+                    </button>
                     <button class="btn btn-sm" onclick="exportCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
                     <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
                 </div>
@@ -2446,13 +2461,13 @@
                 </div>
 
                 <div class="metrics-chart-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h4 style="margin:0">Candidaturas ao longo do tempo</h4>
-                        <div class="vagas-bucket-bar" id="vagasBucketBar">
-                            <button class="metrics-period-btn" onclick="setVagasBucket('day',this)">Dia</button>
-                            <button class="metrics-period-btn active" onclick="setVagasBucket('week',this)">Semana</button>
-                            <button class="metrics-period-btn" onclick="setVagasBucket('month',this)">Mês</button>
-                        </div>
+                    <h4 id="vagasChartTitle" style="margin:0 0 12px">Candidaturas por dia da semana</h4>
+                    <div class="vagas-bucket-bar" id="vagasChartModeBar" style="flex-wrap:wrap;gap:6px;margin-bottom:16px">
+                        <button class="metrics-period-btn"        data-mode="timeline" onclick="setVagasChartMode('timeline',this)">Tempo</button>
+                        <button class="metrics-period-btn active" data-mode="dow"      onclick="setVagasChartMode('dow',this)">Dia da semana</button>
+                        <button class="metrics-period-btn"        data-mode="wom"      onclick="setVagasChartMode('wom',this)">Semana do mês</button>
+                        <button class="metrics-period-btn"        data-mode="dom"      onclick="setVagasChartMode('dom',this)">Dia do mês</button>
+                        <button class="metrics-period-btn"        data-mode="moy"      onclick="setVagasChartMode('moy',this)">Mês</button>
                     </div>
                     <div style="position:relative;height:180px">
                         <canvas id="vagasChart"></canvas>
@@ -3254,10 +3269,11 @@ let _lastRefreshAt  = null;
 const AUTO_REFRESH_MS = 60_000;
 
 function _getTabLoader() {
-    if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
-    if (_activeTab === 'tokens') return loadTokens;
-    if (_activeTab === 'logs')   return loadLogs;
-    if (_activeTab === 'vagas')  return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
+    if (_activeTab === 'cvs')      return () => Promise.all([loadCVs(), loadStorageStats()]);
+    if (_activeTab === 'tokens')   return loadTokens;
+    if (_activeTab === 'logs')     return loadLogs;
+    if (_activeTab === 'vagas')    return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
+    if (_activeTab === 'metricas') return loadAnalytics;
     return loadCVs;
 }
 
@@ -3295,6 +3311,7 @@ let _applications = [];
 let _vagasFilter           = 'all';
 let _vagasModalidadeFilter = 'all';
 let _vagasTipoFilter       = 'all';
+let _vagasFiltersOpen      = true;
 let _openAppId             = null;
 let _filteredApplications  = [];
 
@@ -3412,18 +3429,35 @@ function setVagasFilter(filter, btn) {
     document.querySelectorAll('#vagasFilters .vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderApplicationsTable();
+    _updateVagasFilterBadge();
 }
 function setVagasModalidadeFilter(filter, btn) {
     _vagasModalidadeFilter = filter;
     document.querySelectorAll('#vagasFiltersModalidade .vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderApplicationsTable();
+    _updateVagasFilterBadge();
 }
 function setVagasTipoFilter(filter, btn) {
     _vagasTipoFilter = filter;
     document.querySelectorAll('#vagasFiltersTipo .vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderApplicationsTable();
+    _updateVagasFilterBadge();
+}
+function toggleVagasFilters() {
+    _vagasFiltersOpen = !_vagasFiltersOpen;
+    document.getElementById('vagasFiltersPanel')?.classList.toggle('collapsed', !_vagasFiltersOpen);
+    const ch = document.getElementById('vagasFiltersChevron');
+    if (ch) ch.style.transform = _vagasFiltersOpen ? '' : 'rotate(180deg)';
+}
+function _updateVagasFilterBadge() {
+    let n = 0;
+    if (_vagasFilter           !== 'all') n++;
+    if (_vagasModalidadeFilter !== 'all') n++;
+    if (_vagasTipoFilter       !== 'all') n++;
+    const badge = document.getElementById('vagasFiltersBadge');
+    if (badge) { badge.textContent = n; badge.style.display = n ? 'inline-flex' : 'none'; }
 }
 
 function clearVagasSearch() {
@@ -4915,7 +4949,8 @@ async function sendCV() {
                     + (linkVaga             ? `&link_vaga=${encodeURIComponent(linkVaga)}`                         : '')
                     + (observacoes          ? `&observacoes=${encodeURIComponent(observacoes)}`                   : '')
                     + (_waModalidade        ? `&modalidade=${encodeURIComponent(_waModalidade)}`                  : '')
-                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '');
+                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '')
+                    + (phone               ? `&contato=${encodeURIComponent(phone)}`                             : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
@@ -5225,7 +5260,7 @@ function renderLogDetail({ log, accesses }) {
         html += `<div class="ld-section"><div class="ld-section-title">Contexto da vaga</div>
             ${row('Empresa', meta.empresa ? esc(meta.empresa) : null)}
             ${row('Vaga',    meta.vaga    ? esc(meta.vaga)    : null)}
-            ${meta.contato ? `<div class="ld-row"><span class="ld-label">Contato</span><span class="ld-value"><a href="${meta.contato.startsWith('http') ? esc(meta.contato) : 'mailto:' + esc(meta.contato)}" target="_blank" style="color:var(--cyan)">${esc(meta.contato)}</a></span></div>` : ''}
+            ${meta.contato ? (() => { const c = meta.contato; const href = c.startsWith('http') ? esc(c) : /^\+?\d{6,}$/.test(c) ? `https://wa.me/${c.replace(/\D/g,'')}` : `mailto:${esc(c)}`; return `<div class="ld-row"><span class="ld-label">Contato</span><span class="ld-value"><a href="${href}" target="_blank" rel="noreferrer" style="color:var(--cyan)">${esc(c)}</a></span></div>`; })() : ''}
             ${row('Notas',   meta.notas   ? `<em style="color:var(--text-soft)">${esc(meta.notas)}</em>` : null)}
         </div>`;
     }
@@ -5563,7 +5598,7 @@ function renderAnalytics(data) {
 // ─── ANÁLISE DE VAGAS ─────────────────────────────────────
 let _vagasSubTab         = 'lista';
 let _vagasAnalysisPeriod = 'month';
-let _vagasBucket         = 'week';
+let _vagasChartMode      = 'dow';
 let _vagasAnalysisChart  = null;
 let _vagasAnalysisLoaded = false;
 
@@ -5591,11 +5626,20 @@ function setVagasAnalysisPeriod(period, btn) {
     loadVagasAnalysis();
 }
 
-function setVagasBucket(bucket, btn) {
-    _vagasBucket = bucket;
-    document.querySelectorAll('#vagasBucketBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+function setVagasChartMode(mode, btn) {
+    _vagasChartMode = mode;
+    document.querySelectorAll('#vagasChartModeBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     loadVagasAnalysis();
+}
+
+function _vagasTimelineBucket(from, to) {
+    if (!from || !to) return 'month';
+    const days = Math.round((new Date(to) - new Date(from)) / 86400000);
+    if (days <= 31)  return 'day';
+    if (days <= 180) return 'week';
+    if (days <= 730) return 'month';
+    return 'year';
 }
 
 function _vagasDateRange() {
@@ -5614,7 +5658,8 @@ function _vagasDateRange() {
 
 async function loadVagasAnalysis() {
     const { from, to } = _vagasDateRange();
-    const params = new URLSearchParams({ scope: 'vagas', bucket: _vagasBucket });
+    const params = new URLSearchParams({ scope: 'vagas', mode: _vagasChartMode });
+    if (_vagasChartMode === 'timeline') params.set('bucket', _vagasTimelineBucket(from, to));
     if (from) params.set('from', from);
     if (to)   params.set('to',   to);
     try {
@@ -5628,7 +5673,8 @@ async function loadVagasAnalysis() {
 }
 
 function renderVagasAnalysis(data) {
-    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], series = [], by_stage = [] } = data;
+    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], by_stage = [] } = data;
+    const chart = data.chart || { mode: 'timeline', bucket: 'week', points: data.series || [] };
 
     const byResult = Object.fromEntries((by_result || []).map(r => [r.result, r.cnt]));
     document.getElementById('vkpi-total').textContent       = total ?? '—';
@@ -5636,22 +5682,47 @@ function renderVagasAnalysis(data) {
     document.getElementById('vkpi-aprovado').textContent    = byResult.aprovado    ?? 0;
     document.getElementById('vkpi-recusado').textContent    = byResult.recusado    ?? 0;
 
+    const points = chart.points || [];
+    let labels, values, title;
+    if (chart.mode === 'timeline') {
+        title = 'Candidaturas ao longo do tempo';
+        labels = points.map(s => {
+            const d = new Date(s.bucket);
+            if (chart.bucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
+            if (chart.bucket === 'year')  return String(d.getFullYear());
+            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+        });
+        values = points.map(s => Number(s.cnt) || 0);
+    } else {
+        const cfg = {
+            dow: { len: 7,  names: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'],                                 title: 'Candidaturas por dia da semana' },
+            wom: { len: 5,  names: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5'],                                  title: 'Candidaturas por semana do mês' },
+            dom: { len: 31, names: Array.from({length:31}, (_, i) => String(i + 1)),                          title: 'Candidaturas por dia do mês' },
+            moy: { len: 12, names: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], title: 'Candidaturas por mês' },
+        }[chart.mode] || { len: 0, names: [], title: 'Candidaturas' };
+        const counts = new Array(cfg.len).fill(0);
+        points.forEach(p => {
+            const i = Number(p.idx) - 1;
+            if (i >= 0 && i < cfg.len) counts[i] = Number(p.cnt) || 0;
+        });
+        labels = cfg.names;
+        values = counts;
+        title  = cfg.title;
+    }
+
+    const titleEl = document.getElementById('vagasChartTitle');
+    if (titleEl) titleEl.textContent = title;
+
     const ctx = document.getElementById('vagasChart');
     if (ctx) {
         if (_vagasAnalysisChart) _vagasAnalysisChart.destroy();
-        const labels = (series || []).map(s => {
-            const d = new Date(s.bucket);
-            if (_vagasBucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
-            if (_vagasBucket === 'year')  return String(d.getFullYear());
-            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-        });
         _vagasAnalysisChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels,
                 datasets: [{
                     label: 'Candidaturas',
-                    data: (series || []).map(s => s.cnt ?? 0),
+                    data: values,
                     backgroundColor: 'rgba(124,58,237,0.35)',
                     borderColor: 'rgba(124,58,237,0.8)',
                     borderWidth: 1.5,
@@ -5663,7 +5734,7 @@ function renderVagasAnalysis(data) {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    x: { ticks: { color: '#5c5c80', font: { size: 10 }, autoSkip: true, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } },
                     y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
                 },
             },

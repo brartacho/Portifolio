@@ -39,7 +39,8 @@ export default async function handler(req, res) {
             const toStr   = req.query.to   || '';
             const f = fromStr ? `${fromStr}T00:00:00.000Z` : null;
             const t = toStr   ? `${toStr}T23:59:59.999Z`   : null;
-            const bucket = ['day','week','month','year'].includes(req.query.bucket) ? req.query.bucket : 'week';
+            const mode   = ['timeline','dow','wom','dom','moy'].includes(req.query.mode)   ? req.query.mode   : 'dow';
+            const bucket = ['day','week','month','year'].includes(req.query.bucket)         ? req.query.bucket : 'week';
 
             const rpcArgs = { from_ts: f, to_ts: t };
             let totalQ = supabase.from('job_applications')
@@ -48,12 +49,16 @@ export default async function handler(req, res) {
             if (f) totalQ = totalQ.gte('created_at', f);
             if (t) totalQ = totalQ.lte('created_at', t);
 
-            const [totalRes, byResultRes, byModalidadeRes, byTipoRes, seriesRes, byStageRes] = await Promise.all([
+            const chartPromise = mode === 'timeline'
+                ? supabase.rpc('vagas_series',       { ...rpcArgs, bucket_size: bucket })
+                : supabase.rpc('vagas_distribution', { ...rpcArgs, mode });
+
+            const [totalRes, byResultRes, byModalidadeRes, byTipoRes, chartRes, byStageRes] = await Promise.all([
                 totalQ,
                 supabase.rpc('vagas_by_result',           rpcArgs),
                 supabase.rpc('vagas_by_modalidade',        rpcArgs),
                 supabase.rpc('vagas_by_tipo',              rpcArgs),
-                supabase.rpc('vagas_series', { ...rpcArgs, bucket_size: bucket }),
+                chartPromise,
                 supabase.rpc('vagas_stages_distribution',  rpcArgs),
             ]);
 
@@ -63,7 +68,11 @@ export default async function handler(req, res) {
                 by_result:     byResultRes.data     ?? [],
                 by_modalidade: byModalidadeRes.data ?? [],
                 by_tipo:       byTipoRes.data       ?? [],
-                series:        seriesRes.data       ?? [],
+                chart: {
+                    mode,
+                    bucket: mode === 'timeline' ? bucket : null,
+                    points: chartRes.data ?? [],
+                },
                 by_stage:      byStageRes.data      ?? [],
             });
         }

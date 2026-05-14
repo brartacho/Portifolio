@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     // GET → gera URL assinada de download
     if (req.method === 'GET') {
-        const { id, recipient, channel, empresa, vaga, linkedin_empresa, link_vaga, observacoes, modalidade, tipo_contratacao } = req.query;
+        const { id, recipient, channel, empresa, vaga, linkedin_empresa, link_vaga, observacoes, modalidade, tipo_contratacao, contato } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório' });
 
         const { data: cv, error: cvErr } = await supabase
@@ -56,6 +56,7 @@ export default async function handler(req, res) {
                 const cleanLinkedin = s(linkedin_empresa)?.slice(0, 300) || null;
                 const cleanLinkVaga = s(link_vaga)?.slice(0, 500)        || null;
                 const cleanObs      = s(observacoes)?.slice(0, 500)      || null;
+                const cleanContato  = s(contato)?.replace(/\D/g, '').slice(0, 20) || null;
                 await supabase.from('download_logs').insert({
                     cv_version_id: id,
                     cv_name_snapshot: cv.name,
@@ -64,6 +65,7 @@ export default async function handler(req, res) {
                     user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
                     empresa: cleanEmpresa,
                     vaga:    cleanVaga,
+                    contato: cleanContato,
                 }).then(() => {}, () => {});
                 supabase.from('job_applications').insert({
                     empresa:          cleanEmpresa  || 'N/A',
