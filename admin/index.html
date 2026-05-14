@@ -5783,7 +5783,7 @@ const _kpiRenderers = {
         const body = document.getElementById('kpiDetailBody');
         const dList = devices.length ? `<div class="kpi-detail-list">${devices.map(d => _kpiRow(esc(d.device || '?'), `<span class="meta">${d.views} visitas</span>`)).join('')}</div>` : '';
         const cList = countries.length ? `<div class="kpi-detail-list">${countries.slice(0, 10).map(c => _kpiRow(esc(c.country || '?'), `<span class="meta">${c.views} visitas</span>`)).join('')}</div>` : '';
-        const rList = top_referrers.length ? `<div class="kpi-detail-list">${top_referrers.slice(0, 10).map(r => _kpiRow(esc(r.referrer_host || '(direto)'), `<span class="meta">${r.views} visitas</span>`)).join('')}</div>` : '';
+        const rList = top_referrers.length ? `<div class="kpi-detail-list">${top_referrers.slice(0, 10).map(r => _kpiRow(esc(r.host || '(direto)'), `<span class="meta">${r.views} visitas</span>`)).join('')}</div>` : '';
         const utmFiltered = utm_sources.filter(u => u.source && u.source !== '(nenhum)');
         const uList = utmFiltered.length ? `<div class="kpi-detail-list">${utmFiltered.slice(0, 10).map(u => _kpiRow(esc(u.source), `<span class="meta">${u.views} visitas</span>`)).join('')}</div>` : '<div class="metrics-empty" style="font-size:0.82rem">Nenhuma visita via UTM no período.<br>Adicione <code>?utm_source=linkedin</code> nos seus links para rastrear.</div>';
         body.innerHTML = _kpiSection('Total', `<div class="kpi-detail-list">${_kpiRow('Visitantes únicos', `<strong>${kpis.unique_visitors ?? 0}</strong>`)}</div>`)
