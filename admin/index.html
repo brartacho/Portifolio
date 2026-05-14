@@ -2056,20 +2056,34 @@
         .vagas-subtab-btn:hover { color:var(--text); }
         .vagas-subtab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
 
-        /* Barra de período da análise — 2 linhas: botões em cima, datas+toggle embaixo */
-        .vagas-analysis-period-bar { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
-        .vagas-analysis-period-bar .period-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        /* Barra de período da análise — tudo numa linha no desktop */
+        .vagas-analysis-period-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:20px; }
         .vagas-analysis-period-bar .metrics-period-btn { font-size:0.78rem; padding:5px 12px; }
-        .vagas-analysis-period-bar .period-date { height:32px; width:132px !important; flex:0 0 auto; }
-        .vagas-analysis-period-bar .th-filter-label { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-analysis-period-bar .period-date { height:32px; width:128px !important; flex:0 0 auto; }
+        .vagas-analysis-period-bar .th-filter-label { font-size:0.78rem; color:var(--text-dim); white-space:nowrap; }
+        .vagas-period-dates { display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; }
         .vagas-analysis-period-bar .period-archived-toggle {
-            display:inline-flex; align-items:center; gap:6px;
+            display:inline-flex; align-items:center; gap:7px;
             font-size:0.78rem; color:var(--text-soft);
-            cursor:pointer; user-select:none; margin-left:auto;
+            cursor:pointer; user-select:none; white-space:nowrap;
         }
-        @media (max-width: 540px) {
-            .vagas-analysis-period-bar .period-date { width:calc(50% - 24px) !important; min-width:120px; }
-            .vagas-analysis-period-bar .period-archived-toggle { margin-left:0; width:100%; padding-top:4px; }
+        /* Toggle switch */
+        .period-toggle-switch { position:relative; display:inline-block; width:30px; height:17px; flex-shrink:0; }
+        .period-toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+        .period-toggle-track {
+            position:absolute; cursor:pointer; inset:0;
+            background:rgba(255,255,255,0.12); border-radius:17px; transition:background 0.2s;
+        }
+        .period-toggle-track::before {
+            content:''; position:absolute;
+            width:13px; height:13px; left:2px; bottom:2px;
+            background:#fff; border-radius:50%; transition:transform 0.2s;
+        }
+        .period-toggle-switch input:checked + .period-toggle-track { background:var(--cyan,#22d3ee); }
+        .period-toggle-switch input:checked + .period-toggle-track::before { transform:translateX(13px); }
+        @media (max-width: 600px) {
+            .vagas-period-dates { margin-left:0; width:100%; }
+            .vagas-analysis-period-bar .period-date { width:calc(50% - 32px) !important; min-width:110px; }
         }
         .vagas-bucket-bar { display:flex; gap:4px; }
         .vagas-bucket-bar .metrics-period-btn { font-size:0.72rem; padding:4px 10px; }
@@ -2497,20 +2511,21 @@
             <div id="vagasAnalysisView" style="display:none">
 
                 <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
-                    <div class="period-row">
-                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
-                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
-                        <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
-                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
-                        <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
-                    </div>
-                    <div class="period-row">
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    <div class="vagas-period-dates">
                         <span class="th-filter-label">De</span>
                         <input type="date" id="vagasAnalysisFrom" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
                         <span class="th-filter-label">até</span>
                         <input type="date" id="vagasAnalysisTo" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
                         <label class="period-archived-toggle">
-                            <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
+                            <span class="period-toggle-switch">
+                                <input type="checkbox" id="vagasIncludeArchived" onchange="setVagasIncludeArchived(this.checked)">
+                                <span class="period-toggle-track"></span>
+                            </span>
                             <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
                         </label>
                     </div>
