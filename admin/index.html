@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1346,14 +1347,16 @@
             .drawer-body { gap: 12px; }
             .drawer-actions {
                 order: -1;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                align-items: center;
                 border-top: none;
                 border-bottom: 1px solid var(--border-soft);
                 padding-top: 0;
                 padding-bottom: 10px;
                 margin-bottom: 2px;
             }
-            .drawer-actions .btn-sm:not(.btn-danger) { flex: 1; justify-content: center; text-align: center; }
+            .drawer-actions .btn-sm:not(.btn-danger) { flex: 1; justify-content: center; text-align: center; min-width: 0; }
+            .drawer-actions .btn-danger { flex-shrink: 0; }
 
             /* ── Resultado segmentado: cabe em 1 linha ── */
             .result-seg { padding: 6px 4px; font-size: 0.72rem; gap: 4px; }
@@ -1733,7 +1736,8 @@
             flex-shrink:0;
         }
         .drawer-body { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:16px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
-        .drawer-actions { display:flex; gap:8px; padding-top:4px; border-top:1px solid var(--border-soft); }
+        .drawer-actions { display:flex; align-items:center; gap:8px; padding-top:4px; border-top:1px solid var(--border-soft); flex-wrap:nowrap; }
+        .drawer-actions .btn-danger { flex-shrink:0; margin-left:auto; }
         .drawer-close { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.1rem; padding:2px; }
         .drawer-close:hover { color:var(--text); }
 
@@ -1874,6 +1878,126 @@
             border-radius:6px; padding:3px 8px; font-size:0.75rem;
             cursor:pointer; color:inherit; font-family:inherit; flex-shrink:0;
         }
+
+        /* ─── MÉTRICAS ───────────────────────────────────── */
+        .metrics-period-bar {
+            display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .metrics-period-btn {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-soft);
+            font-family: var(--font-display); font-size: 0.82rem; font-weight: 600;
+            padding: 6px 14px; cursor: pointer; transition: all 0.15s;
+        }
+        .metrics-period-btn:hover { border-color: var(--cyan); color: var(--text); }
+        .metrics-period-btn.active {
+            background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan);
+        }
+        .metrics-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px; margin-bottom: 20px;
+        }
+        .metrics-kpi-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+        }
+        .metrics-kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--violet), var(--cyan));
+        }
+        .metrics-kpi-label {
+            font-size: 0.72rem; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+        }
+        .metrics-kpi-value {
+            font-size: 1.6rem; font-weight: 800; color: var(--text); letter-spacing: -1px;
+        }
+        .metrics-kpi-sub {
+            font-size: 0.7rem; color: var(--text-soft); margin-top: 4px;
+        }
+        .metrics-kpi-card.highlight .metrics-kpi-value { color: var(--cyan); }
+        .metrics-chart-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; margin-bottom: 20px;
+        }
+        .metrics-chart-card h4 {
+            font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 16px;
+        }
+        .metrics-panels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px; margin-bottom: 20px;
+        }
+        .metrics-panel {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 18px;
+        }
+        .metrics-panel h4 {
+            font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 12px;
+        }
+        .metrics-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid var(--border-soft);
+            font-size: 0.82rem; gap: 8px;
+        }
+        .metrics-row:last-child { border-bottom: none; }
+        .metrics-row-label { color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .metrics-row-value { color: var(--text); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .metrics-bar-wrap { margin-top: 4px; height: 3px; background: var(--border); border-radius: 2px; }
+        .metrics-bar-fill { height: 3px; border-radius: 2px; background: var(--cyan); }
+        .metrics-funnel-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+        }
+        .metrics-funnel-card h4 {
+            font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 16px;
+        }
+        .metrics-funnel-steps { display: flex; flex-direction: column; gap: 12px; }
+        .metrics-funnel-step { display: flex; align-items: center; gap: 12px; }
+        .metrics-funnel-step-label { font-size: 0.8rem; color: var(--text-soft); width: 140px; flex-shrink: 0; }
+        .metrics-funnel-step-bar { flex: 1; height: 22px; background: var(--border); border-radius: 6px; overflow: hidden; position: relative; }
+        .metrics-funnel-step-fill {
+            height: 100%; border-radius: 6px;
+            background: linear-gradient(90deg, var(--violet), var(--cyan));
+            transition: width 0.5s ease;
+        }
+        .metrics-funnel-step-count { font-size: 0.8rem; color: var(--text); font-variant-numeric: tabular-nums; width: 48px; text-align: right; flex-shrink: 0; }
+        .metrics-funnel-step-pct { font-size: 0.72rem; color: var(--text-dim); width: 42px; text-align: right; flex-shrink: 0; }
+        .metrics-empty { text-align:center; color:var(--text-dim); padding:40px 20px; font-size:0.88rem; }
+        @media (max-width: 600px) {
+            .metrics-kpis { grid-template-columns: repeat(2, 1fr); }
+            .metrics-panels-grid { grid-template-columns: 1fr; }
+            .metrics-funnel-step-label { width: 100px; font-size: 0.72rem; }
+        }
+
+        /* ─── Sub-abas Vagas ───────────────────────────────── */
+        .vagas-subtabs {
+            display:flex; gap:0; margin-bottom:16px;
+            border-bottom:1px solid var(--border);
+        }
+        .vagas-subtab-btn {
+            background:none; border:none; border-bottom:2px solid transparent;
+            margin-bottom:-1px; cursor:pointer;
+            font-family:var(--font-display); font-size:0.82rem; font-weight:600;
+            color:var(--text-dim); padding:8px 16px 10px;
+            transition:color 0.15s, border-color 0.15s;
+        }
+        .vagas-subtab-btn:hover { color:var(--text); }
+        .vagas-subtab-btn.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+        /* Barra de período da análise com inputs inline */
+        .vagas-analysis-period-bar {
+            display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:20px;
+        }
+        .vagas-analysis-period-bar .metrics-period-btn { font-size:0.78rem; padding:5px 12px; }
+        .vagas-analysis-period-bar .th-filter-input   { height:32px; }
+        .vagas-analysis-period-bar .th-filter-label   { font-size:0.78rem; color:var(--text-dim); }
+        .vagas-bucket-bar { display:flex; gap:4px; }
+        .vagas-bucket-bar .metrics-period-btn { font-size:0.72rem; padding:4px 10px; }
     </style>
 </head>
 <body>
@@ -1944,6 +2068,7 @@
         <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key"></i> Tokens</button>
         <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')"><i class="fa-solid fa-chart-bar"></i> Logs</button>
         <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase"></i> Gestão de Vagas</button>
+        <button class="tab-btn" data-tab="metricas" onclick="switchTab('metricas')"><i class="fa-solid fa-chart-line"></i> Métricas</button>
     </nav>
 
     <div class="app-content">
@@ -2220,14 +2345,38 @@
         <!-- ─── TAB: GESTÃO DE VAGAS ──────────────────────────────────── -->
         <div id="tab-vagas" class="tab-panel">
 
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-                <div class="vagas-filters" id="vagasFilters">
-                    <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
-                    <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
-                    <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
-                    <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+            <div class="vagas-subtabs">
+                <button class="vagas-subtab-btn active" onclick="switchVagasSubTab('lista',this)">Lista</button>
+                <button class="vagas-subtab-btn" onclick="switchVagasSubTab('analise',this)">Análise</button>
+            </div>
+
+            <div id="vagasListView">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                    <div class="vagas-filters" id="vagasFilters">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
+                        <button class="vagas-filter-chip" data-filter="em-processo" onclick="setVagasFilter('em-processo',this)">Em processo</button>
+                        <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
+                        <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                        <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                    </div>
+                    <div class="vagas-filters" id="vagasFiltersModalidade">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
+                        <button class="vagas-filter-chip" data-filter="Presencial" onclick="setVagasModalidadeFilter('Presencial',this)">Presencial</button>
+                        <button class="vagas-filter-chip" data-filter="Híbrida" onclick="setVagasModalidadeFilter('Híbrida',this)">Híbrida</button>
+                        <button class="vagas-filter-chip" data-filter="Remota" onclick="setVagasModalidadeFilter('Remota',this)">Remota</button>
+                    </div>
+                    <div class="vagas-filters" id="vagasFiltersTipo">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasTipoFilter('all',this)">Contratação</button>
+                        <button class="vagas-filter-chip" data-filter="CLT" onclick="setVagasTipoFilter('CLT',this)">CLT</button>
+                        <button class="vagas-filter-chip" data-filter="PJ" onclick="setVagasTipoFilter('PJ',this)">PJ</button>
+                        <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
+                    </div>
                 </div>
-                <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-sm" onclick="exportCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
+                    <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                </div>
             </div>
 
             <div class="filter-bar" style="margin-bottom:12px">
@@ -2235,6 +2384,13 @@
                     <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderApplicationsTable()">
                     <span class="th-filter-count" id="vagasCount"></span>
                     <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="filter-date-group">
+                    <span class="th-filter-label">De</span>
+                    <input class="th-filter-input" type="date" id="vagasDateFrom" title="Data de envio inicial" onchange="renderApplicationsTable()">
+                    <span class="th-filter-label">Até</span>
+                    <input class="th-filter-input" type="date" id="vagasDateTo" title="Data de envio final" onchange="renderApplicationsTable()">
+                    <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -2253,6 +2409,178 @@
                     </tbody>
                 </table>
             </div>
+            </div><!-- /vagasListView -->
+
+            <!-- ─── ANÁLISE DE VAGAS ──────────────────────── -->
+            <div id="vagasAnalysisView" style="display:none">
+
+                <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    <span class="th-filter-label" style="margin-left:6px">De</span>
+                    <input type="date" id="vagasAnalysisFrom" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                    <span class="th-filter-label">até</span>
+                    <input type="date" id="vagasAnalysisTo" class="th-filter-input" style="height:32px" onchange="setVagasAnalysisPeriod('custom',null)">
+                </div>
+
+                <div class="metrics-kpis">
+                    <div class="metrics-kpi-card highlight">
+                        <div class="metrics-kpi-label">Total</div>
+                        <div class="metrics-kpi-value" id="vkpi-total">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Em processo</div>
+                        <div class="metrics-kpi-value" id="vkpi-em-processo" style="color:#eab308">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Aprovadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-aprovado" style="color:#22c55e">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Recusadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-recusado" style="color:#ef4444">—</div>
+                    </div>
+                </div>
+
+                <div class="metrics-chart-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h4 style="margin:0">Candidaturas ao longo do tempo</h4>
+                        <div class="vagas-bucket-bar" id="vagasBucketBar">
+                            <button class="metrics-period-btn" onclick="setVagasBucket('day',this)">Dia</button>
+                            <button class="metrics-period-btn active" onclick="setVagasBucket('week',this)">Semana</button>
+                            <button class="metrics-period-btn" onclick="setVagasBucket('month',this)">Mês</button>
+                        </div>
+                    </div>
+                    <div style="position:relative;height:180px">
+                        <canvas id="vagasChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="metrics-panels-grid">
+                    <div class="metrics-panel">
+                        <h4>Resultado</h4>
+                        <div id="vagasDistResult"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Modalidade</h4>
+                        <div id="vagasDistModalidade"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Tipo de contratação</h4>
+                        <div id="vagasDistTipo"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                    <div class="metrics-panel">
+                        <h4>Etapa atual</h4>
+                        <div id="vagasDistStage"><div class="metrics-empty">Carregando…</div></div>
+                    </div>
+                </div>
+
+            </div><!-- /vagasAnalysisView -->
+
+        </div>
+
+        <!-- ─── TAB: MÉTRICAS ────────────────────────────────────────── -->
+        <div id="tab-metricas" class="tab-panel">
+
+            <div class="metrics-period-bar">
+                <button class="metrics-period-btn active" data-period="7" onclick="setAnalyticsPeriod(7,this)">7 dias</button>
+                <button class="metrics-period-btn" data-period="30" onclick="setAnalyticsPeriod(30,this)">30 dias</button>
+                <button class="metrics-period-btn" data-period="90" onclick="setAnalyticsPeriod(90,this)">90 dias</button>
+                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
+            </div>
+
+            <!-- KPIs -->
+            <div class="metrics-kpis" id="metricsKpis">
+                <div class="metrics-kpi-card highlight">
+                    <div class="metrics-kpi-label">Visitas</div>
+                    <div class="metrics-kpi-value" id="kpi-pageviews">—</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Visitantes únicos</div>
+                    <div class="metrics-kpi-value" id="kpi-unique">—</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Engajados</div>
+                    <div class="metrics-kpi-value" id="kpi-engaged">—</div>
+                    <div class="metrics-kpi-sub" id="kpi-engaged-rate">—% das visitas</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Cliques em CV</div>
+                    <div class="metrics-kpi-value" id="kpi-cv-clicks">—</div>
+                </div>
+                <div class="metrics-kpi-card highlight">
+                    <div class="metrics-kpi-label">Downloads reais</div>
+                    <div class="metrics-kpi-value" id="kpi-cv-downloads">—</div>
+                    <div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Recorrentes</div>
+                    <div class="metrics-kpi-value" id="kpi-recurring">—</div>
+                </div>
+            </div>
+
+            <!-- Gráfico de série temporal -->
+            <div class="metrics-chart-card">
+                <h4>Visitas por dia</h4>
+                <div style="position:relative;height:180px">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Funil -->
+            <div class="metrics-funnel-card">
+                <h4>Funil de conversão</h4>
+                <div class="metrics-funnel-steps" id="metricsFunnel">
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Visitas</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-pageview" style="width:100%"></div></div>
+                        <span class="metrics-funnel-step-count" id="funnel-val-pageview">—</span>
+                        <span class="metrics-funnel-step-pct" id="funnel-pct-pageview">100%</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Engajados</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-engaged" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="funnel-val-engaged">—</span>
+                        <span class="metrics-funnel-step-pct" id="funnel-pct-engaged">—</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Clicou no CV</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-click" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="funnel-val-cv-click">—</span>
+                        <span class="metrics-funnel-step-pct" id="funnel-pct-cv-click">—</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Baixou o CV</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-download" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="funnel-val-cv-download">—</span>
+                        <span class="metrics-funnel-step-pct" id="funnel-pct-cv-download">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de painéis -->
+            <div class="metrics-panels-grid">
+                <div class="metrics-panel">
+                    <h4>Top páginas</h4>
+                    <div id="metricsTopPages"><div class="metrics-empty">Carregando…</div></div>
+                </div>
+                <div class="metrics-panel">
+                    <h4>Top origens</h4>
+                    <div id="metricsReferrers"><div class="metrics-empty">Carregando…</div></div>
+                </div>
+                <div class="metrics-panel">
+                    <h4>Dispositivos</h4>
+                    <div id="metricsDevices"><div class="metrics-empty">Carregando…</div></div>
+                </div>
+                <div class="metrics-panel">
+                    <h4>Países</h4>
+                    <div id="metricsCountries"><div class="metrics-empty">Carregando…</div></div>
+                </div>
+            </div>
+
         </div>
 
         <!-- ─── DRAWER: DETALHE DA CANDIDATURA ──────────────────────── -->
@@ -2465,6 +2793,26 @@
         <div class="form-group" style="margin-bottom:10px">
             <label for="sendObservacoes" style="font-size:0.78rem">Observações <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
             <input type="text" id="sendObservacoes" placeholder="headhunter, urgência, referência…" maxlength="500" autocomplete="off" data-form-type="other">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+            <div class="form-group" style="margin:0">
+                <label for="sendModalidade" style="font-size:0.78rem">Modalidade <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <select id="sendModalidade" class="mock-input" style="font-size:0.85rem">
+                    <option value="">—</option>
+                    <option value="Presencial">Presencial</option>
+                    <option value="Híbrida">Híbrida</option>
+                    <option value="Remota">Remota</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label for="sendTipoContratacao" style="font-size:0.78rem">Tipo de contratação <span style="color:var(--text-dim);font-weight:400">(opcional)</span></label>
+                <select id="sendTipoContratacao" class="mock-input" style="font-size:0.85rem">
+                    <option value="">—</option>
+                    <option value="CLT">CLT</option>
+                    <option value="PJ">PJ</option>
+                    <option value="Freelancer">Freelancer</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-group">
@@ -2909,7 +3257,7 @@ function _getTabLoader() {
     if (_activeTab === 'cvs')    return () => Promise.all([loadCVs(), loadStorageStats()]);
     if (_activeTab === 'tokens') return loadTokens;
     if (_activeTab === 'logs')   return loadLogs;
-    if (_activeTab === 'vagas')  return loadApplications;
+    if (_activeTab === 'vagas')  return _vagasSubTab === 'analise' ? loadVagasAnalysis : loadApplications;
     return loadCVs;
 }
 
@@ -2944,8 +3292,11 @@ setInterval(_updateRefreshTs, 5000);
 
 // ─── GESTÃO DE VAGAS ──────────────────────────────────────
 let _applications = [];
-let _vagasFilter  = 'all';
-let _openAppId    = null;
+let _vagasFilter           = 'all';
+let _vagasModalidadeFilter = 'all';
+let _vagasTipoFilter       = 'all';
+let _openAppId             = null;
+let _filteredApplications  = [];
 
 // Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
 function stageStatus(s) {
@@ -2996,7 +3347,23 @@ function renderApplicationsTable() {
     const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
 
     let filtered = _applications;
-    if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    if (_vagasFilter === 'arquivadas') {
+        filtered = filtered.filter(app => app.archived);
+    } else {
+        filtered = filtered.filter(app => !app.archived);
+        if (_vagasFilter !== 'all') filtered = filtered.filter(app => getAppStatus(app) === _vagasFilter);
+    }
+    if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(app => app.modalidade === _vagasModalidadeFilter);
+    if (_vagasTipoFilter       !== 'all') filtered = filtered.filter(app => app.tipo_contratacao === _vagasTipoFilter);
+
+    const dateFrom = document.getElementById('vagasDateFrom')?.value;
+    const dateTo   = document.getElementById('vagasDateTo')?.value;
+    if (dateFrom) filtered = filtered.filter(app => app.data_envio && app.data_envio.slice(0,10) >= dateFrom);
+    if (dateTo)   filtered = filtered.filter(app => app.data_envio && app.data_envio.slice(0,10) <= dateTo);
+    const dateActive = dateFrom || dateTo;
+    const dateBtn = document.getElementById('vagasDateClear');
+    if (dateBtn) dateBtn.style.display = dateActive ? '' : 'none';
+
     if (search) filtered = filtered.filter(app =>
         (app.empresa || '').toLowerCase().includes(search) ||
         (app.vaga || '').toLowerCase().includes(search) ||
@@ -3006,6 +3373,8 @@ function renderApplicationsTable() {
     if (countEl) countEl.textContent = _applications.length
         ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
         : '';
+
+    _filteredApplications = filtered;
 
     if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
@@ -3021,10 +3390,14 @@ function renderApplicationsTable() {
         const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
         const selected = _openAppId === app.id ? ' selected' : '';
         const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
+        const tagBadges = [app.modalidade, app.tipo_contratacao].filter(Boolean)
+            .map(t => `<span style="display:inline-block;font-size:0.62rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);margin-right:3px">${esc(t)}</span>`)
+            .join('');
         return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
             <td>
                 <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
                 ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                ${tagBadges ? `<div style="margin-top:3px">${tagBadges}</div>` : ''}
                 ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
             </td>
             <td class="col-gestor" style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
@@ -3036,7 +3409,19 @@ function renderApplicationsTable() {
 
 function setVagasFilter(filter, btn) {
     _vagasFilter = filter;
-    document.querySelectorAll('.vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#vagasFilters .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasModalidadeFilter(filter, btn) {
+    _vagasModalidadeFilter = filter;
+    document.querySelectorAll('#vagasFiltersModalidade .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasTipoFilter(filter, btn) {
+    _vagasTipoFilter = filter;
+    document.querySelectorAll('#vagasFiltersTipo .vagas-filter-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderApplicationsTable();
 }
@@ -3045,6 +3430,59 @@ function clearVagasSearch() {
     const el = document.getElementById('vagasSearch');
     if (el) el.value = '';
     renderApplicationsTable();
+}
+function clearVagasDate() {
+    const from = document.getElementById('vagasDateFrom');
+    const to   = document.getElementById('vagasDateTo');
+    if (from) from.value = '';
+    if (to)   to.value   = '';
+    renderApplicationsTable();
+}
+
+function exportCSV() {
+    if (!_filteredApplications.length) {
+        showToast('Nenhuma candidatura para exportar.', 'error');
+        return;
+    }
+    const headers = [
+        'Empresa', 'Vaga', 'Modalidade', 'Tipo', 'Gestor', 'Email Gestor',
+        'Data Envio', 'Resultado', 'Etapa Atual', 'Observações', 'Fonte', 'Arquivada'
+    ];
+    function csvCell(val) {
+        const s = String(val == null ? '' : val);
+        if (s.includes('"') || s.includes(',') || s.includes('\n')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+    }
+    const rows = _filteredApplications.map(app => [
+        app.empresa          || '',
+        app.vaga             || '',
+        app.modalidade       || '',
+        app.tipo_contratacao || '',
+        app.gestor_nome      || '',
+        app.gestor_email     || '',
+        app.data_envio ? app.data_envio.slice(0, 10) : '',
+        app.result           || 'em_processo',
+        getAppCurrentStageName(app),
+        app.observacoes      || '',
+        app.source           || '',
+        app.archived ? 'Sim' : 'Não',
+    ].map(csvCell).join(','));
+
+    const bom  = '﻿';
+    const csv  = bom + [headers.map(csvCell).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    a.href     = url;
+    a.download = `candidaturas-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Exportando ${_filteredApplications.length} candidatura(s).`);
 }
 
 function openDrawer(id) {
@@ -3058,7 +3496,8 @@ function openDrawer(id) {
         ? '<span class="vaga-source-badge email"><i class="fa-solid fa-envelope"></i> via email</span>'
         : '<span class="vaga-source-badge manual"><i class="fa-solid fa-pen"></i> manual</span>';
     const dt = app.data_envio ? fmtDate(app.data_envio) : '—';
-    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}`;
+    const archivedBadge = app.archived ? ' · <span class="vaga-source-badge" style="opacity:0.7"><i class="fa-solid fa-box-archive"></i> arquivada</span>' : '';
+    document.getElementById('drawerMeta').innerHTML = `${dt} · ${srcBadge}${archivedBadge}`;
 
     renderDrawerBody(app);
 
@@ -3088,6 +3527,8 @@ function renderDrawerBody(app) {
     const chips = [
         app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>` : '',
         app.link_vaga        ? `<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>` : '',
+        app.modalidade       ? `<span class="dinfo-chip"><i class="fa-solid fa-map-pin"></i> ${esc(app.modalidade)}</span>` : '',
+        app.tipo_contratacao ? `<span class="dinfo-chip"><i class="fa-solid fa-file-contract"></i> ${esc(app.tipo_contratacao)}</span>` : '',
     ].filter(Boolean);
 
     const hasRecruiter = recruiterRows.length > 0;
@@ -3128,7 +3569,9 @@ function renderDrawerBody(app) {
         <div class="drawer-actions">
             <button class="btn btn-sm" onclick="openEditVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar vaga</button>
             <button class="btn btn-sm" onclick="toggleStageManager('${app.id}')"><i class="fa-solid fa-gear"></i> Gerenciar etapas</button>
-            <button class="btn btn-danger btn-sm" style="margin-left:auto;padding:6px 10px" title="Deletar candidatura"
+            <button class="btn btn-sm" style="padding:6px 10px;opacity:0.7" title="${app.archived ? 'Desarquivar candidatura' : 'Arquivar candidatura'}"
+                onclick="toggleArchive('${app.id}', ${app.archived})"><i class="fa-solid fa-${app.archived ? 'box-open' : 'box-archive'}"></i></button>
+            <button class="btn btn-danger btn-sm" style="padding:6px 10px" title="Deletar candidatura"
                 onclick="deleteApplication('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
 
@@ -3164,6 +3607,19 @@ function renderTimeline(stages) {
             <div class="stage-label ${labelClass}">${esc(normalizeStageName(s.name))}</div>
         </div>`;
     }).join('');
+}
+
+async function toggleArchive(id, currentlyArchived) {
+    try {
+        const updated = await api('PUT', `/api/admin/applications?id=${id}`, { archived: !currentlyArchived });
+        const idx = _applications.findIndex(a => a.id === id);
+        if (idx !== -1) _applications[idx] = updated;
+        renderDrawerBody(updated);
+        openDrawer(id);
+        showToast(currentlyArchived ? 'Candidatura desarquivada.' : 'Candidatura arquivada.');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 async function deleteApplication(id) {
@@ -3624,6 +4080,26 @@ function vagaFormHTML(app) {
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Modalidade</label>
+                    <select id="vfModalidade" class="mock-input">
+                        <option value="">—</option>
+                        <option value="Presencial" ${app?.modalidade === 'Presencial' ? 'selected' : ''}>Presencial</option>
+                        <option value="Híbrida" ${app?.modalidade === 'Híbrida' ? 'selected' : ''}>Híbrida</option>
+                        <option value="Remota" ${app?.modalidade === 'Remota' ? 'selected' : ''}>Remota</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Tipo de contratação</label>
+                    <select id="vfTipoContratacao" class="mock-input">
+                        <option value="">—</option>
+                        <option value="CLT" ${app?.tipo_contratacao === 'CLT' ? 'selected' : ''}>CLT</option>
+                        <option value="PJ" ${app?.tipo_contratacao === 'PJ' ? 'selected' : ''}>PJ</option>
+                        <option value="Freelancer" ${app?.tipo_contratacao === 'Freelancer' ? 'selected' : ''}>Freelancer</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="form-group" style="margin:0">
                     <label style="font-size:0.75rem">Data de envio</label>
                     <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
                 </div>
@@ -3666,6 +4142,8 @@ async function saveNovaVaga() {
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
+            modalidade:       document.getElementById('vfModalidade').value || null,
+            tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
         });
         closeNovaVaga();
         await loadApplications();
@@ -3711,6 +4189,8 @@ async function saveEditVaga(appId) {
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
+            modalidade:       document.getElementById('vfModalidade').value || null,
+            tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
         });
         const idx = _applications.findIndex(a => a.id === appId);
         if (idx !== -1) _applications[idx] = updated;
@@ -3751,6 +4231,7 @@ function switchTab(name) {
     if (name === 'tokens') { loadCVs(); loadTokens(); }
     if (name === 'logs') loadLogs();
     if (name === 'vagas') loadApplications();
+    if (name === 'metricas') loadAnalytics();
     _scheduleRefresh();
 }
 
@@ -4353,6 +4834,8 @@ async function sendCV() {
                     linkedin_empresa: linkedinEmpresa  || null,
                     link_vaga:        linkVaga         || null,
                     observacoes:      observacoes      || null,
+                    modalidade:       document.getElementById('sendModalidade').value || null,
+                    tipo_contratacao: document.getElementById('sendTipoContratacao').value || null,
                 });
                 msgEl.className = 'forgot-msg success';
                 msgEl.textContent = r.message || 'Enviado!';
@@ -4397,8 +4880,13 @@ async function sendCV() {
                     ip_address:       'admin-send-whatsapp-link',
                     user_agent:       `Send to ${name} via whatsapp-link`,
                     token_id:         tk.id,
-                    empresa: empresa || null,
-                    vaga:    vaga    || null,
+                    empresa:          empresa         || null,
+                    vaga:             vaga            || null,
+                    linkedin_empresa: linkedinEmpresa || null,
+                    link_vaga:        linkVaga        || null,
+                    notas:            observacoes     || null,
+                    modalidade:       document.getElementById('sendModalidade').value || null,
+                    tipo_contratacao: document.getElementById('sendTipoContratacao').value || null,
                 }).catch(() => {});
 
                 const validade = fmtDate(tk.expires_at, true).replace(',', ' às');
@@ -4417,10 +4905,17 @@ async function sendCV() {
             } else {
                 // ANEXO MANUAL (exceção): baixa PDF + envio fica registrado em logs
                 finalMsg = message.replace(/\[link\]\s*\n*/g, '');
+                const _waModalidade       = document.getElementById('sendModalidade').value;
+                const _waTipoContratacao  = document.getElementById('sendTipoContratacao').value;
                 const dlUrl = `/api/admin/cv-storage-url?id=${_sendCv.id}`
                     + `&recipient=${encodeURIComponent(name)}&channel=whatsapp`
-                    + (empresa ? `&empresa=${encodeURIComponent(empresa)}` : '')
-                    + (vaga    ? `&vaga=${encodeURIComponent(vaga)}`       : '');
+                    + (empresa              ? `&empresa=${encodeURIComponent(empresa)}`                           : '')
+                    + (vaga                 ? `&vaga=${encodeURIComponent(vaga)}`                                 : '')
+                    + (linkedinEmpresa      ? `&linkedin_empresa=${encodeURIComponent(linkedinEmpresa)}`           : '')
+                    + (linkVaga             ? `&link_vaga=${encodeURIComponent(linkVaga)}`                         : '')
+                    + (observacoes          ? `&observacoes=${encodeURIComponent(observacoes)}`                   : '')
+                    + (_waModalidade        ? `&modalidade=${encodeURIComponent(_waModalidade)}`                  : '')
+                    + (_waTipoContratacao   ? `&tipo_contratacao=${encodeURIComponent(_waTipoContratacao)}`       : '');
                 const dl = await api('GET', dlUrl);
                 const a = document.createElement('a');
                 a.href = dl.signedUrl;
@@ -4893,6 +5388,311 @@ function fmtDate(iso, withTime = false) {
     return new Date(iso).toLocaleString('pt-BR', opts);
 }
 
+// ─── ANALYTICS / MÉTRICAS ─────────────────────────────────
+let _analyticsPeriod = 7;
+let _analyticsChart = null;
+
+function setAnalyticsPeriod(days, btn) {
+    _analyticsPeriod = days;
+    document.querySelectorAll('.metrics-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadAnalytics();
+}
+
+async function loadAnalytics() {
+    const to   = new Date();
+    const from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
+    const fmt  = d => d.toISOString().slice(0, 10);
+    try {
+        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}`);
+        renderAnalytics(data);
+    } catch (e) {
+        ['kpi-pageviews','kpi-unique','kpi-engaged','kpi-cv-clicks','kpi-cv-downloads','kpi-recurring']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '—'; });
+    }
+}
+
+function renderAnalytics(data) {
+    const { kpis = {}, series = [], top_pages = [], top_referrers = [], devices = [], countries = [], funnel = {} } = data;
+
+    // KPIs
+    const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
+    setKpi('kpi-pageviews',    kpis.pageviews    ?? '—');
+    setKpi('kpi-unique',       kpis.unique_visitors ?? '—');
+    setKpi('kpi-engaged',      kpis.engaged_rate != null ? kpis.engaged_rate + '%' : '—');
+    setKpi('kpi-cv-clicks',    kpis.cv_download_clicks ?? '—');
+    setKpi('kpi-cv-downloads', kpis.cv_downloads ?? '—');
+    setKpi('kpi-recurring',    kpis.recurring_visitors ?? '—');
+    const erEl = document.getElementById('kpi-engaged-rate');
+    if (erEl) erEl.textContent = kpis.engaged_rate != null ? `${kpis.engaged_rate}% das visitas` : '—';
+    const cnvEl = document.getElementById('kpi-conversion');
+    if (cnvEl) cnvEl.textContent = kpis.conversion_rate != null ? `${kpis.conversion_rate}% conversão` : '—';
+
+    // Série temporal (Chart.js)
+    const labels  = series.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
+    const pvData  = series.map(s => s.pageviews ?? 0);
+    const uniqData = series.map(s => s.unique_visitors ?? 0);
+    const ctx = document.getElementById('analyticsChart');
+    if (ctx) {
+        if (_analyticsChart) _analyticsChart.destroy();
+        _analyticsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Visitas',
+                        data: pvData,
+                        backgroundColor: 'rgba(34,211,238,0.25)',
+                        borderColor: 'rgba(34,211,238,0.8)',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                        order: 2,
+                    },
+                    {
+                        label: 'Únicos',
+                        data: uniqData,
+                        type: 'line',
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'transparent',
+                        pointRadius: 3,
+                        pointBackgroundColor: '#7c3aed',
+                        tension: 0.3,
+                        order: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#a8a8c0', font: { size: 11 }, boxWidth: 12 } } },
+                scales: {
+                    x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    // Funil
+    const fKeys   = ['pageview','engaged','cv-click','cv-download'];
+    const fLabels = ['Visitas','Engajados','Clicou no CV','Baixou o CV'];
+    const fVals   = [funnel.pageview ?? 0, funnel.engaged ?? 0, funnel.cv_click ?? 0, funnel.cv_download ?? 0];
+    const fMax    = fVals[0] || 1;
+    fKeys.forEach((key, i) => {
+        const bar  = document.getElementById(`funnel-bar-${key}`);
+        const val  = document.getElementById(`funnel-val-${key}`);
+        const pct  = document.getElementById(`funnel-pct-${key}`);
+        if (!bar || !val || !pct) return;
+        const w    = Math.round((fVals[i] / fMax) * 100);
+        bar.style.width  = w + '%';
+        val.textContent  = fVals[i];
+        pct.textContent  = i === 0 ? '100%' : (fMax > 0 ? Math.round((fVals[i] / fMax) * 100) + '%' : '—');
+    });
+
+    // Top páginas
+    const pagesEl = document.getElementById('metricsTopPages');
+    if (pagesEl) {
+        if (!top_pages.length) { pagesEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
+        else {
+            const maxV = top_pages[0]?.views || 1;
+            pagesEl.innerHTML = top_pages.slice(0, 8).map(p => `
+                <div class="metrics-row">
+                    <span class="metrics-row-label" title="${esc(p.path)}">${esc(p.path || '/')}</span>
+                    <span class="metrics-row-value">${p.views}</span>
+                </div>
+                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(p.views/maxV*100)}%"></div></div>
+            `).join('');
+        }
+    }
+
+    // Top referrers
+    const refEl = document.getElementById('metricsReferrers');
+    if (refEl) {
+        if (!top_referrers.length) { refEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
+        else {
+            const maxV = top_referrers[0]?.views || 1;
+            refEl.innerHTML = top_referrers.slice(0, 8).map(r => `
+                <div class="metrics-row">
+                    <span class="metrics-row-label">${esc(r.host)}</span>
+                    <span class="metrics-row-value">${r.views}</span>
+                </div>
+                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(r.views/maxV*100)}%"></div></div>
+            `).join('');
+        }
+    }
+
+    // Dispositivos
+    const devEl = document.getElementById('metricsDevices');
+    if (devEl) {
+        if (!devices.length) { devEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
+        else {
+            const total = devices.reduce((s, d) => s + (d.views || 0), 0) || 1;
+            const icons = { mobile: 'fa-mobile-screen', tablet: 'fa-tablet-screen-button', desktop: 'fa-desktop' };
+            devEl.innerHTML = devices.map(d => {
+                const pct = Math.round(d.views / total * 100);
+                const icon = icons[d.device] || 'fa-display';
+                return `
+                    <div class="metrics-row">
+                        <span class="metrics-row-label"><i class="fa-solid ${icon}" style="width:14px;text-align:center;margin-right:6px;color:var(--text-dim)"></i>${esc(d.device)}</span>
+                        <span class="metrics-row-value">${pct}%</span>
+                    </div>
+                    <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${pct}%"></div></div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Países
+    const cntEl = document.getElementById('metricsCountries');
+    if (cntEl) {
+        if (!countries.length) { cntEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
+        else {
+            const maxV = countries[0]?.views || 1;
+            cntEl.innerHTML = countries.slice(0, 8).map(c => `
+                <div class="metrics-row">
+                    <span class="metrics-row-label">${esc(c.country)}</span>
+                    <span class="metrics-row-value">${c.views}</span>
+                </div>
+                <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round(c.views/maxV*100)}%"></div></div>
+            `).join('');
+        }
+    }
+}
+
+// ─── ANÁLISE DE VAGAS ─────────────────────────────────────
+let _vagasSubTab         = 'lista';
+let _vagasAnalysisPeriod = 'month';
+let _vagasBucket         = 'week';
+let _vagasAnalysisChart  = null;
+let _vagasAnalysisLoaded = false;
+
+function switchVagasSubTab(tab, btn) {
+    _vagasSubTab = tab;
+    document.querySelectorAll('.vagas-subtab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('vagasListView').style.display    = tab === 'lista'   ? '' : 'none';
+    document.getElementById('vagasAnalysisView').style.display = tab === 'analise' ? '' : 'none';
+    if (tab === 'analise' && !_vagasAnalysisLoaded) loadVagasAnalysis();
+}
+
+function setVagasAnalysisPeriod(period, btn) {
+    _vagasAnalysisPeriod = period;
+    if (btn) {
+        document.querySelectorAll('#vagasAnalysisPeriodBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    if (period !== 'custom') {
+        const from = document.getElementById('vagasAnalysisFrom');
+        const to   = document.getElementById('vagasAnalysisTo');
+        if (from) from.value = '';
+        if (to)   to.value   = '';
+    }
+    loadVagasAnalysis();
+}
+
+function setVagasBucket(bucket, btn) {
+    _vagasBucket = bucket;
+    document.querySelectorAll('#vagasBucketBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    loadVagasAnalysis();
+}
+
+function _vagasDateRange() {
+    const now = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    if (_vagasAnalysisPeriod === 'all') return { from: '', to: '' };
+    if (_vagasAnalysisPeriod === 'custom') {
+        return {
+            from: document.getElementById('vagasAnalysisFrom')?.value || '',
+            to:   document.getElementById('vagasAnalysisTo')?.value   || fmt(now),
+        };
+    }
+    const days = { today: 0, week: 6, month: 29, year: 364 }[_vagasAnalysisPeriod] ?? 29;
+    return { from: fmt(new Date(Date.now() - days * 86400000)), to: fmt(now) };
+}
+
+async function loadVagasAnalysis() {
+    const { from, to } = _vagasDateRange();
+    const params = new URLSearchParams({ scope: 'vagas', bucket: _vagasBucket });
+    if (from) params.set('from', from);
+    if (to)   params.set('to',   to);
+    try {
+        const data = await api('GET', `/api/admin/analytics?${params}`);
+        renderVagasAnalysis(data);
+        _vagasAnalysisLoaded = true;
+    } catch (e) {
+        ['vkpi-total','vkpi-em-processo','vkpi-aprovado','vkpi-recusado']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = '—'; });
+    }
+}
+
+function renderVagasAnalysis(data) {
+    const { total = 0, by_result = [], by_modalidade = [], by_tipo = [], series = [], by_stage = [] } = data;
+
+    const byResult = Object.fromEntries((by_result || []).map(r => [r.result, r.cnt]));
+    document.getElementById('vkpi-total').textContent       = total ?? '—';
+    document.getElementById('vkpi-em-processo').textContent = byResult.em_processo ?? 0;
+    document.getElementById('vkpi-aprovado').textContent    = byResult.aprovado    ?? 0;
+    document.getElementById('vkpi-recusado').textContent    = byResult.recusado    ?? 0;
+
+    const ctx = document.getElementById('vagasChart');
+    if (ctx) {
+        if (_vagasAnalysisChart) _vagasAnalysisChart.destroy();
+        const labels = (series || []).map(s => {
+            const d = new Date(s.bucket);
+            if (_vagasBucket === 'month') return d.toLocaleDateString('pt-BR', { month:'short', year:'2-digit' });
+            if (_vagasBucket === 'year')  return String(d.getFullYear());
+            return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+        });
+        _vagasAnalysisChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Candidaturas',
+                    data: (series || []).map(s => s.cnt ?? 0),
+                    backgroundColor: 'rgba(124,58,237,0.35)',
+                    borderColor: 'rgba(124,58,237,0.8)',
+                    borderWidth: 1.5,
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    function renderDist(elId, rows, labelKey, valueKey) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!rows || !rows.length) { el.innerHTML = '<div class="metrics-empty">Sem dados</div>'; return; }
+        const maxV = Math.max(...rows.map(r => Number(r[valueKey]) || 0)) || 1;
+        el.innerHTML = rows.map(r => `
+            <div class="metrics-row">
+                <span class="metrics-row-label">${esc(String(r[labelKey] ?? '—'))}</span>
+                <span class="metrics-row-value">${r[valueKey] ?? 0}</span>
+            </div>
+            <div class="metrics-bar-wrap"><div class="metrics-bar-fill" style="width:${Math.round((Number(r[valueKey])||0)/maxV*100)}%"></div></div>
+        `).join('');
+    }
+
+    const resultLabel = { em_processo: 'Em processo', aprovado: 'Aprovado', recusado: 'Recusado' };
+    renderDist('vagasDistResult',
+        (by_result || []).map(r => ({ ...r, _label: resultLabel[r.result] || r.result })),
+        '_label', 'cnt');
+    renderDist('vagasDistModalidade', by_modalidade, 'modalidade',       'cnt');
+    renderDist('vagasDistTipo',       by_tipo,       'tipo_contratacao', 'cnt');
+    renderDist('vagasDistStage',      by_stage,      'stage_name',       'cnt');
+}
+
 // ─── INIT ─────────────────────────────────────────────────
 const savedJwt = sessionStorage.getItem('admin_jwt');
 if (savedJwt) {
@@ -4920,6 +5720,10 @@ if (savedJwt) {
     <button class="mobile-nav-btn" data-tab="vagas" onclick="switchTab('vagas')">
         <i class="fa-solid fa-briefcase"></i>
         <span>Vagas</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="metricas" onclick="switchTab('metricas')">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Métricas</span>
     </button>
 </nav>
 </body>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacidade — ARTACHO.dev</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href="imagens/favicon-artacho.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0a0f; --text: #f0f0f5; --text-soft: #a8a8c0;
+            --cyan: #22d3ee; --border: #1e1e2e;
+            --font: "Plus Jakarta Sans", sans-serif;
+        }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100dvh; }
+        .wrap { max-width: 680px; margin: 0 auto; padding: 60px 24px 80px; }
+        .back { display: inline-flex; align-items: center; gap: 8px; color: var(--cyan);
+            text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 48px; }
+        .back:hover { opacity: 0.8; }
+        h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+        h1 span { color: var(--cyan); }
+        .subtitle { color: var(--text-soft); font-size: 0.9rem; margin-bottom: 40px; }
+        h2 { font-size: 1rem; font-weight: 700; margin: 32px 0 10px; }
+        p, li { color: var(--text-soft); font-size: 0.9rem; line-height: 1.7; }
+        ul { padding-left: 20px; margin-top: 6px; }
+        li + li { margin-top: 4px; }
+        .highlight { color: var(--text); }
+        hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <a href="/" class="back">← Voltar ao portfólio</a>
+
+        <h1>ARTACHO<span>.</span>dev</h1>
+        <p class="subtitle">Política de privacidade · Última atualização: maio de 2026</p>
+
+        <h2>O que é coletado</h2>
+        <p>Este site usa medição anônima de acessos para entender quais páginas são visitadas e como os visitantes chegam até ele. <span class="highlight">Nenhum dado pessoal é armazenado.</span></p>
+
+        <h2>O que não é coletado</h2>
+        <ul>
+            <li>Nenhum cookie é criado</li>
+            <li>Seu endereço IP não é gravado — ele é descartado após ser convertido em um código anônimo</li>
+            <li>Nenhum perfil de usuário é construído ao longo do tempo</li>
+            <li>Nenhum dado é compartilhado com terceiros</li>
+        </ul>
+
+        <h2>Como funciona a anonimização</h2>
+        <p>Cada visita gera um identificador temporário calculado a partir do seu IP, do seu navegador e de uma chave secreta que muda diariamente. O resultado é um código criptográfico que não permite reconstruir os dados originais. No dia seguinte, o mesmo navegador produz um código diferente.</p>
+
+        <h2>Finalidade</h2>
+        <p>Os dados agregados — como "quantas visitas esta semana" ou "de onde vieram os acessos" — são usados exclusivamente para avaliar o desempenho deste portfólio profissional.</p>
+
+        <hr>
+
+        <p>Dúvidas? <a href="mailto:bruno@artacho.dev" style="color:var(--cyan)">bruno@artacho.dev</a></p>
+    </div>
+</body>
+</html>

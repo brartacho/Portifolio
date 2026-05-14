@@ -77,6 +77,7 @@ export default async function handler(req, res) {
     const {
         cv_version_id, recipient_name, recipient_email, message,
         empresa, vaga, linkedin_empresa, link_vaga, observacoes,
+        modalidade, tipo_contratacao,
     } = req.body || {};
 
     const name = clean(recipient_name);
@@ -151,6 +152,8 @@ export default async function handler(req, res) {
         gestor_nome:      name,
         gestor_email:     email,
         data_envio:       new Date().toISOString(),
+        modalidade:       modalidade       ? clean(modalidade).slice(0, 20)        : null,
+        tipo_contratacao: tipo_contratacao ? clean(tipo_contratacao).slice(0, 20)  : null,
         source:           'cv_send',
         stages:           DEFAULT_STAGES,
     }).then(() => {}, (e) => console.error('[job_applications] insert failed:', e.message));

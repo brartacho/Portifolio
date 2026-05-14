@@ -1,6 +1,7 @@
 import { requireAdmin, cors } from '../_lib/auth.js';
 import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { normalizeFileName } from '../_lib/filename.js';
+import { DEFAULT_STAGES } from '../_lib/stages.js';
 
 export default async function handler(req, res) {
     cors(res);
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
 
     // GET → gera URL assinada de download
     if (req.method === 'GET') {
-        const { id, recipient, channel, empresa, vaga } = req.query;
+        const { id, recipient, channel, empresa, vaga, linkedin_empresa, link_vaga, observacoes, modalidade, tipo_contratacao } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório' });
 
         const { data: cv, error: cvErr } = await supabase
@@ -50,14 +51,32 @@ export default async function handler(req, res) {
             const cleanChannel = String(channel).replace(/[^a-z-]/gi, '').toLowerCase().slice(0, 50);
             if (cleanRecipient && cleanChannel) {
                 const s = v => v ? String(v).replace(/[\r\n\t]/g, '').trim() : null;
+                const cleanEmpresa  = s(empresa)?.slice(0, 200)          || null;
+                const cleanVaga     = s(vaga)?.slice(0, 200)             || null;
+                const cleanLinkedin = s(linkedin_empresa)?.slice(0, 300) || null;
+                const cleanLinkVaga = s(link_vaga)?.slice(0, 500)        || null;
+                const cleanObs      = s(observacoes)?.slice(0, 500)      || null;
                 await supabase.from('download_logs').insert({
                     cv_version_id: id,
                     cv_name_snapshot: cv.name,
                     cv_id_snapshot: id,
                     ip_address: `admin-send-${cleanChannel}`,
                     user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
-                    empresa: s(empresa)?.slice(0, 200) || null,
-                    vaga:    s(vaga)?.slice(0, 200)    || null,
+                    empresa: cleanEmpresa,
+                    vaga:    cleanVaga,
+                }).then(() => {}, () => {});
+                supabase.from('job_applications').insert({
+                    empresa:          cleanEmpresa  || 'N/A',
+                    vaga:             cleanVaga,
+                    linkedin_empresa: cleanLinkedin,
+                    link_vaga:        cleanLinkVaga,
+                    observacoes:      cleanObs,
+                    gestor_nome:      cleanRecipient || null,
+                    data_envio:       new Date().toISOString(),
+                    modalidade:       s(modalidade)?.slice(0, 20)       || null,
+                    tipo_contratacao: s(tipo_contratacao)?.slice(0, 20) || null,
+                    source:           'cv_send',
+                    stages:           DEFAULT_STAGES,
                 }).then(() => {}, () => {});
             }
         }

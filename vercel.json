@@ -1,8 +1,17 @@
 {
+  "crons": [
+    {
+      "path": "/api/track",
+      "schedule": "0 8 */4 * *"
+    }
+  ],
   "rewrites": [
+    { "source": "/api/admin/analytics", "destination": "/api/admin/applications?__h=analytics" },
+    { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },
-    { "source": "/admin/reset", "destination": "/admin/reset.html" }
+    { "source": "/admin/reset", "destination": "/admin/reset.html" },
+    { "source": "/privacidade", "destination": "/privacidade.html" }
   ],
   "headers": [
     {
