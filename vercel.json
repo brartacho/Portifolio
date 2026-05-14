@@ -7,7 +7,8 @@
   ],
   "rewrites": [
     { "source": "/api/admin/analytics",       "destination": "/api/admin/applications?__h=analytics" },
-    { "source": "/api/admin/login-attempts",  "destination": "/api/admin/applications?__h=login-attempts" },
+    { "source": "/api/admin/login-attempts",   "destination": "/api/admin/applications?__h=login-attempts" },
+    { "source": "/api/admin/mark-my-visits",   "destination": "/api/admin/applications?__h=mark-my-visits" },
     { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },
@@ -35,6 +36,21 @@
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
         { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    },
+    {
+      "source": "/admin/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/admin/service-worker.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "Service-Worker-Allowed", "value": "/admin/" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
   ]
