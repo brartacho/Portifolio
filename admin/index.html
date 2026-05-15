@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin — ARTACHO.dev</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/svg+xml" href="../imagens/favicon-artacho.svg">
@@ -52,6 +52,10 @@
             color: var(--text);
             font-family: var(--font-display);
             min-height: 100dvh;
+            /* safe-area: preenche toda a área incluindo notch/câmera (iOS/Android) */
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* ─── LOGIN ──────────────────────────────────── */
@@ -315,7 +319,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 200;
+            z-index: 500; /* acima de modal-overlay (400) e vagas-drawer (200) */
             background: var(--bg-elevated);
             border-top: 1px solid var(--border-soft);
             padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -4377,6 +4381,15 @@ function toggleTokenForm() {
 
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name) {
+    // Fecha modais abertos: permite que bottom-nav funcione mesmo com modal visível
+    ['sendCvModal','editCvModal','forgotModal','shareModal','confirmModal','promptModal','kpiDetailModal']
+        .forEach(id => { const m = document.getElementById(id); if (m && !m.hidden) m.hidden = true; });
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    const vagasOverlay = document.getElementById('vagasOverlay');
+    if (vagasOverlay) vagasOverlay.classList.remove('open');
+    const logDrawerOverlay = document.getElementById('logDrawerOverlay');
+    if (logDrawerOverlay) logDrawerOverlay.classList.remove('open');
+
     _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
