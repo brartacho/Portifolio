@@ -1189,7 +1189,25 @@
 
         /* ─── RESPONSIVE ─────────────────────────────── */
         .vaga-meta-mobile { display: none; }
-        .col-gestor, .col-date { }
+        .col-gestor, .col-date, .col-cadastrado { }
+        .sort-icon { font-size:0.7rem; color:var(--cyan); margin-left:2px; }
+        .vagas-table th { cursor:default; }
+        .vagas-table th[onclick] { cursor:pointer; user-select:none; }
+        .vagas-table th[onclick]:hover { color:var(--text); }
+        .vagas-sort-bar { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+        .vagas-sort-chip {
+            font-size:0.7rem; padding:2px 10px; border-radius:20px; cursor:pointer;
+            background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+            color:var(--text-dim); white-space:nowrap;
+        }
+        .vagas-sort-chip.active { background:rgba(34,211,238,0.12); border-color:var(--cyan); color:var(--cyan); }
+        .vagas-row-check { width:14px; height:14px; margin-right:6px; cursor:pointer; accent-color:var(--cyan); flex-shrink:0; }
+        #vagas-bulk-bar {
+            display:none; position:fixed; bottom:0; left:0; right:0; z-index:600;
+            background:var(--bg-elevated); border-top:1px solid rgba(255,255,255,0.1);
+            padding:10px 16px; padding-bottom:max(10px, env(safe-area-inset-bottom, 0px));
+            gap:8px; align-items:center; flex-wrap:wrap;
+        }
         .cv-btn-lbl { display: none; }
 
         @media (max-width: 600px) {
@@ -1274,7 +1292,8 @@
             .vagas-table tbody tr td { border: none !important; padding: 0; background: transparent !important; }
             .vagas-table tr td:nth-child(1) { grid-column: 1; }
             .vagas-table tr td:nth-child(4) { grid-column: 2; padding-left: 10px; }
-            .col-gestor, .col-date { display: none; }
+            .col-gestor, .col-date, .col-cadastrado { display: none; }
+            #vagas-bulk-bar { bottom: 60px; }
             .vaga-meta-mobile { display: block; font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
             .stage-badge { white-space: normal; text-align: center; line-height: 1.3; max-width: 88px; font-size: 0.68rem; }
 
@@ -1746,7 +1765,8 @@
             .vagas-table tbody { display: table-row-group; }
             .vagas-table tbody tr { display: table-row; border: none; border-radius: 0; }
             .vagas-table tbody tr td { border: none; border-bottom: 1px solid rgba(255,255,255,0.03); padding: 10px 10px; }
-            .col-gestor, .col-date { display: table-cell; }
+            .col-gestor, .col-date, .col-cadastrado { display: table-cell; }
+            #vagas-bulk-bar { bottom: 0; }
             .vaga-meta-mobile { display: none; }
         }
 
@@ -2569,6 +2589,7 @@
                         <span id="vagasFiltersBadge" class="vagas-filters-badge" style="display:none"></span>
                         <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;transition:transform 0.2s"></i>
                     </button>
+                    <button class="btn btn-sm" id="vagasSelectBtn" onclick="toggleVagasSelectMode()" title="Selecionar candidaturas para ações em lote"><i class="fa-solid fa-check-square"></i> Selecionar</button>
                     <button class="btn btn-sm" onclick="exportCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
                     <button class="btn btn-sm btn-cyan" onclick="openNovaVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
                 </div>
@@ -2588,19 +2609,28 @@
                     <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
+            <div class="vagas-sort-bar">
+                <span style="font-size:0.72rem;color:var(--text-dim)">Ordenar:</span>
+                <button class="vagas-sort-chip active" id="sort-chip-data_envio" onclick="sortVagasChip('data_envio',this)">Enviado em</button>
+                <button class="vagas-sort-chip" id="sort-chip-created_at" onclick="sortVagasChip('created_at',this)">Cadastrado</button>
+                <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)">Última mod.</button>
+                <button class="vagas-sort-chip" id="sort-chip-empresa" onclick="sortVagasChip('empresa',this)">Empresa A–Z</button>
+                <button class="vagas-sort-chip" id="sort-chip-stage" onclick="sortVagasChip('stage',this)">Etapa</button>
+            </div>
 
             <div id="vagasTableWrap" style="overflow-x:auto">
                 <table class="vagas-table">
                     <thead>
                         <tr>
-                            <th>Empresa / Vaga</th>
-                            <th>Gestor</th>
-                            <th>Enviado em</th>
-                            <th>Etapa atual</th>
+                            <th onclick="sortVagas('empresa')">Empresa / Vaga <span id="sort-empresa" class="sort-icon"></span></th>
+                            <th onclick="sortVagas('gestor')">Gestor <span id="sort-gestor" class="sort-icon"></span></th>
+                            <th onclick="sortVagas('data_envio')">Enviado em <span id="sort-data_envio" class="sort-icon">↓</span></th>
+                            <th class="col-cadastrado" onclick="sortVagas('created_at')">Cadastrado <span id="sort-created_at" class="sort-icon"></span></th>
+                            <th onclick="sortVagas('stage')">Etapa atual <span id="sort-stage" class="sort-icon"></span></th>
                         </tr>
                     </thead>
                     <tbody id="vagasTableBody">
-                        <tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -3533,6 +3563,9 @@ let _vagasTipoFilter       = 'all';
 let _vagasFiltersOpen      = true;
 let _openAppId             = null;
 let _filteredApplications  = [];
+let _vagasSort             = { col: 'data_envio', dir: 'desc' };
+let _vagasSelecting        = false;
+let _vagasSelected         = new Set();
 
 // Retorna status canônico de uma etapa (lê s.status; fallback p/ dados antigos)
 function stageStatus(s) {
@@ -3606,6 +3639,29 @@ function renderApplicationsTable() {
         (app.gestor_nome || '').toLowerCase().includes(search)
     );
 
+    // Sort
+    const sortDir = _vagasSort.dir === 'asc' ? 1 : -1;
+    filtered = [...filtered].sort((a, b) => {
+        switch (_vagasSort.col) {
+            case 'empresa':   return sortDir * (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR');
+            case 'gestor':    return sortDir * (a.gestor_nome || '').localeCompare(b.gestor_nome || '', 'pt-BR');
+            case 'data_envio': {
+                const da = a.data_envio ? a.data_envio.slice(0,10) : '';
+                const db = b.data_envio ? b.data_envio.slice(0,10) : '';
+                return sortDir * da.localeCompare(db);
+            }
+            case 'created_at': return sortDir * (a.created_at || '').localeCompare(b.created_at || '');
+            case 'updated_at': return sortDir * (a.updated_at || '').localeCompare(b.updated_at || '');
+            case 'stage':     return sortDir * getAppCurrentStageName(a).localeCompare(getAppCurrentStageName(b), 'pt-BR');
+            default:          return 0;
+        }
+    });
+
+    // Atualizar ícones de sort nos headers
+    document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
+    const activeIcon = document.getElementById(`sort-${_vagasSort.col}`);
+    if (activeIcon) activeIcon.textContent = _vagasSort.dir === 'asc' ? ' ↑' : ' ↓';
+
     if (countEl) countEl.textContent = _applications.length
         ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
         : '';
@@ -3613,31 +3669,46 @@ function renderApplicationsTable() {
     _filteredApplications = filtered;
 
     if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
         return;
     }
 
     tbody.innerHTML = filtered.map(app => {
-        const status  = getAppStatus(app);
-        const stage   = esc(getAppCurrentStageName(app));
-        const empresa = esc(app.empresa || '—');
-        const vaga    = esc(app.vaga || '');
-        const gestor  = esc(app.gestor_nome || '—');
-        const dt      = app.data_envio ? fmtDate(app.data_envio) : '—';
-        const selected = _openAppId === app.id ? ' selected' : '';
-        const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
-        const tagBadges = [app.modalidade, app.tipo_contratacao].filter(Boolean)
+        const status      = getAppStatus(app);
+        const stage       = esc(getAppCurrentStageName(app));
+        const empresa     = esc(app.empresa || '—');
+        const vaga        = esc(app.vaga || '');
+        const gestor      = esc(app.gestor_nome || '—');
+        const dt          = app.data_envio ? fmtDate(app.data_envio) : '—';
+        const dtCadastro  = app.created_at ? fmtDate(app.created_at) : '—';
+        const isSelected  = _vagasSelected.has(app.id);
+        const rowSelected = _openAppId === app.id ? ' selected' : '';
+        const rowClass    = `${rowSelected}${isSelected ? ' selected' : ''}`;
+        const metaMobile  = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
+        const tagBadges   = [app.modalidade, app.tipo_contratacao].filter(Boolean)
             .map(t => `<span style="display:inline-block;font-size:0.62rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);margin-right:3px">${esc(t)}</span>`)
             .join('');
-        return `<tr class="${selected}" onclick="openDrawer('${app.id}')">
+        const checkboxHtml = _vagasSelecting
+            ? `<input type="checkbox" class="vagas-row-check" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleVagasSelect('${app.id}')">`
+            : '';
+        const rowAction = _vagasSelecting
+            ? `onclick="toggleVagasSelect('${app.id}')"`
+            : `onclick="openDrawer('${app.id}')"`;
+        return `<tr class="${rowClass}" ${rowAction}>
             <td>
-                <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
-                ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
-                ${tagBadges ? `<div style="margin-top:3px">${tagBadges}</div>` : ''}
-                ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
+                <div style="display:flex;align-items:flex-start;gap:2px">
+                    ${checkboxHtml}
+                    <div>
+                        <div style="font-size:0.82rem;font-weight:500">${empresa}</div>
+                        ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                        ${tagBadges ? `<div style="margin-top:3px">${tagBadges}</div>` : ''}
+                        ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
+                    </div>
+                </div>
             </td>
             <td class="col-gestor" style="font-size:0.75rem;color:var(--text-soft)">${gestor}</td>
             <td class="col-date" style="font-size:0.72rem;color:var(--text-dim)">${dt}</td>
+            <td class="col-cadastrado" style="font-size:0.72rem;color:var(--text-dim)">${dtCadastro}</td>
             <td><span class="stage-badge status-${status}">${stage}</span></td>
         </tr>`;
     }).join('');
@@ -3677,6 +3748,99 @@ function _updateVagasFilterBadge() {
     if (_vagasTipoFilter       !== 'all') n++;
     const badge = document.getElementById('vagasFiltersBadge');
     if (badge) { badge.textContent = n; badge.style.display = n ? 'inline-flex' : 'none'; }
+}
+
+function sortVagas(col) {
+    if (_vagasSort.col === col) {
+        _vagasSort.dir = _vagasSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+        _vagasSort.col = col;
+        _vagasSort.dir = col === 'empresa' ? 'asc' : 'desc';
+    }
+    // Sincronizar chips
+    document.querySelectorAll('.vagas-sort-chip').forEach(c => c.classList.remove('active'));
+    const chip = document.getElementById(`sort-chip-${col}`);
+    if (chip) chip.classList.add('active');
+    renderApplicationsTable();
+}
+function sortVagasChip(col, btn) {
+    sortVagas(col);
+}
+
+function toggleVagasSelectMode() {
+    _vagasSelecting = !_vagasSelecting;
+    _vagasSelected.clear();
+    const btn = document.getElementById('vagasSelectBtn');
+    if (btn) btn.classList.toggle('active', _vagasSelecting);
+    renderApplicationsTable();
+    _renderBulkBar();
+}
+
+function toggleVagasSelect(id) {
+    if (_vagasSelected.has(id)) {
+        _vagasSelected.delete(id);
+    } else {
+        _vagasSelected.add(id);
+    }
+    renderApplicationsTable();
+    _renderBulkBar();
+}
+
+function _renderBulkBar() {
+    let bar = document.getElementById('vagas-bulk-bar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'vagas-bulk-bar';
+        document.body.appendChild(bar);
+    }
+    if (!_vagasSelecting || _vagasSelected.size === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+    const n = _vagasSelected.size;
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+        <span style="font-size:0.8rem;color:var(--text-soft);margin-right:4px">${n} selecionada${n > 1 ? 's' : ''}</span>
+        <button class="btn btn-sm" onclick="bulkArchive(true)"><i class="fa-solid fa-box-archive"></i> Arquivar</button>
+        <button class="btn btn-sm" onclick="bulkArchive(false)"><i class="fa-solid fa-box-open"></i> Desarquivar</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkDelete()"><i class="fa-solid fa-trash"></i> Excluir</button>
+        <button class="btn btn-sm" onclick="toggleVagasSelectMode()" style="margin-left:auto">Cancelar</button>
+    `;
+}
+
+async function bulkArchive(archive) {
+    const ids = [..._vagasSelected];
+    let count = 0;
+    for (const id of ids) {
+        const app = _applications.find(a => a.id === id);
+        if (app && app.archived !== archive) {
+            try {
+                const updated = await api('PUT', `/api/admin/applications?id=${id}`, { archived: archive });
+                const idx = _applications.findIndex(a => a.id === id);
+                if (idx !== -1) _applications[idx] = updated;
+                count++;
+            } catch (_) {}
+        }
+    }
+    toggleVagasSelectMode();
+    renderApplicationsTable();
+    showToast(`${count} candidatura${count !== 1 ? 's' : ''} ${archive ? 'arquivada' : 'desarquivada'}${count !== 1 ? 's' : ''}.`);
+}
+
+async function bulkDelete() {
+    const n = _vagasSelected.size;
+    if (!await showConfirm(`Deletar ${n} candidatura${n > 1 ? 's' : ''}?`, 'Esta ação não pode ser desfeita.', { okText: 'Deletar' })) return;
+    const ids = [..._vagasSelected];
+    for (const id of ids) {
+        try {
+            await api('DELETE', `/api/admin/applications?id=${id}`);
+            _applications = _applications.filter(a => a.id !== id);
+        } catch (_) {}
+    }
+    closeDrawer();
+    toggleVagasSelectMode();
+    renderApplicationsTable();
+    showToast(`${ids.length} candidatura${ids.length !== 1 ? 's' : ''} removida${ids.length !== 1 ? 's' : ''}.`);
 }
 
 function clearVagasSearch() {
