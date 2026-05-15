@@ -2610,12 +2610,7 @@
                 </div>
             </div>
             <div class="vagas-sort-bar">
-                <span style="font-size:0.72rem;color:var(--text-dim)">Ordenar:</span>
-                <button class="vagas-sort-chip active" id="sort-chip-data_envio" onclick="sortVagasChip('data_envio',this)">Enviado em</button>
-                <button class="vagas-sort-chip" id="sort-chip-created_at" onclick="sortVagasChip('created_at',this)">Cadastrado</button>
-                <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)">Última mod.</button>
-                <button class="vagas-sort-chip" id="sort-chip-empresa" onclick="sortVagasChip('empresa',this)">Empresa A–Z</button>
-                <button class="vagas-sort-chip" id="sort-chip-stage" onclick="sortVagasChip('stage',this)">Etapa</button>
+                <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)"><i class="fa-solid fa-clock" style="font-size:0.65rem"></i> Última mod.</button>
             </div>
 
             <div id="vagasTableWrap" style="overflow-x:auto">
@@ -3940,6 +3935,10 @@ function renderDrawerBody(app) {
     if (app.gestor_email) {
         recruiterRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
     }
+    if (app.gestor_phone) {
+        const phone = app.gestor_phone.replace(/\D/g, '');
+        recruiterRows.push(`<div class="dinfo-row"><i class="fa-brands fa-whatsapp dinfo-icon" style="color:#25d366"></i><a href="https://wa.me/${esc(phone)}" target="_blank" rel="noopener" class="dinfo-link">${esc(app.gestor_phone)}</a></div>`);
+    }
 
     const chips = [
         app.linkedin_empresa ? `<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>` : '',
@@ -3951,6 +3950,20 @@ function renderDrawerBody(app) {
     const hasRecruiter = recruiterRows.length > 0;
     const hasChips     = chips.length > 0;
     const hasObs       = !!app.observacoes;
+    const hasCv        = !!app.cv_versions;
+
+    const cvSection = hasCv ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Currículo enviado</div>
+            <div class="dinfo-row" style="display:flex;align-items:center;gap:8px">
+                <i class="fa-solid fa-file-pdf dinfo-icon" style="color:#f87171"></i>
+                <span>${esc(app.cv_versions.name)}</span>
+                <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem"
+                    onclick="previewCV('${app.cv_versions.id}','${esc(app.cv_versions.name)}')" title="Pré-visualizar">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+        </div>` : '';
 
     const recruiterSection = hasRecruiter || hasChips ? `
         <div class="dinfo-section">
@@ -3967,6 +3980,7 @@ function renderDrawerBody(app) {
 
     body.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:10px">
+            ${cvSection}
             ${recruiterSection}
             ${obsSection}
         </div>
@@ -4483,7 +4497,7 @@ function vagaFormHTML(app) {
             </div>
             <div class="form-group" style="margin:0">
                 <label style="font-size:0.75rem">Observações</label>
-                <input id="vfObs" class="mock-input" placeholder="headhunter, urgência…" ${v('observacoes',500)} autocomplete="off" data-form-type="other">
+                <textarea id="vfObs" class="mock-input" placeholder="headhunter, urgência…" maxlength="500" rows="3" autocomplete="off" data-form-type="other" style="resize:vertical;font-family:inherit;font-size:inherit">${esc(app?.observacoes || '')}</textarea>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div class="form-group" style="margin:0">
@@ -4494,6 +4508,10 @@ function vagaFormHTML(app) {
                     <label style="font-size:0.75rem">Gestor (email)</label>
                     <input id="vfGestorEmail" class="mock-input" placeholder="m.silva@empresa.com" ${v('gestor_email',120)} autocomplete="off" data-form-type="other">
                 </div>
+            </div>
+            <div class="form-group" style="margin:0">
+                <label style="font-size:0.75rem">WhatsApp do recrutador</label>
+                <input id="vfGestorPhone" class="mock-input" placeholder="+55 44 99999-0000" value="${esc(app?.gestor_phone || '')}" maxlength="30" autocomplete="off" data-form-type="other">
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div class="form-group" style="margin:0">
@@ -4520,17 +4538,36 @@ function vagaFormHTML(app) {
                     <label style="font-size:0.75rem">Data de envio</label>
                     <input id="vfDataEnvio" type="date" class="mock-input" value="${app?.data_envio ? app.data_envio.slice(0,10) : ''}" autocomplete="off">
                 </div>
-                <div></div>
+                <div class="form-group" style="margin:0">
+                    <label style="font-size:0.75rem">Currículo enviado</label>
+                    <select id="vfCvVersion" class="mock-input">
+                        <option value="">— Nenhum —</option>
+                    </select>
+                </div>
             </div>
-            <div style="display:flex;gap:8px">
-                <button class="btn btn-sm" style="flex:1" onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
-                <button class="btn btn-cyan btn-sm" style="flex:1" onclick="${app ? `saveEditVaga('${app.id}')` : 'saveNovaVaga()'}">
+            <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;padding-top:4px">
+                <button class="btn btn-sm" style="opacity:0.6;background:none;border:none;padding:6px 10px"
+                    onclick="${app ? 'closeEditVaga()' : 'closeNovaVaga()'}">Cancelar</button>
+                <button class="btn btn-cyan btn-sm" onclick="${app ? `saveEditVaga('${app.id}')` : 'saveNovaVaga()'}">
                     <i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar candidatura'}
                 </button>
             </div>
             <p id="vfMsg" hidden style="font-size:0.78rem"></p>
         </div>
     `;
+}
+
+function _populateCvSelect(app) {
+    api('GET', '/api/admin/cv-versions?limit=100').then(cvs => {
+        const sel = document.getElementById('vfCvVersion');
+        if (!sel) return;
+        while (sel.options.length > 1) sel.remove(1);
+        cvs.forEach(cv => {
+            const opt = new Option(`${cv.name}${cv.active ? '' : ' (inativo)'}`, cv.id);
+            opt.selected = cv.id === (app?.cv_version_id || null);
+            sel.add(opt);
+        });
+    }).catch(() => {});
 }
 
 function openNovaVaga() {
@@ -4541,6 +4578,7 @@ function openNovaVaga() {
     wrap.innerHTML = vagaFormHTML(null);
     document.getElementById('vagasTableWrap').before(wrap);
     document.getElementById('vfEmpresa').focus();
+    _populateCvSelect(null);
 }
 function closeNovaVaga() {
     document.getElementById('novaVagaForm')?.remove();
@@ -4558,9 +4596,11 @@ async function saveNovaVaga() {
             observacoes:      document.getElementById('vfObs').value.trim() || null,
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
+            gestor_phone:     document.getElementById('vfGestorPhone').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
             modalidade:       document.getElementById('vfModalidade').value || null,
             tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
+            cv_version_id:    document.getElementById('vfCvVersion').value || null,
         });
         closeNovaVaga();
         await loadApplications();
@@ -4588,6 +4628,7 @@ function openEditVaga(appId) {
     section.innerHTML = vagaFormHTML(app);
     section.hidden = false;
     section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    _populateCvSelect(app);
 }
 function closeEditVaga() {
     document.getElementById('editVagaSection').hidden = true;
@@ -4605,9 +4646,11 @@ async function saveEditVaga(appId) {
             observacoes:      document.getElementById('vfObs').value.trim() || null,
             gestor_nome:      document.getElementById('vfGestorNome').value.trim() || null,
             gestor_email:     document.getElementById('vfGestorEmail').value.trim() || null,
+            gestor_phone:     document.getElementById('vfGestorPhone').value.trim() || null,
             data_envio:       document.getElementById('vfDataEnvio').value || null,
             modalidade:       document.getElementById('vfModalidade').value || null,
             tipo_contratacao: document.getElementById('vfTipoContratacao').value || null,
+            cv_version_id:    document.getElementById('vfCvVersion').value || null,
         });
         const idx = _applications.findIndex(a => a.id === appId);
         if (idx !== -1) _applications[idx] = updated;

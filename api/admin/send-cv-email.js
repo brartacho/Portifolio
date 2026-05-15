@@ -154,6 +154,7 @@ export default async function handler(req, res) {
         data_envio:       new Date().toISOString(),
         modalidade:       modalidade       ? clean(modalidade).slice(0, 20)        : null,
         tipo_contratacao: tipo_contratacao ? clean(tipo_contratacao).slice(0, 20)  : null,
+        cv_version_id:    cv_version_id,
         source:           'cv_send',
         stages:           DEFAULT_STAGES,
     }).then(() => {}, (e) => console.error('[job_applications] insert failed:', e.message));
