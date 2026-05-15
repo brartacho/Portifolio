@@ -5540,6 +5540,12 @@ function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 
 function fmtDate(iso, withTime = false) {
     if (!iso) return '—';
+    // Strings date-only (YYYY-MM-DD) sem componente de hora: new Date() as interpreta como
+    // UTC midnight, causando shift de -1 dia em BRT. Parsear como componentes locais.
+    if (!withTime && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [y, m, d] = iso.split('-');
+        return `${d}/${m}/${y}`;
+    }
     const opts = { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' };
     if (withTime) { opts.hour = '2-digit'; opts.minute = '2-digit'; }
     return new Date(iso).toLocaleString('pt-BR', opts);
