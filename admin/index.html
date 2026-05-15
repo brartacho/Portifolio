@@ -3042,6 +3042,10 @@ function setJwt(t) {
     jwtToken = t;
     sessionStorage.setItem('admin_jwt', t);
     try { localStorage.setItem('artacho_admin', '1'); } catch (_) {}
+    // Marca visitas históricas deste dispositivo como admin (best-effort, silencioso)
+    try {
+        api('POST', '/api/admin/mark-my-visits', {}).catch(() => {});
+    } catch (_) {}
 }
 
 function logout() {
@@ -5570,12 +5574,16 @@ function _metricsPeriodLabel(days) {
 }
 
 async function loadAnalytics() {
-    const to   = new Date();
-    const from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
-    const fmt  = d => d.toISOString().slice(0, 10);
+    const tz = 'America/Sao_Paulo';
+    const fmt = d => d.toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD em BRT
+    const today = new Date();
+    const to = fmt(today);
+    const fromDate = new Date(today);
+    fromDate.setDate(fromDate.getDate() - (_analyticsPeriod - 1));
+    const from = fmt(fromDate);
     try {
         const excludeParam = _metricsExcludeAdmin ? '&exclude_admin=1' : '';
-        const data = await api('GET', `/api/admin/analytics?from=${fmt(from)}&to=${fmt(to)}${excludeParam}&_=${Date.now()}`);
+        const data = await api('GET', `/api/admin/analytics?from=${from}&to=${to}${excludeParam}&_=${Date.now()}`);
         _lastAnalyticsData = data;
         renderAnalytics(data);
     } catch (e) {
