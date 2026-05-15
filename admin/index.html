@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin — ARTACHO.dev</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/svg+xml" href="../imagens/favicon-artacho.svg">
@@ -52,6 +52,10 @@
             color: var(--text);
             font-family: var(--font-display);
             min-height: 100dvh;
+            /* safe-area: preenche toda a área incluindo notch/câmera (iOS/Android) */
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* ─── LOGIN ──────────────────────────────────── */
@@ -315,7 +319,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 200;
+            z-index: 500; /* acima de modal-overlay (400) e vagas-drawer (200) */
             background: var(--bg-elevated);
             border-top: 1px solid var(--border-soft);
             padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1655,6 +1659,95 @@
 
             /* ── Scroll inercial ── */
             .tbl-wrap { -webkit-overflow-scrolling: touch; }
+
+            /* ── Transições de aba: fade-in suave ── */
+            .tab-panel.active {
+                animation: tabFadeIn 0.18s ease-out both;
+            }
+
+            /* ── Bottom nav: pill indicator animado na aba ativa ── */
+            .mobile-nav-btn.active::after {
+                width: 32px;
+                height: 3px;
+                border-radius: 0 0 3px 3px;
+                background: linear-gradient(90deg, var(--violet), var(--cyan));
+                box-shadow: 0 0 8px rgba(34,211,238,0.4);
+            }
+            .mobile-nav-btn.active i {
+                filter: drop-shadow(0 0 4px rgba(34,211,238,0.5));
+            }
+            .mobile-nav-btn {
+                min-height: 56px; /* touch target >= 44px */
+                padding: 8px 4px 6px;
+            }
+
+            /* ── KPI grid: 2 colunas em mobile ── */
+            .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+            .kpi-card {
+                padding: 14px 12px !important;
+                border-radius: 14px !important;
+                background: linear-gradient(135deg, var(--bg-elevated), var(--bg-surface)) !important;
+                border: 1px solid var(--border-soft) !important;
+            }
+            .kpi-num {
+                font-size: 1.8rem !important;
+                font-weight: 800 !important;
+                letter-spacing: -1px !important;
+            }
+            .kpi-label { font-size: 0.65rem !important; }
+
+            /* ── Panel header: compacto ── */
+            .panel-header { margin-bottom: 12px; }
+            .panel-title { font-size: 0.85rem; }
+        }
+
+        @keyframes tabFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── TABLET (601px – 1024px) ─────────────────── */
+        @media (min-width: 601px) and (max-width: 1024px) {
+            /* Esconde bottom-nav; mantém top tabs */
+            .mobile-bottom-nav { display: none !important; }
+            .app-tabs { display: flex !important; }
+
+            /* Padding lateral generoso em tablet */
+            .app-content { padding: 20px 24px; }
+            .app-header { padding: 0 24px; }
+
+            /* KPI: 3 colunas em tablet */
+            .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
+
+            /* Modais: centralizado com max-width */
+            .modal, .forgot-card { max-width: 560px !important; }
+
+            /* Touch targets mínimos: 44px */
+            .btn.btn-sm { min-height: 44px; min-width: 44px; }
+
+            /* Font-size 16px: evita zoom no iOS */
+            input, select, textarea { font-size: 16px !important; }
+
+            /* Tabelas: mantém formato normal (não cards) */
+            .tbl-wrap table { display: table; width: 100%; }
+            .tbl-wrap thead { display: table-header-group; }
+            .tbl-wrap tbody { display: table-row-group; }
+            .tbl-wrap tbody tr { display: table-row; }
+            .tbl-wrap tbody td { display: table-cell; }
+            .tbl-wrap tbody td::before { display: none; }
+
+            /* row-2 e row-3: 2 colunas em tablet */
+            .row-2 { grid-template-columns: 1fr 1fr; }
+            .row-3 { grid-template-columns: 1fr 1fr; }
+
+            /* Vagas: tabela normal */
+            .vagas-table { display: table; }
+            .vagas-table thead { display: table-header-group; }
+            .vagas-table tbody { display: table-row-group; }
+            .vagas-table tbody tr { display: table-row; border: none; border-radius: 0; }
+            .vagas-table tbody tr td { border: none; border-bottom: 1px solid rgba(255,255,255,0.03); padding: 10px 10px; }
+            .col-gestor, .col-date { display: table-cell; }
+            .vaga-meta-mobile { display: none; }
         }
 
         /* ─── GESTÃO DE VAGAS ───────────────────────── */
@@ -4381,6 +4474,15 @@ function toggleTokenForm() {
 
 // ─── TABS ─────────────────────────────────────────────────
 function switchTab(name) {
+    // Fecha modais abertos: permite que bottom-nav funcione mesmo com modal visível
+    ['sendCvModal','editCvModal','forgotModal','shareModal','confirmModal','promptModal','kpiDetailModal']
+        .forEach(id => { const m = document.getElementById(id); if (m && !m.hidden) m.hidden = true; });
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    const vagasOverlay = document.getElementById('vagasOverlay');
+    if (vagasOverlay) vagasOverlay.classList.remove('open');
+    const logDrawerOverlay = document.getElementById('logDrawerOverlay');
+    if (logDrawerOverlay) logDrawerOverlay.classList.remove('open');
+
     _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
