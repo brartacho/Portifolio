@@ -222,7 +222,7 @@ export default async function handler(req, res) {
 
         const { data, error } = await supabase
             .from('job_applications')
-            .select('*')
+            .select('*, cv_versions(id, name, file_name)')
             .order('data_envio', { ascending: false, nullsFirst: false })
             .order('created_at', { ascending: false });
 
@@ -232,7 +232,7 @@ export default async function handler(req, res) {
 
     // POST — cria candidatura manual
     if (req.method === 'POST') {
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, gestor_phone, data_envio, modalidade, tipo_contratacao, cv_version_id } = req.body || {};
 
         const emp = clean(empresa, TEXT_MAX.empresa);
         if (!emp) return res.status(400).json({ error: 'empresa obrigatório' });
@@ -261,6 +261,8 @@ export default async function handler(req, res) {
                 data_envio:       data_envio || null,
                 modalidade:       modalidade || null,
                 tipo_contratacao: tipo_contratacao || null,
+                cv_version_id:    cv_version_id || null,
+                gestor_phone:     clean(gestor_phone, 30) || null,
                 source:           'manual',
                 stages:           DEFAULT_STAGES,
             })
@@ -276,7 +278,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'id obrigatório' });
 
-        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, data_envio, modalidade, tipo_contratacao, archived, stages, result } = req.body || {};
+        const { empresa, vaga, linkedin_empresa, link_vaga, observacoes, gestor_nome, gestor_email, gestor_phone, data_envio, modalidade, tipo_contratacao, archived, stages, result, cv_version_id } = req.body || {};
 
         const patch = {};
         if (empresa !== undefined) {
@@ -290,6 +292,8 @@ export default async function handler(req, res) {
         if (observacoes      !== undefined) patch.observacoes      = clean(observacoes, TEXT_MAX.observacoes);
         if (gestor_nome      !== undefined) patch.gestor_nome      = clean(gestor_nome, TEXT_MAX.gestor_nome);
         if (gestor_email     !== undefined) patch.gestor_email     = clean(gestor_email, TEXT_MAX.gestor_email);
+        if (gestor_phone     !== undefined) patch.gestor_phone     = clean(gestor_phone, 30) || null;
+        if (cv_version_id    !== undefined) patch.cv_version_id    = cv_version_id || null;
         if (data_envio !== undefined) {
             if (data_envio !== null && data_envio !== '' && isNaN(new Date(data_envio).getTime())) {
                 return res.status(400).json({ error: 'data_envio inválido' });
@@ -343,7 +347,7 @@ export default async function handler(req, res) {
             .from('job_applications')
             .update(patch)
             .eq('id', id)
-            .select()
+            .select('*, cv_versions(id, name, file_name)')
             .single();
 
         if (error) return res.status(500).json({ error: error.message });

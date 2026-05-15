@@ -77,6 +77,8 @@ export default async function handler(req, res) {
                     data_envio:       new Date().toISOString(),
                     modalidade:       s(modalidade)?.slice(0, 20)       || null,
                     tipo_contratacao: s(tipo_contratacao)?.slice(0, 20) || null,
+                    cv_version_id:    id,
+                    gestor_phone:     cleanContato || null,
                     source:           'cv_send',
                     stages:           DEFAULT_STAGES,
                 }).then(() => {}, () => {});
