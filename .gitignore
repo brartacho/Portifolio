@@ -25,3 +25,6 @@ test-results/
 
 # Planos de implementação concluídos
 docs/superpowers/
+
+# Worktrees git locais para desenvolvimento paralelo
+.worktrees/
