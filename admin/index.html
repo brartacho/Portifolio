@@ -5646,11 +5646,14 @@ function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 
 function fmtDate(iso, withTime = false) {
     if (!iso) return '—';
-    // Strings date-only (YYYY-MM-DD) sem componente de hora: new Date() as interpreta como
-    // UTC midnight, causando shift de -1 dia em BRT. Parsear como componentes locais.
-    if (!withTime && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-        const [y, m, d] = iso.split('-');
-        return `${d}/${m}/${y}`;
+    if (!withTime) {
+        // Usa sempre os primeiros 10 chars (YYYY-MM-DD) sem passar pelo construtor Date,
+        // evitando o shift UTC→BRT que causa o dia anterior em timestamps de meia-noite UTC.
+        const datePart = iso.slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+            const [y, m, d] = datePart.split('-');
+            return `${d}/${m}/${y}`;
+        }
     }
     const opts = { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' };
     if (withTime) { opts.hour = '2-digit'; opts.minute = '2-digit'; }
