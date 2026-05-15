@@ -4,8 +4,9 @@ import { getSupabase } from '../_lib/supabase.js';
 import { DEFAULT_STAGES } from '../_lib/stages.js';
 
 function dateRange(from, to) {
-    const f = from ? `${from}T00:00:00.000Z` : new Date(Date.now() - 30 * 86400000).toISOString();
-    const t = to   ? `${to}T23:59:59.999Z`   : new Date().toISOString();
+    const offset = '-03:00';
+    const f = from ? `${from}T00:00:00${offset}` : new Date(Date.now() - 30 * 86400000).toISOString();
+    const t = to   ? `${to}T23:59:59.999${offset}` : new Date().toISOString();
     return { f, t };
 }
 
@@ -82,7 +83,9 @@ export default async function handler(req, res) {
         const { f, t } = dateRange(from, to);
         const excAdm = req.query.exclude_admin === '1';
 
-        const adminFilter = q => excAdm ? q.not('meta->>admin', 'eq', 'true') : q;
+        const adminFilter = q => excAdm
+            ? q.or('meta->>admin.is.null,meta->>admin.neq.true')
+            : q;
 
         const [pageviewsRes, uniqueRes, engagedRes, cvClickRes, contactRes, caseRes,
                emailRes, downloadsRes, seriesRes, topPagesRes, referrersRes,
