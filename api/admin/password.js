@@ -9,7 +9,7 @@ const RESET_WINDOW_MS = 60 * 60 * 1000;
 const MIN_LEN = 8;
 
 export default async function handler(req, res) {
-    cors(res);
+    cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

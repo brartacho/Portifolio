@@ -35,6 +35,59 @@ async function sendTelegram(text) {
     });
 }
 
+// ─── Alertas de segurança (fire-and-forget) ─────────────────────────────────
+// Notifica eventos suspeitos no admin via Telegram. Não bloqueia o response;
+// se Telegram estiver fora ou env não configurada, falha silenciosamente.
+//
+// Eventos suportados:
+//   - 'rate_limit_blocked' : 5+ falhas de login do mesmo IP em 15min
+//   - 'login_new_ip'       : login bem-sucedido de IP nunca visto antes
+//   - 'bot_detected'       : guard de UA/honeypot/fillTime disparou
+
+function escapeMd(s) {
+    if (!s) return '';
+    return String(s).replace(/[*_`[\]()]/g, c => '\\' + c);
+}
+
+export async function notifySecurityEvent({ kind, ip, ua, country, details }) {
+    try {
+        const time = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const uaShort = (ua || '').slice(0, 80);
+        const geo = country ? ` (${country})` : '';
+
+        let title, body;
+        switch (kind) {
+            case 'rate_limit_blocked':
+                title = '🚨 *Login bloqueado por rate limit*';
+                body = `5+ falhas em 15min do mesmo IP. Possível ataque.`;
+                break;
+            case 'login_new_ip':
+                title = '⚠️ *Login admin de IP novo*';
+                body = `Foi você? Se não, revogue a sessão imediatamente.`;
+                break;
+            case 'bot_detected':
+                title = '🤖 *Bot detectado na tela de login*';
+                body = `UA/honeypot/timing acusou automação.`;
+                break;
+            default:
+                title = '🔔 *Evento de segurança*';
+                body = details || '(sem detalhes)';
+        }
+
+        const msg = [
+            title,
+            body,
+            `🌐 IP: \`${escapeMd(ip || 'unknown')}\`${escapeMd(geo)}`,
+            `🧭 UA: \`${escapeMd(uaShort)}\``,
+            `🕐 ${escapeMd(time)}`,
+            details && kind !== 'rate_limit_blocked' && kind !== 'login_new_ip' && kind !== 'bot_detected'
+                ? `📋 ${escapeMd(details)}` : null,
+        ].filter(Boolean).join('\n');
+
+        await sendTelegram(msg);
+    } catch { /* swallow — alerta nunca bloqueia auth */ }
+}
+
 async function sendEmail({ label, cvName, time, ip, usesText }) {
     const apiKey = process.env.RESEND_API_KEY;
     const toEmail = process.env.NOTIFY_EMAIL;

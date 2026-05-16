@@ -15,7 +15,7 @@ const ALLOWED_SORT = new Set([
 const MAX_LIMIT = 100;
 
 export default async function handler(req, res) {
-    cors(res);
+    cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
     if (!requireAdmin(req, res)) return;
     // Log-share — roteado de /api/admin/log-share via rewrite
