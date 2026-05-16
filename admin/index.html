@@ -2164,8 +2164,11 @@
         .metrics-kpis-secondary { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
         /* Bloco explicativo colapsável dentro dos drill-downs (fechado por padrão) */
         .kpi-detail-explain { margin-top: 10px; font-size: 0.78rem; color: var(--text-dim); }
-        .kpi-detail-explain summary { cursor: pointer; padding: 6px 0; user-select: none; }
-        .kpi-detail-explain summary::marker, .kpi-detail-explain summary::-webkit-details-marker { display: none; }
+        /* list-style:none + ::marker + ::-webkit-details-marker = remoção tripla
+           do triângulo nativo do <summary> em Chrome/Firefox/Safari */
+        .kpi-detail-explain summary { cursor: pointer; padding: 6px 0; user-select: none; list-style: none; }
+        .kpi-detail-explain summary::marker { display: none; content: ''; }
+        .kpi-detail-explain summary::-webkit-details-marker { display: none; }
         .kpi-detail-explain summary::before { content: '▸ '; display: inline-block; }
         .kpi-detail-explain[open] summary::before { content: '▾ '; }
         .kpi-detail-explain summary:hover { color: var(--text); }
@@ -4848,6 +4851,11 @@ function switchTab(name) {
     const logDrawerOverlay = document.getElementById('logDrawerOverlay');
     if (logDrawerOverlay) logDrawerOverlay.classList.remove('open');
 
+    // Sair de Vagas com modo de seleção ativo: desliga e remove a bulk bar flutuante
+    if (name !== 'vagas' && typeof _vagasSelecting !== 'undefined' && _vagasSelecting) {
+        toggleVagasSelectMode();
+    }
+
     _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
@@ -6429,6 +6437,10 @@ function _kpiSection(title, html) {
 function _kpiRow(left, right) {
     return `<div class="kpi-detail-row"><span>${left}</span><span>${right}</span></div>`;
 }
+// Bloco explicativo colapsado dos drill-downs ("O que isto mede?")
+function _explain(html) {
+    return `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>${html}</details>`;
+}
 function _kpiEventRow(occurred_at, path, country, device, hash7, isAdmin) {
     const adminBadge = isAdmin ? `<span style="color:#4ade80;font-size:0.7rem;margin-left:5px">● você</span>` : '';
     const hashEl = hash7
@@ -6455,7 +6467,8 @@ const _kpiRenderers = {
         const visitsHtml = latest_visits.length ? `<div class="kpi-detail-list">${latest_visits.map(v =>
             _kpiEventRow(v.occurred_at, v.path === '/' ? 'Início' : v.path, v.country, v.device, v.hash7, v.is_admin)
         ).join('')}</div>` : '';
-        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas', topHtml) + _kpiSection('Últimas visitas', visitsHtml);
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas', topHtml) + _kpiSection('Últimas visitas', visitsHtml)
+            + _explain(`<p>Cada visita é um pageview registrado pelo <code>analytics.js</code>: dispara no <code>DOMContentLoaded</code> de qualquer página pública do site. Recarregar a página conta como nova visita; navegar entre páginas internas também. Visitas de bots conhecidos e do próprio admin (quando o toggle está ligado) são excluídas.</p>`);
     },
     unicos: data => {
         const { kpis = {}, devices = [], countries = [], top_referrers = [], utm_sources = [] } = data;
@@ -6467,7 +6480,8 @@ const _kpiRenderers = {
         const uList = utmFiltered.length ? `<div class="kpi-detail-list">${utmFiltered.slice(0, 10).map(u => _kpiRow(esc(u.source), `<span class="meta">${u.views} visitas</span>`)).join('')}</div>` : '<div class="metrics-empty" style="font-size:0.82rem">Nenhuma visita via UTM no período.<br>Adicione <code>?utm_source=linkedin</code> nos seus links para rastrear.</div>';
         body.innerHTML = _kpiSection('Total', `<div class="kpi-detail-list">${_kpiRow('Visitantes únicos', `<strong>${kpis.unique_visitors ?? 0}</strong>`)}</div>`)
             + _kpiSection('Dispositivos', dList) + _kpiSection('Países', cList)
-            + _kpiSection('Origens', rList) + _kpiSection('UTM sources', uList);
+            + _kpiSection('Origens', rList) + _kpiSection('UTM sources', uList)
+            + _explain(`<p>Visitantes únicos = quantidade distinta de <code>visitor_id_hash</code> no período. O hash é <strong>SHA-256(IP + User-Agent + salt-do-dia)</strong>, calculado no backend e regerado a cada dia — então o mesmo navegador conta como novo a partir do dia seguinte. Não há cookie nem fingerprint persistente.</p>`);
     },
     engajados: data => {
         const { kpis = {}, top_pages = [] } = data;
@@ -6483,7 +6497,8 @@ const _kpiRenderers = {
             const label = (p.path || '/') === '/' ? 'Início' : p.path;
             return _kpiRow(esc(label), `<span class="meta">${p.rate}% · ${p.engaged}/${p.views}</span>`);
         }).join('')}</div>` : '';
-        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas por engajamento', rank);
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas por engajamento', rank)
+            + _explain(`<p>Engajamento dispara via evento <code>engaged</code> quando o visitante permanece <strong>30 segundos</strong> na mesma página sem fechar a aba. É um proxy de interesse real, diferente de uma visita-relâmpago. A taxa = engaged ÷ visitas (limite teórico 100%).</p>`);
     },
     'cv-clicks': data => {
         const { kpis = {}, latest_cv_clicks = [], cv_page_contacts = [] } = data;
@@ -6502,7 +6517,8 @@ const _kpiRenderers = {
         ).join('')}</div>` : '';
         body.innerHTML = _kpiSection('Resumo', resumo)
             + _kpiSection('Canal preferido na página CV', `<div class="kpi-detail-list">${canalRows}</div>`)
-            + _kpiSection('Últimos cliques em CV', list);
+            + _kpiSection('Últimos cliques em CV', list)
+            + _explain(`<p>Clique em qualquer link que leve a <code>/cv</code> ou ao endpoint <code>/api/cv/download</code>. <strong>Não é o download em si</strong> — apenas a intenção. A diferença para "Downloads reais" mostra quantos clicaram mas desistiram (rate-limit, link expirado, etc.).</p>`);
     },
     'cv-downloads': async data => {
         const body = document.getElementById('kpiDetailBody');
@@ -6519,7 +6535,8 @@ const _kpiRenderers = {
                 ${_kpiRow('Conversão', `<strong>${data.kpis?.conversion_rate ?? 0}%</strong>`)}
             </div>`;
             body.innerHTML = _kpiSection('Resumo', resumo)
-                + _kpiSection('Últimos downloads (até 30, com IP real)', rows ? `<div class="kpi-detail-list">${rows}</div>` : '');
+                + _kpiSection('Últimos downloads (até 30, com IP real)', rows ? `<div class="kpi-detail-list">${rows}</div>` : '')
+                + _explain(`<p>Cada download que efetivamente saiu do servidor é registrado em <code>download_logs</code> com o IP real (apenas para auditoria, não exibido em outras métricas). Conversão = downloads reais ÷ visitas no período. Inserts feitos pelo painel admin (envio por e-mail/WhatsApp) são excluídos quando o toggle "Excluir meus acessos" está ligado.</p>`);
         } catch (e) {
             body.innerHTML = `<p style="color:var(--danger);padding:20px">${esc(e.message)}</p>`;
         }
@@ -6532,7 +6549,8 @@ const _kpiRenderers = {
             return `<div class="kpi-detail-row"><span><span class="kpi-hash">#${esc(r.hash7 || '???')}</span> · <strong>${r.visit_count} visitas</strong></span><span class="meta">${meta}</span></div>`;
         }).join('')}</div>` : '';
         body.innerHTML = _kpiSection('Resumo', `<div class="kpi-detail-list">${_kpiRow('Visitantes recorrentes', `<strong>${kpis.recurring_visitors ?? 0}</strong>`)}</div>`)
-            + _kpiSection('Top 10 (anonimizados)', list);
+            + _kpiSection('Top 10 (anonimizados)', list)
+            + _explain(`<p>Visitante recorrente = mesmo <code>visitor_id_hash</code> visto em <strong>≥ 2 dias distintos</strong> dentro do período (em horário de Brasília). Como o hash regenera a cada dia, isso significa que o IP+UA bate em dias diferentes — sinal forte de retorno legítimo, não refresh.</p>`);
     },
 
     sessoes: data => {
