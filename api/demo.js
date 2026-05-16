@@ -1,0 +1,381 @@
+import { randomBytes } from 'crypto';
+import { getSessionId, getSupabaseDemo, cors, clean, hashIP, verifyTurnstile } from './demo/_lib/session.js';
+import { checkRateLimit, clientIp } from './_lib/rate-limit.js';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function safeFileName(n) {
+    return String(n || 'cv-demo.pdf').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 100);
+}
+function genHash() { return randomBytes(6).toString('hex'); }
+
+const VALID_MODALIDADE = new Set(['Presencial', 'Híbrida', 'Remota']);
+const VALID_TIPO       = new Set(['CLT', 'PJ', 'Freelancer']);
+const VALID_RESULTS    = new Set(['em_processo', 'aprovado', 'recusado']);
+
+function sanitizeApp(body) {
+    const out = {};
+    if ('empresa'          in body) out.empresa          = clean(body.empresa, 200) || 'N/A';
+    if ('vaga'             in body) out.vaga             = clean(body.vaga, 200);
+    if ('linkedin_empresa' in body) out.linkedin_empresa = clean(body.linkedin_empresa, 300);
+    if ('link_vaga'        in body) out.link_vaga        = clean(body.link_vaga, 500);
+    if ('observacoes'      in body) out.observacoes      = clean(body.observacoes, 500);
+    if ('gestor_nome'      in body) out.gestor_nome      = clean(body.gestor_nome, 100);
+    if ('gestor_email'     in body) out.gestor_email     = clean(body.gestor_email, 120);
+    if ('gestor_phone'     in body) out.gestor_phone     = clean(body.gestor_phone, 30);
+    if ('modalidade'       in body) out.modalidade       = VALID_MODALIDADE.has(body.modalidade) ? body.modalidade : null;
+    if ('tipo_contratacao' in body) out.tipo_contratacao = VALID_TIPO.has(body.tipo_contratacao) ? body.tipo_contratacao : null;
+    if ('cv_version_id'    in body) out.cv_version_id    = body.cv_version_id || null;
+    if ('result'           in body) out.result           = VALID_RESULTS.has(body.result) ? body.result : null;
+    if ('archived'         in body) out.archived         = !!body.archived;
+    if ('stages'           in body) out.stages           = Array.isArray(body.stages) ? body.stages.slice(0, 20) : null;
+    if ('data_envio'       in body) out.data_envio       = body.data_envio || null;
+    return out;
+}
+
+async function mutRateLimit(req, res) {
+    if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return true;
+    const rl = await checkRateLimit({ req, scope: 'demo-mut', max: 60, windowMs: 60_000 });
+    if (!rl.allowed) {
+        res.setHeader('Retry-After', rl.retryAfterSec);
+        res.status(429).json({ error: 'Muitas requisições. Aguarde.' });
+        return false;
+    }
+    return true;
+}
+
+// ─── Resource handlers ───────────────────────────────────────────────────────
+
+async function handleConfig(req, res) {
+    if (req.method !== 'GET') return res.status(405).end();
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.json({ turnstile_sitekey: process.env.TURNSTILE_SITE_KEY || null });
+}
+
+async function handleInit(req, res) {
+    if (req.method !== 'POST') return res.status(405).end();
+    const session_id = getSessionId(req);
+    if (!session_id) return res.status(400).json({ error: 'session_id inválido' });
+    if (req.body?.website) return res.status(403).json({ error: 'forbidden' });
+
+    const rl = await checkRateLimit({ req, scope: 'demo-init', max: 3, windowMs: 60 * 60 * 1000 });
+    if (!rl.allowed) {
+        res.setHeader('Retry-After', rl.retryAfterSec);
+        return res.status(429).json({ error: 'Muitas tentativas. Aguarde antes de iniciar nova sessão demo.' });
+    }
+    const ip = clientIp(req);
+    if (!await verifyTurnstile(req.body?.cf_token, ip)) {
+        return res.status(403).json({ error: 'Verificação anti-bot falhou. Recarregue e tente novamente.' });
+    }
+    const { error } = await getSupabaseDemo().rpc('demo_seed', { p_session_id: session_id });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ ok: true, session_id });
+}
+
+async function handleCleanup(req, res) {
+    const auth = req.headers['authorization'];
+    if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const supabase = getSupabaseDemo();
+    const { data, error } = await supabase.rpc('demo_cleanup_expired');
+    if (error) return res.status(500).json({ error: error.message });
+    console.log(`[demo:cleanup] deleted ${data} rows`);
+    return res.json({ ok: true, deleted: data });
+}
+
+async function handleHealth(req, res) {
+    const auth = req.headers['authorization'];
+    if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const supabase = getSupabaseDemo();
+    const { data: total, error } = await supabase.rpc('demo_total_rows');
+    if (error) return res.status(500).json({ error: error.message });
+
+    let action = 'ok', deleted = 0;
+    if (total > 80000) {
+        const { data: d } = await supabase.rpc('demo_full_wipe');
+        deleted = d ?? 0; action = 'full_wipe';
+        console.error(`[demo:health] PANIC total=${total} wiped ${deleted}`);
+    } else if (total > 50000) {
+        const { data: d } = await supabase.rpc('demo_emergency_cleanup');
+        deleted = d ?? 0; action = 'emergency';
+        console.error(`[demo:health] EMERGENCY total=${total} cleaned ${deleted}`);
+    } else if (total > 30000) {
+        action = 'warn';
+        console.warn(`[demo:health] WARN total=${total}`);
+    }
+    return res.json({ ok: true, total, action, deleted, ts: new Date().toISOString() });
+}
+
+async function handleAnalytics(req, res) {
+    if (req.method !== 'GET') return res.status(405).end();
+    const session_id = getSessionId(req);
+    if (!session_id) return res.status(400).json({ error: 'session_id obrigatório' });
+
+    const period = Math.max(1, Math.min(365, parseInt(req.query.period) || 7));
+    const scale = period / 7;
+    const base = { pv: 247, uniq: 12, engaged: 86, cv: 18, dl: 11, rec: 8 };
+    const kpis = {
+        pageviews:          Math.round(base.pv   * scale),
+        unique_visitors:    Math.round(base.uniq * scale),
+        engaged_rate:       Math.round((base.engaged / base.pv) * 1000) / 10,
+        cv_download_clicks: Math.round(base.cv   * scale),
+        email_requests:     Math.round(2 * scale),
+        contact_clicks:     Math.round(9 * scale),
+        case_opens:         Math.round(15 * scale),
+        cv_downloads:       Math.round(base.dl   * scale),
+        conversion_rate:    Math.round((base.dl / base.pv) * 1000) / 10,
+        recurring_visitors: Math.round(base.rec  * scale),
+    };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const seed = [34, 51, 28, 67, 43, 89, 57, 41, 62, 38, 71, 49, 55, 83];
+    const series = Array.from({ length: period }, (_, i) => {
+        const d = new Date(today.getTime() - (period - 1 - i) * 86400000);
+        const pv = seed[i % seed.length];
+        return { bucket: d.toISOString().slice(0, 10), pageviews: pv, unique_visitors: Math.max(1, Math.round(pv * 0.18)) };
+    });
+    return res.json({
+        kpis, series,
+        top_pages: [
+            { path: '/', count: Math.round(120 * scale) }, { path: '/cv', count: Math.round(45 * scale) },
+            { path: '/case/qa', count: Math.round(28 * scale) }, { path: '/privacidade', count: Math.round(6 * scale) },
+        ],
+        top_referrers: [
+            { host: 'linkedin.com', count: Math.round(68 * scale) }, { host: 'github.com', count: Math.round(34 * scale) },
+            { host: 'google.com', count: Math.round(22 * scale) }, { host: '(direto)', count: Math.round(123 * scale) },
+        ],
+        utm_sources: [
+            { source: 'linkedin', count: Math.round(45 * scale) }, { source: 'github', count: Math.round(18 * scale) },
+            { source: 'email', count: Math.round(7 * scale) },
+        ],
+        devices: [
+            { name: 'desktop', count: Math.round(178 * scale) }, { name: 'mobile', count: Math.round(59 * scale) }, { name: 'tablet', count: Math.round(10 * scale) },
+        ],
+        countries: [
+            { name: 'BR', count: Math.round(231 * scale) }, { name: 'PT', count: Math.round(8 * scale) }, { name: 'US', count: Math.round(8 * scale) },
+        ],
+        latest_visits: [
+            { occurred_at: new Date(Date.now() - 5  * 60000).toISOString(), browser: 'Chrome',  device: 'desktop', country: 'BR', host: 'linkedin.com', visitor_id_hash: 'a3f2b8c1', is_admin: false },
+            { occurred_at: new Date(Date.now() - 22 * 60000).toISOString(), browser: 'Safari',  device: 'mobile',  country: 'BR', host: 'github.com',   visitor_id_hash: 'e5f6g7h8', is_admin: false },
+            { occurred_at: new Date(Date.now() - 3600000).toISOString(),    browser: 'Edge',    device: 'desktop', country: 'BR', host: '(direto)',     visitor_id_hash: 'i9j0k1l2', is_admin: false },
+            { occurred_at: new Date(Date.now() - 10800000).toISOString(),   browser: 'Firefox', device: 'desktop', country: 'PT', host: 'google.com',   visitor_id_hash: 'm3n4o5p6', is_admin: false },
+        ],
+        latest_cv_clicks: [
+            { occurred_at: new Date(Date.now() - 1800000).toISOString(), browser: 'Chrome', device: 'desktop', country: 'BR', visitor_id_hash: 'a3f2b8c1', is_admin: false },
+            { occurred_at: new Date(Date.now() - 14400000).toISOString(), browser: 'Safari', device: 'mobile', country: 'BR', visitor_id_hash: 'e5f6g7h8', is_admin: false },
+        ],
+        funnel: { pageview: kpis.pageviews, engaged: base.engaged * scale | 0, cv_click: kpis.cv_download_clicks, cv_download: kpis.cv_downloads },
+        period_days: period,
+    });
+}
+
+async function handleApplications(req, res, session_id) {
+    if (!await mutRateLimit(req, res)) return;
+    const supabase = getSupabaseDemo();
+
+    if (req.method === 'GET') {
+        if (req.query.id) {
+            const { data, error } = await supabase.from('demo_job_applications')
+                .select('*, cv_versions:demo_cv_versions(id, name, file_name)')
+                .eq('id', req.query.id).eq('session_id', session_id).single();
+            if (error || !data) return res.status(404).json({ error: 'Não encontrado' });
+            return res.json(data);
+        }
+        const { data } = await supabase.from('demo_job_applications')
+            .select('*, cv_versions:demo_cv_versions(id, name, file_name)')
+            .eq('session_id', session_id).order('updated_at', { ascending: false }).limit(50);
+        return res.json(data ?? []);
+    }
+    if (req.method === 'POST') {
+        const { data: qErr } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_job_applications' });
+        if (qErr) return res.status(429).json({ error: qErr });
+        const patch = sanitizeApp(req.body || {});
+        patch.session_id = session_id;
+        patch.stages = patch.stages || [];
+        patch.data_envio = patch.data_envio || new Date().toISOString();
+        const { data, error } = await supabase.from('demo_job_applications')
+            .insert(patch).select('*, cv_versions:demo_cv_versions(id, name, file_name)').single();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(201).json(data);
+    }
+    if (req.method === 'PUT') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        const patch = sanitizeApp(req.body || {});
+        const { data, error } = await supabase.from('demo_job_applications')
+            .update(patch).eq('id', req.query.id).eq('session_id', session_id)
+            .select('*, cv_versions:demo_cv_versions(id, name, file_name)').single();
+        if (error || !data) return res.status(404).json({ error: 'Não encontrado' });
+        return res.json(data);
+    }
+    if (req.method === 'DELETE') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        await supabase.from('demo_job_applications').delete().eq('id', req.query.id).eq('session_id', session_id);
+        return res.status(204).end();
+    }
+    return res.status(405).end();
+}
+
+async function handleCvVersions(req, res, session_id) {
+    if (!await mutRateLimit(req, res)) return;
+    const supabase = getSupabaseDemo();
+
+    if (req.method === 'GET') {
+        const { data } = await supabase.from('demo_cv_versions').select('*')
+            .eq('session_id', session_id).order('created_at', { ascending: false }).limit(100);
+        return res.json(data ?? []);
+    }
+    if (req.method === 'POST') {
+        const { data: qErr } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_cv_versions' });
+        if (qErr) return res.status(429).json({ error: qErr });
+        const body = req.body || {};
+        const { data, error } = await supabase.from('demo_cv_versions')
+            .insert({ session_id, name: clean(body.name, 100) || 'CV sem nome', description: clean(body.description, 200), file_name: safeFileName(body.file_name || `cv-demo-${Date.now()}.pdf`), active: true })
+            .select('*').single();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(201).json(data);
+    }
+    if (req.method === 'PUT') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        const body = req.body || {};
+        const patch = {};
+        if ('name'        in body) patch.name        = clean(body.name, 100);
+        if ('description' in body) patch.description = clean(body.description, 200);
+        if ('active'      in body) patch.active      = !!body.active;
+        const { data, error } = await supabase.from('demo_cv_versions')
+            .update(patch).eq('id', req.query.id).eq('session_id', session_id).select('*').single();
+        if (error || !data) return res.status(404).json({ error: 'Não encontrado' });
+        return res.json(data);
+    }
+    if (req.method === 'DELETE') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        await supabase.from('demo_cv_versions').delete().eq('id', req.query.id).eq('session_id', session_id);
+        return res.status(204).end();
+    }
+    return res.status(405).end();
+}
+
+async function handleTokens(req, res, session_id) {
+    if (!await mutRateLimit(req, res)) return;
+    const supabase = getSupabaseDemo();
+
+    if (req.method === 'GET') {
+        const { data } = await supabase.from('demo_download_tokens')
+            .select('*, cv_versions:demo_cv_versions(id, name)')
+            .eq('session_id', session_id).order('created_at', { ascending: false }).limit(100);
+        return res.json(data ?? []);
+    }
+    if (req.method === 'POST') {
+        const { data: qErr } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_download_tokens' });
+        if (qErr) return res.status(429).json({ error: qErr });
+        const body = req.body || {};
+        if (!body.cv_version_id) return res.status(400).json({ error: 'cv_version_id obrigatório' });
+        const hours = Math.max(1, Math.min(720, parseInt(body.hours) || 24));
+        const max_uses = (body.max_uses === null || body.max_uses === '') ? null : Math.max(1, Math.min(100, parseInt(body.max_uses) || 5));
+        const { data, error } = await supabase.from('demo_download_tokens')
+            .insert({ session_id, cv_version_id: body.cv_version_id, label: clean(body.label, 100) || 'Token sem label', hash: genHash(), expires_at: new Date(Date.now() + hours * 3_600_000).toISOString(), max_uses, use_count: 0, revoked: false })
+            .select('*, cv_versions:demo_cv_versions(id, name)').single();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(201).json(data);
+    }
+    if (req.method === 'PUT') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        const body = req.body || {};
+        const patch = {};
+        if ('revoked' in body) patch.revoked = !!body.revoked;
+        if ('label'   in body) patch.label   = clean(body.label, 100);
+        const { data, error } = await supabase.from('demo_download_tokens')
+            .update(patch).eq('id', req.query.id).eq('session_id', session_id)
+            .select('*, cv_versions:demo_cv_versions(id, name)').single();
+        if (error || !data) return res.status(404).json({ error: 'Não encontrado' });
+        return res.json(data);
+    }
+    if (req.method === 'DELETE') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        await supabase.from('demo_download_tokens').delete().eq('id', req.query.id).eq('session_id', session_id);
+        return res.status(204).end();
+    }
+    return res.status(405).end();
+}
+
+async function handleLogs(req, res, session_id) {
+    const supabase = getSupabaseDemo();
+
+    if (req.method === 'GET') {
+        const tipo = req.query.tipo || '';
+        const search = req.query.search || '';
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+        const offset = (page - 1) * limit;
+
+        let query = supabase.from('demo_download_logs')
+            .select('*, cv_versions:demo_cv_versions(name), download_tokens:demo_download_tokens(label)', { count: 'exact' })
+            .eq('session_id', session_id).order('downloaded_at', { ascending: false });
+
+        if (tipo === 'download')          query = query.not('ip_address', 'like', 'admin-%');
+        else if (tipo === 'email')        query = query.eq('ip_address', 'admin-send-email');
+        else if (tipo === 'whatsapp-link')   query = query.eq('ip_address', 'admin-send-whatsapp-link');
+        else if (tipo === 'whatsapp-attach') query = query.eq('ip_address', 'admin-send-whatsapp');
+        else if (tipo === 'whatsapp')     query = query.like('ip_address', 'admin-send-whatsapp%');
+
+        if (search) {
+            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+            query = query.or(`cv_name_snapshot.ilike.%${s}%,empresa.ilike.%${s}%,vaga.ilike.%${s}%,user_agent.ilike.%${s}%`);
+        }
+        query = query.range(offset, offset + limit - 1);
+        const { data, count } = await query;
+        return res.json({ data: data ?? [], total: count ?? 0, page, limit, pages: Math.ceil((count ?? 0) / limit) });
+    }
+
+    if (req.method === 'POST') {
+        const rl = await checkRateLimit({ req, scope: 'demo-mut', max: 60, windowMs: 60_000 });
+        if (!rl.allowed) { res.setHeader('Retry-After', rl.retryAfterSec); return res.status(429).json({ error: 'Muitas requisições. Aguarde.' }); }
+        const { data: qErr } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_download_logs' });
+        if (qErr) return res.status(429).json({ error: qErr });
+
+        const body = req.body || {};
+        let ip = clean(body.ip_address, 100);
+        if (ip && !ip.startsWith('admin-') && !ip.startsWith('ip:')) ip = hashIP(ip);
+        if (!ip) ip = hashIP(clientIp(req));
+
+        const { data, error } = await supabase.from('demo_download_logs')
+            .insert({ session_id, cv_version_id: body.cv_version_id || null, cv_name_snapshot: clean(body.cv_name_snapshot, 200), cv_id_snapshot: body.cv_id_snapshot || null, token_id: body.token_id || null, ip_address: ip, user_agent: clean(body.user_agent, 500), empresa: clean(body.empresa, 200), vaga: clean(body.vaga, 200), notas: clean(body.notas, 500), contato: clean(body.contato, 200) })
+            .select('*, cv_versions:demo_cv_versions(name), download_tokens:demo_download_tokens(label)').single();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(201).json(data);
+    }
+
+    return res.status(405).end();
+}
+
+// ─── Main dispatcher ─────────────────────────────────────────────────────────
+
+export default async function handler(req, res) {
+    cors(res);
+    if (req.method === 'OPTIONS') return res.status(204).end();
+
+    const resource = req.query.resource || '';
+
+    // Public / cron / no session needed
+    if (resource === 'config')  return handleConfig(req, res);
+    if (resource === 'init')    return handleInit(req, res);
+    if (resource === 'cleanup') return handleCleanup(req, res);
+    if (resource === 'health')  return handleHealth(req, res);
+
+    // Session-required resources
+    const session_id = getSessionId(req);
+    if (!session_id) return res.status(400).json({ error: 'session_id obrigatório' });
+
+    // Rate limit per session (200 req/hour)
+    const rlSes = await checkRateLimit({ req, scope: `demo-sess-${session_id}`, max: 200, windowMs: 3_600_000 });
+    if (!rlSes.allowed) { res.setHeader('Retry-After', rlSes.retryAfterSec); return res.status(429).json({ error: 'Limite da sessão atingido. Aguarde ou recarregue.' }); }
+
+    if (resource === 'analytics')    return handleAnalytics(req, res);
+    if (resource === 'applications') return handleApplications(req, res, session_id);
+    if (resource === 'cv-versions')  return handleCvVersions(req, res, session_id);
+    if (resource === 'tokens')       return handleTokens(req, res, session_id);
+    if (resource === 'logs')         return handleLogs(req, res, session_id);
+
+    return res.status(404).json({ error: 'Resource not found' });
+}

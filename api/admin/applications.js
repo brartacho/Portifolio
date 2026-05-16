@@ -1,7 +1,24 @@
 import { createHash } from 'crypto';
 import { requireAdmin, cors } from '../_lib/auth.js';
-import { getSupabase } from '../_lib/supabase.js';
+import { getSupabase, BUCKET } from '../_lib/supabase.js';
 import { DEFAULT_STAGES } from '../_lib/stages.js';
+
+const STORAGE_LIMIT_BYTES = 1024 * 1024 * 1024; // 1 GB (Supabase free)
+const STORAGE_ALERT_THRESHOLD = 0.80;
+
+function storageProjectRef() {
+    try { return new URL(process.env.SUPABASE_URL).hostname.split('.')[0]; } catch { return null; }
+}
+
+async function listAllStorageObjects(supabase, bucket, prefix = '', acc = []) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
+    if (error) throw new Error(`Erro ao listar storage: ${error.message}`);
+    for (const item of data || []) {
+        if (!item.id) { await listAllStorageObjects(supabase, bucket, prefix ? `${prefix}/${item.name}` : item.name, acc); }
+        else { acc.push({ name: item.name, size: item.metadata?.size || 0, created_at: item.created_at }); }
+    }
+    return acc;
+}
 
 function dateRange(from, to) {
     const offset = '-03:00';
@@ -208,6 +225,31 @@ export default async function handler(req, res) {
         const browser = /Edg\//i.test(ua) ? 'Edge' : /Firefox\//i.test(ua) ? 'Firefox' : /Chrome\//i.test(ua) ? 'Chrome' : /Safari\//i.test(ua) ? 'Safari' : 'Other';
         const device  = /Mobile|Android.*Mobile|iPhone/i.test(ua) ? 'mobile' : /iPad|Tablet/i.test(ua) ? 'tablet' : 'desktop';
         return res.status(200).json({ updated: data ?? 0, device, browser });
+    }
+
+    // Storage stats — roteado de /api/admin/storage-stats via rewrite
+    if (req.query.__h === 'storage-stats') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        const bucket = BUCKET();
+        try {
+            const objects  = await listAllStorageObjects(supabase, bucket);
+            const usedBytes    = objects.reduce((s, o) => s + o.size, 0);
+            const limitBytes   = Number(process.env.STORAGE_LIMIT_BYTES) || STORAGE_LIMIT_BYTES;
+            const usedPercent  = limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+            const ref = storageProjectRef();
+            return res.status(200).json({
+                bucket,
+                files_count:             objects.length,
+                used_bytes:              usedBytes,
+                limit_bytes:             limitBytes,
+                used_percent:            Number(usedPercent.toFixed(2)),
+                alert_threshold_percent: STORAGE_ALERT_THRESHOLD * 100,
+                should_alert:            usedPercent >= STORAGE_ALERT_THRESHOLD * 100,
+                dashboard_url: ref ? `https://supabase.com/dashboard/project/${ref}/storage/buckets/${bucket}` : null,
+            });
+        } catch (e) {
+            return res.status(500).json({ error: e.message });
+        }
     }
 
     // GET — lista candidaturas ou detalhe individual (?id=)
