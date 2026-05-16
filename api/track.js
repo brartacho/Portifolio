@@ -3,7 +3,7 @@ import { getSupabase } from './_lib/supabase.js';
 
 const ALLOWED_EVENTS = new Set([
     'pageview', 'cv_download_click', 'email_request',
-    'contact_click', 'case_open', 'engaged',
+    'contact_click', 'case_open', 'engaged', 'demo_access',
     'project_click', 'admin_lock_click',
     'scroll_depth', 'time_on_page', 'outbound_click',
     'print_attempt', 'cv_view',

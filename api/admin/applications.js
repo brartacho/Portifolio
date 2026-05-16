@@ -104,7 +104,7 @@ export default async function handler(req, res) {
                projectClicksRes, contactClicksRes, adminLockRes,
                hourlyRes, dowRes, funnelUniqueRes, sessionsRes, refConvRes, retentionRes,
                pvPrevRes, uniquePrevRes, engagedPrevRes, cvClickPrevRes,
-               downloadsPrevRes, recurringPrevRes] = await Promise.all([
+               downloadsPrevRes, recurringPrevRes, demoRes] = await Promise.all([
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t)),
             supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t)),
@@ -140,6 +140,8 @@ export default async function handler(req, res) {
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'cv_download_click').gte('occurred_at', fPrev).lte('occurred_at', tPrev)),
             adminFilterDl(supabase.from('download_logs').select('id', { count: 'exact', head: true }).gte('downloaded_at', fPrev).lte('downloaded_at', tPrev)),
             supabase.rpc('analytics_recurring_visitors',  { from_ts: fPrev, to_ts: tPrev, exclude_admin: excAdm }),
+            // Demo access (do PR #17 - showcase)
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'demo_access').gte('occurred_at', f).lte('occurred_at', t)),
         ]);
 
         const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
@@ -214,6 +216,7 @@ export default async function handler(req, res) {
                 'target'
             ),
             admin_lock_clicks: adminLockRes.count ?? 0,
+            demo_accesses: demoRes.count ?? 0,
             funnel: {
                 pageview:    pageviews,
                 engaged,

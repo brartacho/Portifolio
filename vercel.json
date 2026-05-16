@@ -14,7 +14,8 @@
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },
     { "source": "/admin/reset", "destination": "/admin/reset.html" },
-    { "source": "/privacidade", "destination": "/privacidade.html" }
+    { "source": "/privacidade", "destination": "/privacidade.html" },
+    { "source": "/projeto-sistema-admin", "destination": "/projeto-sistema-admin.html" }
   ],
   "headers": [
     {
