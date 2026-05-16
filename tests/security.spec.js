@@ -358,10 +358,13 @@ test.describe('Admin assets self-hosted — anti-regressão CSP', () => {
     });
 
     test('/admin carrega sem violações de CSP no console', async ({ page }) => {
+        // Ignora script injetado pelo Vercel apenas em deploys de preview
+        // (vercel.live/_next-live/feedback/feedback.js) — não existe em produção.
+        const VERCEL_LIVE_PREVIEW = /vercel\.live\/_next-live\/feedback/;
         const cspViolations = [];
         page.on('console', msg => {
             const txt = msg.text();
-            if (msg.type() === 'error' && /content security policy|refused to load/i.test(txt)) {
+            if (msg.type() === 'error' && /content security policy|refused to load/i.test(txt) && !VERCEL_LIVE_PREVIEW.test(txt)) {
                 cspViolations.push(txt);
             }
         });
