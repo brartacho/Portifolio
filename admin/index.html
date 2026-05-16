@@ -955,10 +955,116 @@
             white-space: nowrap;
         }
 
-        .badge-active   { background: var(--success-soft);  color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
-        .badge-expired  { background: var(--warning-soft);  color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
-        .badge-revoked  { background: var(--danger-soft);   color: var(--danger);  border: 1px solid rgba(239,68,68,0.2); }
-        .badge-esgotado { background: var(--bg-surface);    color: var(--text-dim);border: 1px solid var(--border); }
+        .badge-active    { background: var(--success-soft);  color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
+        .badge-expired   { background: var(--warning-soft);  color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+        .badge-expiring  { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.4); animation: pulse-warn 2s ease-in-out infinite; }
+        .badge-revoked   { background: var(--danger-soft);   color: var(--danger);  border: 1px solid rgba(239,68,68,0.2); }
+        .badge-esgotado  { background: var(--bg-surface);    color: var(--text-dim);border: 1px solid var(--border); }
+        @keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.65} }
+
+        /* ─── TAB KPIS ───────────────────────────────── */
+        .tab-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .tab-kpi-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px;
+            cursor: pointer; transition: transform 0.12s ease, border-color 0.15s;
+            display: flex; flex-direction: column; gap: 4px; user-select: none;
+        }
+        .tab-kpi-card:hover  { transform: translateY(-2px); border-color: rgba(34,211,238,0.3); }
+        .tab-kpi-card.kpi-selected { border-color: var(--cyan); background: var(--cyan-soft); }
+        .tab-kpi-num   { font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; line-height: 1; color: var(--text); }
+        .tab-kpi-label { font-size: 0.68rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 4px; }
+        .tab-kpi-card.kpi-green  .tab-kpi-num { color: var(--success); }
+        .tab-kpi-card.kpi-yellow .tab-kpi-num { color: var(--warning); }
+        .tab-kpi-card.kpi-red    .tab-kpi-num { color: var(--danger); }
+        .tab-kpi-card.kpi-dim    .tab-kpi-num { color: var(--text-dim); }
+        .tab-kpi-card.kpi-cyan   .tab-kpi-num { color: var(--cyan); }
+
+        /* ─── TOKEN SELEÇÃO ─────────────────────────── */
+        tr.token-row-selected td { background: rgba(34,211,238,0.04) !important; }
+        tr.token-row-selected { outline: 1px solid rgba(34,211,238,0.2); }
+
+        /* ─── PRESET CHIPS ───────────────────────────── */
+        .preset-chips {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            padding: 8px 0; margin-top: -4px;
+        }
+        .preset-chip {
+            padding: 4px 12px; border-radius: 100px;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--text-soft); font-size: 0.73rem; font-family: var(--font-display);
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .preset-chip:hover  { border-color: var(--cyan); color: var(--text); }
+        .preset-chip.active { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+
+        /* ─── TOKEN BULK BAR ─────────────────────────── */
+        #token-bulk-bar {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 600;
+            background: var(--bg-elevated); border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 20px; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+            gap: 10px; align-items: center; flex-wrap: wrap;
+        }
+        .bulk-count { font-size: 0.85rem; font-weight: 600; color: var(--text-soft); flex: 1; }
+
+        /* ─── TOKEN HISTORY DRAWER ───────────────────── */
+        #tokenDrawer {
+            position: fixed; top: 0; right: 0; width: 420px; max-width: 100vw; height: 100%;
+            background: var(--card-bg); border-left: 1px solid var(--border);
+            z-index: 700; transform: translateX(100%); transition: transform 0.25s ease;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        #tokenDrawer.open { transform: none; }
+        #tokenDrawerOverlay {
+            position: fixed; inset: 0; z-index: 699; background: rgba(0,0,0,0.5);
+            opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        }
+        #tokenDrawerOverlay.open { opacity: 1; pointer-events: all; }
+        .tok-drawer-header {
+            padding: 18px 20px 14px; border-bottom: 1px solid var(--border-soft);
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+            flex-shrink: 0;
+        }
+        .tok-drawer-title { font-weight: 700; font-size: 0.95rem; flex: 1; line-height: 1.35; }
+        .tok-drawer-close {
+            background: none; border: none; color: var(--text-dim); cursor: pointer;
+            font-size: 1.1rem; padding: 2px 4px; border-radius: 6px; flex-shrink: 0;
+        }
+        .tok-drawer-close:hover { color: var(--text); }
+        .tok-drawer-body { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+        .tok-drawer-actions { padding: 12px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 8px; flex-wrap: wrap; }
+        .tok-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; padding: 6px 0; border-bottom: 1px solid var(--border-soft); gap: 12px; }
+        .tok-info-row:last-child { border-bottom: none; }
+        .tok-info-label { color: var(--text-dim); flex-shrink: 0; }
+        .tok-info-val   { font-weight: 600; text-align: right; }
+        .tok-section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--cyan); margin-bottom: 4px; }
+
+        /* ─── SHORTCUTS OVERLAY ───────────────────────── */
+        .shortcuts-overlay {
+            position: fixed; inset: 0; z-index: 900;
+            background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; padding: 24px;
+        }
+        .shortcuts-overlay[hidden] { display: none !important; }
+        .shortcuts-card {
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: 18px; padding: 24px 28px; max-width: 460px; width: 100%; max-height: 80vh; overflow-y: auto;
+        }
+        .shortcuts-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+        .shortcuts-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; }
+        .sc-key {
+            font-family: var(--font-mono); font-size: 0.73rem; font-weight: 600;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 6px; padding: 2px 8px; color: var(--cyan); white-space: nowrap;
+        }
+        .sc-desc { font-size: 0.82rem; color: var(--text-soft); }
+
+        /* ─── FOCUS VISIBLE ─────────────────────────── */
+        :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+        button:focus:not(:focus-visible) { outline: none; }
 
         /* ─── SHARE MODAL ────────────────────────────── */
         .modal-overlay {
@@ -1291,7 +1397,14 @@
             .vagas-table tr td:nth-child(1) { grid-column: 1; }
             .vagas-table tr td:nth-child(4) { grid-column: 2; padding-left: 10px; }
             .col-gestor, .col-date, .col-cadastrado { display: none; }
-            #vagas-bulk-bar { bottom: 60px; }
+            #vagas-bulk-bar  { bottom: 60px; }
+            #token-bulk-bar  { bottom: 60px; }
+            .tab-kpis { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+            .tab-kpi-num { font-size: 1.4rem !important; }
+            .tab-kpi-card { padding: 12px !important; }
+            #tokenDrawer { width: 100vw; }
+            .preset-chips { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+            .preset-chip  { flex-shrink: 0; }
             .vaga-meta-mobile { display: block; font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
             .stage-badge { white-space: normal; text-align: center; line-height: 1.3; max-width: 88px; font-size: 0.68rem; }
 
@@ -1509,15 +1622,17 @@
                 padding: 0 !important;
             }
             #tokenTable td::before { display: none !important; }
+            /* Checkbox: oculto no mobile (card layout não precisa) */
+            #tokenTable td:nth-child(1) { display: none !important; }
             /* Label: título do card */
-            #tokenTable td:nth-child(1) {
+            #tokenTable td:nth-child(2) {
                 grid-area: label;
                 padding: 12px 6px 4px 14px !important;
                 font-size: 0.9rem;
                 align-self: center;
             }
             /* Currículo: subtítulo */
-            #tokenTable td:nth-child(2) {
+            #tokenTable td:nth-child(3) {
                 grid-area: cv;
                 padding: 2px 14px 10px !important;
                 font-size: 0.76rem;
@@ -1525,7 +1640,7 @@
                 border-bottom: 1px solid var(--border-soft) !important;
             }
             /* Status: badge no canto superior direito */
-            #tokenTable td:nth-child(3) {
+            #tokenTable td:nth-child(4) {
                 grid-area: status;
                 display: flex !important;
                 justify-content: flex-end;
@@ -1533,30 +1648,13 @@
                 padding: 12px 14px 4px 6px !important;
             }
             /* Usos: coluna esquerda com label acima */
-            #tokenTable td:nth-child(4) {
+            #tokenTable td:nth-child(5) {
                 grid-area: usos;
                 display: flex !important;
                 flex-direction: column;
                 gap: 1px;
                 padding: 8px 10px 10px 14px !important;
                 border-top: 1px solid var(--border-soft) !important;
-            }
-            #tokenTable td:nth-child(4)::before {
-                display: block !important;
-                font-size: 0.62rem;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                color: var(--text-dim);
-            }
-            /* Expira: coluna central com label acima */
-            #tokenTable td:nth-child(5) {
-                grid-area: expira;
-                display: flex !important;
-                flex-direction: column;
-                gap: 1px;
-                padding: 8px 10px 10px !important;
-                border-top: 1px solid var(--border-soft) !important;
-                align-self: stretch;
             }
             #tokenTable td:nth-child(5)::before {
                 display: block !important;
@@ -1565,8 +1663,25 @@
                 text-transform: uppercase;
                 color: var(--text-dim);
             }
-            /* Ações: coluna direita, alinhada com Usos/Expira */
+            /* Expira: coluna central com label acima */
             #tokenTable td:nth-child(6) {
+                grid-area: expira;
+                display: flex !important;
+                flex-direction: column;
+                gap: 1px;
+                padding: 8px 10px 10px !important;
+                border-top: 1px solid var(--border-soft) !important;
+                align-self: stretch;
+            }
+            #tokenTable td:nth-child(6)::before {
+                display: block !important;
+                font-size: 0.62rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-dim);
+            }
+            /* Ações: coluna direita, alinhada com Usos/Expira */
+            #tokenTable td:nth-child(7) {
                 grid-area: acts;
                 display: flex !important;
                 align-items: center;
@@ -1582,7 +1697,7 @@
                 height: 52px; overflow: hidden;
             }
             #tokenTable tr.skel-row td { display: none !important; }
-            #tokenTable tr.skel-row td:first-child { display: block !important; flex: 1; height: 100%; }
+            #tokenTable tr.skel-row td:nth-child(2) { display: block !important; flex: 1; height: 100%; }
 
             /* ── Log table: card redesenhado ── */
             #logTable tr {
@@ -2485,6 +2600,39 @@
         <!-- ─── TOKENS ─────────────────────────────────── -->
         <div class="tab-panel" id="tab-tokens">
 
+            <!-- ─── KPIs de tokens ─── -->
+            <div class="tab-kpis" id="tokenKpis">
+                <div class="tab-kpi-card kpi-green" onclick="filterTokenKpi('ativo')" role="button" tabindex="0" aria-label="Filtrar tokens ativos">
+                    <span class="tab-kpi-num" id="kpiTokenAtivo">—</span>
+                    <span class="tab-kpi-label">Ativos</span>
+                </div>
+                <div class="tab-kpi-card kpi-yellow" onclick="filterTokenKpi('expirando')" role="button" tabindex="0" aria-label="Filtrar tokens expirando em 24h">
+                    <span class="tab-kpi-num" id="kpiTokenExpirando">—</span>
+                    <span class="tab-kpi-label">Expirando 24h</span>
+                </div>
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('expirado')" role="button" tabindex="0" aria-label="Filtrar tokens expirados">
+                    <span class="tab-kpi-num" id="kpiTokenExpirado">—</span>
+                    <span class="tab-kpi-label">Expirados</span>
+                </div>
+                <div class="tab-kpi-card kpi-red" onclick="filterTokenKpi('revogado')" role="button" tabindex="0" aria-label="Filtrar tokens revogados">
+                    <span class="tab-kpi-num" id="kpiTokenRevogado">—</span>
+                    <span class="tab-kpi-label">Revogados</span>
+                </div>
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('esgotado')" role="button" tabindex="0" aria-label="Filtrar tokens esgotados">
+                    <span class="tab-kpi-num" id="kpiTokenEsgotado">—</span>
+                    <span class="tab-kpi-label">Esgotados</span>
+                </div>
+            </div><!-- /tokenKpis -->
+
+            <!-- ─── Bulk bar de tokens (seleção múltipla) ─── -->
+            <div id="token-bulk-bar" role="toolbar" aria-label="Ações em lote para tokens selecionados">
+                <span class="bulk-count" id="tokenBulkCount">0 selecionados</span>
+                <button class="btn btn-sm" onclick="extendTokensBulk()" aria-label="Estender validade dos selecionados"><i class="fa-solid fa-clock-rotate-left"></i> Estender +24h</button>
+                <button class="btn btn-sm" onclick="revokeTokensBulk()" aria-label="Revogar selecionados"><i class="fa-solid fa-ban"></i> Revogar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTokensBulk()" aria-label="Excluir selecionados"><i class="fa-solid fa-trash"></i> Excluir</button>
+                <button class="btn btn-sm" style="margin-left:auto" onclick="clearTokenSelection()" aria-label="Cancelar seleção">Cancelar</button>
+            </div>
+
             <!-- Formulário accordion (mobile: colapsável, desktop: sempre visível) -->
             <div class="token-form-section">
                 <button class="token-form-toggle" onclick="toggleTokenForm()" id="tokenFormToggleBtn" aria-expanded="false">
@@ -2540,7 +2688,20 @@
             <!-- Lista de tokens (mobile: aparece antes do form via CSS order) -->
             <div class="token-list-section">
                 <div class="panel">
-                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                    <div class="panel-title">
+                        <i class="fa-solid fa-list-check"></i> Tokens ativos e histórico
+                        <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir todos os tokens expirados">
+                            <i class="fa-solid fa-broom"></i> Limpar expirados
+                        </button>
+                    </div>
+                    <!-- Preset chips -->
+                    <div class="preset-chips" id="tokenPresetChips">
+                        <button class="preset-chip active" data-preset="" onclick="applyTokenPreset('',this)" aria-pressed="true">Todos</button>
+                        <button class="preset-chip" data-preset="ativo" onclick="applyTokenPreset('ativo',this)" aria-pressed="false">Ativos</button>
+                        <button class="preset-chip" data-preset="expirando" onclick="applyTokenPreset('expirando',this)" aria-pressed="false">Expirando hoje</button>
+                        <button class="preset-chip" data-preset="expirado" onclick="applyTokenPreset('expirado',this)" aria-pressed="false">Expirados</button>
+                        <button class="preset-chip" data-preset="revogado" onclick="applyTokenPreset('revogado',this)" aria-pressed="false">Revogados</button>
+                    </div>
                     <div class="filter-bar">
                         <div class="filter-search">
                             <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
@@ -2559,6 +2720,7 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th style="width:36px;padding-right:4px"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" aria-label="Selecionar todos" style="accent-color:var(--cyan);cursor:pointer"></th>
                                     <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
                                     <th>Currículo</th>
                                     <th>Status</th>
@@ -2567,7 +2729,7 @@
                                     <th class="col-actions"></th>
                                 </tr>
                             </thead>
-                            <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                            <tbody id="tokenTable"><tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -2578,12 +2740,38 @@
         <!-- ─── LOGS ───────────────────────────────────── -->
         <div class="tab-panel" id="tab-logs">
             <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
+                <div class="panel-title">
+                    <i class="fa-solid fa-chart-bar"></i> Downloads realizados
+                    <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="exportLogsCsv()" aria-label="Exportar logs como CSV">
+                        <i class="fa-solid fa-download"></i> Exportar CSV
+                    </button>
+                </div>
+
+                <!-- ─── KPIs de logs ─── -->
+                <div class="tab-kpis" id="logKpis">
+                    <div class="tab-kpi-card" onclick="applyLogPreset('today')" role="button" tabindex="0" aria-label="Filtrar: downloads de hoje">
+                        <span class="tab-kpi-num" id="kpiLogHoje">—</span>
+                        <span class="tab-kpi-label">Hoje</span>
+                    </div>
+                    <div class="tab-kpi-card" onclick="applyLogPreset('7d')" role="button" tabindex="0" aria-label="Filtrar: últimos 7 dias">
+                        <span class="tab-kpi-num" id="kpiLog7d">—</span>
+                        <span class="tab-kpi-label">7 dias</span>
+                    </div>
+                    <div class="tab-kpi-card" onclick="applyLogPreset('30d')" role="button" tabindex="0" aria-label="Filtrar: últimos 30 dias">
+                        <span class="tab-kpi-num" id="kpiLog30d">—</span>
+                        <span class="tab-kpi-label">30 dias</span>
+                    </div>
+                    <div class="tab-kpi-card kpi-cyan" onclick="applyLogPreset('all')" role="button" tabindex="0" aria-label="Ver todos os registros">
+                        <span class="tab-kpi-num" id="kpiLogTotal">—</span>
+                        <span class="tab-kpi-label">Total geral</span>
+                    </div>
+                </div><!-- /logKpis -->
+
                 <div class="filter-bar">
                     <div class="filter-search">
                         <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar label, destinatário, currículo, IP…" oninput="_debouncedLogLoad()">
                         <span class="th-filter-count" id="logCount"></span>
-                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar filtros" aria-label="Limpar filtros"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:210px;flex-shrink:0">
                         <option value="">Todos os eventos</option>
@@ -2609,9 +2797,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <th class="sortable" data-sort="download_tokens.label" onclick="toggleSort('logs','download_tokens.label')">Token / Label<span class="sort-arrow">↕</span></th>
+                                <th class="sortable" data-sort="download_tokens.label" onclick="toggleSort('logs','download_tokens.label')">Evento / Label<span class="sort-arrow">↕</span></th>
                                 <th class="sortable" data-sort="cv" onclick="toggleSort('logs','cv')">Currículo<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="ip_address" onclick="toggleSort('logs','ip_address')">IP<span class="sort-arrow">↕</span></th>
+                                <th>Origem</th>
                                 <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
                             </tr>
                         </thead>
@@ -3023,6 +3211,38 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- ─── TOKEN HISTORY DRAWER ──────────────────────── -->
+<div id="tokenDrawerOverlay" onclick="closeTokenDrawer()"></div>
+<div id="tokenDrawer" role="dialog" aria-modal="true" aria-labelledby="tokDrawerTitle">
+    <div class="tok-drawer-header">
+        <span class="tok-drawer-title" id="tokDrawerTitle">Detalhes do token</span>
+        <button class="tok-drawer-close" onclick="closeTokenDrawer()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="tok-drawer-body" id="tokDrawerBody">
+        <div style="text-align:center;color:var(--text-dim);padding:48px"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+    </div>
+    <div class="tok-drawer-actions" id="tokDrawerActions"></div>
+</div>
+
+<!-- ─── KEYBOARD SHORTCUTS OVERLAY ────────────────── -->
+<div class="shortcuts-overlay" id="shortcutsOverlay" hidden onclick="if(event.target===this)closeShortcuts()">
+    <div class="shortcuts-card" role="dialog" aria-modal="true" aria-label="Atalhos de teclado">
+        <h3><i class="fa-solid fa-keyboard" style="color:var(--cyan);margin-right:8px"></i> Atalhos de teclado</h3>
+        <div class="shortcuts-grid">
+            <span class="sc-key">g t</span><span class="sc-desc">Ir para Tokens</span>
+            <span class="sc-key">g l</span><span class="sc-desc">Ir para Logs</span>
+            <span class="sc-key">g c</span><span class="sc-desc">Ir para Currículos</span>
+            <span class="sc-key">g v</span><span class="sc-desc">Ir para Vagas</span>
+            <span class="sc-key">g m</span><span class="sc-desc">Ir para Métricas</span>
+            <span class="sc-key">/</span><span class="sc-desc">Focar busca da aba</span>
+            <span class="sc-key">n</span><span class="sc-desc">Novo token (aba Tokens)</span>
+            <span class="sc-key">Esc</span><span class="sc-desc">Fechar drawer / modal</span>
+            <span class="sc-key">?</span><span class="sc-desc">Mostrar / ocultar atalhos</span>
+        </div>
+        <button class="btn btn-sm" style="margin-top:16px;width:100%" onclick="closeShortcuts()">Fechar</button>
     </div>
 </div>
 
@@ -4928,7 +5148,7 @@ function switchTab(name) {
 
     if (name === 'cvs') loadCVs();
     if (name === 'tokens') { loadCVs(); loadTokens(); }
-    if (name === 'logs') loadLogs();
+    if (name === 'logs') { loadLogs(); loadLogKpis(); }
     if (name === 'vagas') loadApplications();
     if (name === 'metricas') { loadAnalytics(); loadLoginAttempts(); }
     if (name === 'seguranca') loadSessions();
@@ -5292,6 +5512,17 @@ async function loadTokens() {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+// Estado de seleção em lote de tokens
+let _tokenSelected = new Set();
+let _tokenFilteredData = []; // última lista filtrada renderizada
+
+function _tokenEffectiveStatus(t) {
+    if (t.status !== 'ativo') return t.status;
+    const exp = new Date(t.expires_at).getTime();
+    if (!isNaN(exp) && exp > Date.now() && exp - Date.now() < 24 * 3600 * 1000) return 'expirando';
+    return 'ativo';
+}
+
 function renderTokens() {
     updateSortHeaders('tokens');
 
@@ -5306,31 +5537,67 @@ function renderTokens() {
         (t.label || '').toLowerCase().includes(search) ||
         (t.cv_versions?.name || '').toLowerCase().includes(search)
     );
-    if (status) data = data.filter(t => t.status === status);
+    if (status) {
+        if (status === 'expirando') {
+            data = data.filter(t => _tokenEffectiveStatus(t) === 'expirando');
+        } else {
+            data = data.filter(t => t.status === status);
+        }
+    }
     data = _sortData(data, _tokenSort.col, _tokenSort.dir);
+    _tokenFilteredData = data;
 
     if (countEl) countEl.textContent = _tokenData.length
         ? (data.length !== _tokenData.length ? `${data.length} de ${_tokenData.length}` : `${_tokenData.length} registros`)
         : '';
 
+    updateTokenKpis();
+
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>`;
+        const emptyMsg = _tokenData.length ? 'Nenhum token encontrado' : 'Nenhum token criado ainda';
+        const emptyIcon = _tokenData.length ? 'fa-filter' : 'fa-key';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:40px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+                <i class="fa-solid ${emptyIcon}" style="font-size:1.4rem;opacity:0.3"></i>
+                <span>${emptyMsg}</span>
+                ${!_tokenData.length ? '<button class="btn btn-sm btn-cyan" onclick="document.getElementById(\'tokenFormToggleBtn\')?.click()||document.getElementById(\'tokenCV\')?.focus()" style="margin-top:4px"><i class="fa-solid fa-plus"></i> Criar token</button>' : ''}
+            </div>
+        </td></tr>`;
         return;
     }
+
     tbody.innerHTML = data.map(t => {
-        const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
+        const effStatus = _tokenEffectiveStatus(t);
+        const badgeCls = effStatus === 'ativo' ? 'badge-active'
+                       : effStatus === 'expirando' ? 'badge-expiring'
+                       : effStatus === 'expirado'  ? 'badge-expired'
+                       : effStatus === 'revogado'  ? 'badge-revoked'
+                       : 'badge-esgotado';
+        const badgeLabel = effStatus === 'expirando' ? '⚡ expirando' : `● ${t.status}`;
         const uses = t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
+        const expRel  = _relTime(t.expires_at);
+        const expAbs  = fmtDate(t.expires_at);
+        const checked = _tokenSelected.has(t.id) ? 'checked' : '';
+
+        const tokenPath = `/cv?t=${t.id}`;
+        const fullLink  = `${location.origin}${tokenPath}`;
+
         return `
-            <tr>
+            <tr class="${_tokenSelected.has(t.id) ? 'token-row-selected' : ''}" style="cursor:pointer" onclick="openTokenDrawer(${JSON.stringify(t).replace(/"/g,'&quot;')})">
+                <td onclick="event.stopPropagation()" style="width:36px;padding-right:4px">
+                    <input type="checkbox" ${checked} onchange="toggleTokenSelect('${t.id}',this)" aria-label="Selecionar token ${esc(t.label||'(sem label)')}" style="accent-color:var(--cyan);cursor:pointer">
+                </td>
                 <td data-label="Label"><span><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></span></td>
-                <td data-label="Currículo">${esc(t.cv_versions?.name || '—')}</td>
-                <td data-label="Status"><span class="badge ${badgeCls}">● ${t.status}</span></td>
+                <td data-label="Currículo" style="color:var(--text-soft)">${esc(t.cv_versions?.name || '—')}</td>
+                <td data-label="Status"><span class="badge ${badgeCls}">${badgeLabel}</span></td>
                 <td data-label="Usos" style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
-                <td data-label="Expira" style="font-size:0.8rem">${fmtDate(t.expires_at)}</td>
-                <td>
+                <td data-label="Expira" style="font-size:0.8rem" title="${expAbs}">${expRel}</td>
+                <td onclick="event.stopPropagation()">
                     <div class="row-actions">
-                        ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                        <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn btn-sm" onclick="copyTokenLink('${fullLink}')" title="Copiar link" aria-label="Copiar link do token"><i class="fa-solid fa-copy"></i></button>
+                        <button class="btn btn-sm" onclick="regenerateToken(${JSON.stringify(t).replace(/"/g,'&quot;')})" title="Regenerar (criar cópia)" aria-label="Criar cópia deste token"><i class="fa-solid fa-rotate"></i></button>
+                        ${effStatus === 'ativo' || effStatus === 'expirando' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar" aria-label="Revogar token"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteToken('${t.id}', '${esc(t.label || '(sem label)')}')" title="Excluir" aria-label="Excluir token"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
@@ -5341,6 +5608,11 @@ function renderTokens() {
 function clearTokenFilters() {
     ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     _tokenSort = { col: 'expires_at', dir: 'asc' };
+    // Reset preset chips
+    document.querySelectorAll('#tokenPresetChips .preset-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.preset === '');
+        c.setAttribute('aria-pressed', c.dataset.preset === '' ? 'true' : 'false');
+    });
     renderTokens();
 }
 
@@ -5353,13 +5625,274 @@ async function revokeToken(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function deleteToken(id, label) {
+async function confirmDeleteToken(id, label) {
     if (!await showConfirm(`Excluir token "${label}"?`, 'Esta ação remove o token permanentemente — perde-se o histórico de associação.\nOs logs de download ficam preservados.', { okText: 'Excluir' })) return;
     try {
         await api('DELETE', `/api/admin/tokens?id=${id}`);
         showToast('Token excluído');
+        _tokenSelected.delete(id);
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }
+}
+
+// Alias para compatibilidade com chamadas existentes
+const deleteToken = confirmDeleteToken;
+
+// ─── TOKEN KPIS & FILTROS ──────────────────────────────────
+
+function updateTokenKpis() {
+    const counts = { ativo: 0, expirando: 0, expirado: 0, revogado: 0, esgotado: 0 };
+    (_tokenData || []).forEach(t => {
+        const s = _tokenEffectiveStatus(t);
+        if (s in counts) counts[s]++;
+    });
+    const ids = { ativo: 'kpiTokenAtivo', expirando: 'kpiTokenExpirando', expirado: 'kpiTokenExpirado', revogado: 'kpiTokenRevogado', esgotado: 'kpiTokenEsgotado' };
+    Object.entries(ids).forEach(([k, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = counts[k];
+    });
+}
+
+function filterTokenKpi(status) {
+    const sel = document.getElementById('tokenStatusFilter');
+    const current = sel?.value;
+    const next = current === status ? '' : status;
+    if (sel) sel.value = next;
+    // Sync preset chips
+    document.querySelectorAll('#tokenPresetChips .preset-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.preset === next);
+        c.setAttribute('aria-pressed', c.dataset.preset === next ? 'true' : 'false');
+    });
+    // Highlight active KPI card
+    document.querySelectorAll('#tokenKpis .tab-kpi-card').forEach(c => c.classList.remove('kpi-selected'));
+    if (next) {
+        const map = { ativo: 'kpi-green', expirando: 'kpi-yellow', expirado: 'kpi-dim', revogado: 'kpi-red', esgotado: 'kpi-dim' };
+        const card = document.querySelector(`#tokenKpis .tab-kpi-card.${map[next]}`);
+        if (card) card.classList.add('kpi-selected');
+    }
+    renderTokens();
+}
+
+function applyTokenPreset(preset, btn) {
+    const sel = document.getElementById('tokenStatusFilter');
+    if (sel) sel.value = preset;
+    document.querySelectorAll('#tokenPresetChips .preset-chip').forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-pressed', 'false');
+    });
+    if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
+    renderTokens();
+}
+
+// ─── TOKEN SELEÇÃO EM LOTE ────────────────────────────────
+
+function toggleTokenSelect(id, checkbox) {
+    if (checkbox.checked) _tokenSelected.add(id);
+    else _tokenSelected.delete(id);
+    // Atualiza visual da linha
+    const row = checkbox.closest('tr');
+    if (row) row.classList.toggle('token-row-selected', checkbox.checked);
+    _updateTokenBulkBar();
+    // Atualiza checkbox-mestre
+    const all = document.getElementById('tokenSelectAll');
+    if (all) {
+        const visibleIds = _tokenFilteredData.map(t => t.id);
+        const selectedVisible = visibleIds.filter(id => _tokenSelected.has(id));
+        all.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleIds.length;
+        all.checked = visibleIds.length > 0 && selectedVisible.length === visibleIds.length;
+    }
+}
+
+function toggleSelectAllTokens(checkbox) {
+    const visibleIds = _tokenFilteredData.map(t => t.id);
+    if (checkbox.checked) visibleIds.forEach(id => _tokenSelected.add(id));
+    else visibleIds.forEach(id => _tokenSelected.delete(id));
+    renderTokens();
+    _updateTokenBulkBar();
+}
+
+function _updateTokenBulkBar() {
+    const bar = document.getElementById('token-bulk-bar');
+    const countEl = document.getElementById('tokenBulkCount');
+    if (!bar) return;
+    const n = _tokenSelected.size;
+    bar.style.display = n > 0 ? 'flex' : 'none';
+    if (countEl) countEl.textContent = `${n} selecionado${n !== 1 ? 's' : ''}`;
+}
+
+function clearTokenSelection() {
+    _tokenSelected.clear();
+    renderTokens();
+    _updateTokenBulkBar();
+}
+
+async function revokeTokensBulk() {
+    const ids = [..._tokenSelected];
+    const ativoIds = ids.filter(id => {
+        const t = _tokenData.find(x => x.id === id);
+        return t && (t.status === 'ativo');
+    });
+    if (!ativoIds.length) return showToast('Nenhum token ativo selecionado', 'error');
+    if (!await showConfirm(`Revogar ${ativoIds.length} token(s)?`, 'Os links deixarão de funcionar imediatamente.', { okText: 'Revogar' })) return;
+    try {
+        await Promise.all(ativoIds.map(id => api('PATCH', `/api/admin/tokens?id=${id}`)));
+        showToast(`${ativoIds.length} token(s) revogado(s)`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteTokensBulk() {
+    const ids = [..._tokenSelected];
+    if (!ids.length) return;
+    if (!await showConfirm(`Excluir ${ids.length} token(s)?`, 'Esta ação é permanente. Os logs de download ficam preservados.', { okText: 'Excluir' })) return;
+    try {
+        await Promise.all(ids.map(id => api('DELETE', `/api/admin/tokens?id=${id}`)));
+        showToast(`${ids.length} token(s) excluído(s)`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function extendTokensBulk() {
+    const ids = [..._tokenSelected];
+    const ativoIds = ids.filter(id => {
+        const t = _tokenData.find(x => x.id === id);
+        return t && (t.status === 'ativo' || _tokenEffectiveStatus(t) === 'expirando');
+    });
+    if (!ativoIds.length) return showToast('Nenhum token ativo/expirando selecionado', 'error');
+    if (!await showConfirm(`Estender ${ativoIds.length} token(s) em +24h?`, '', { okText: 'Estender' })) return;
+    try {
+        await Promise.all(ativoIds.map(id => api('PATCH', `/api/admin/tokens?id=${id}&extend=24`)));
+        showToast(`${ativoIds.length} token(s) estendido(s) em +24h`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function clearExpiredTokens() {
+    const expired = (_tokenData || []).filter(t => t.status === 'expirado');
+    if (!expired.length) return showToast('Nenhum token expirado', 'error');
+    if (!await showConfirm(`Excluir ${expired.length} token(s) expirado(s)?`, 'Os logs de download ficam preservados.', { okText: 'Limpar' })) return;
+    try {
+        await Promise.all(expired.map(t => api('DELETE', `/api/admin/tokens?id=${t.id}`)));
+        showToast(`${expired.length} token(s) expirado(s) excluído(s)`);
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ─── TOKEN AÇÕES INLINE ────────────────────────────────────
+
+async function copyTokenLink(link) {
+    try {
+        await navigator.clipboard.writeText(link);
+        showToast('Link copiado!');
+    } catch {
+        showToast('Erro ao copiar — copie manualmente: ' + link, 'error');
+    }
+}
+
+async function regenerateToken(t) {
+    const label = await showPrompt('Label para o novo token:', t.label || '');
+    if (label === null) return;
+    const body = {
+        cv_version_id: t.cv_version_id,
+        label: label || null,
+        max_uses: t.max_uses || null,
+        expires_in_hours: 24,
+    };
+    try {
+        const data = await api('POST', '/api/admin/tokens', body);
+        openShareModal(data);
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ─── TOKEN DRAWER (histórico) ─────────────────────────────
+
+function openTokenDrawer(t) {
+    document.getElementById('tokenDrawer').classList.add('open');
+    document.getElementById('tokenDrawerOverlay').classList.add('open');
+    document.getElementById('tokDrawerTitle').textContent = esc(t.label || '(sem label)');
+    renderTokenDrawer(t);
+}
+
+function closeTokenDrawer() {
+    document.getElementById('tokenDrawer').classList.remove('open');
+    document.getElementById('tokenDrawerOverlay').classList.remove('open');
+}
+
+function renderTokenDrawer(t) {
+    const effStatus = _tokenEffectiveStatus(t);
+    const badgeCls  = effStatus === 'ativo' ? 'badge-active' : effStatus === 'expirando' ? 'badge-expiring' : effStatus === 'expirado' ? 'badge-expired' : effStatus === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
+    const tokenPath = `/cv?t=${t.id}`;
+    const fullLink  = `${location.origin}${tokenPath}`;
+
+    const body = document.getElementById('tokDrawerBody');
+    body.innerHTML = `
+        <div>
+            <div class="tok-section-title">Detalhes</div>
+            <div class="tok-info-row"><span class="tok-info-label">Status</span><span class="tok-info-val"><span class="badge ${badgeCls}">● ${effStatus}</span></span></div>
+            <div class="tok-info-row"><span class="tok-info-label">Currículo</span><span class="tok-info-val">${esc(t.cv_versions?.name || '—')}</span></div>
+            <div class="tok-info-row"><span class="tok-info-label">Usos</span><span class="tok-info-val" style="font-family:var(--font-mono)">${t.max_uses ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`}</span></div>
+            <div class="tok-info-row"><span class="tok-info-label">Expira</span><span class="tok-info-val" title="${fmtDate(t.expires_at)}">${_relTime(t.expires_at)}</span></div>
+            <div class="tok-info-row"><span class="tok-info-label">Criado</span><span class="tok-info-val">${fmtDate(t.created_at)}</span></div>
+        </div>
+        <div>
+            <div class="tok-section-title">Link público</div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <code style="font-size:0.7rem;color:var(--text-dim);background:var(--bg-surface);padding:6px 10px;border-radius:8px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${esc(fullLink)}</code>
+                <button class="btn btn-sm" onclick="copyTokenLink('${fullLink}')" aria-label="Copiar link"><i class="fa-solid fa-copy"></i></button>
+            </div>
+        </div>
+        <div>
+            <div class="tok-section-title">Acessos recentes</div>
+            <div id="tokDrawerLogs" style="color:var(--text-dim);font-size:0.82rem;padding:8px 0">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando…
+            </div>
+        </div>
+    `;
+
+    const actions = document.getElementById('tokDrawerActions');
+    actions.innerHTML = `
+        ${effStatus === 'ativo' || effStatus === 'expirando' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}');closeTokenDrawer()" aria-label="Revogar token"><i class="fa-solid fa-ban"></i> Revogar</button>` : ''}
+        <button class="btn btn-sm" onclick="regenerateToken(${JSON.stringify(t).replace(/"/g,'&quot;')})" aria-label="Regenerar token"><i class="fa-solid fa-rotate"></i> Regenerar</button>
+        <button class="btn btn-sm" onclick="copyTokenLink('${fullLink}')" aria-label="Copiar link"><i class="fa-solid fa-copy"></i> Copiar link</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDeleteToken('${t.id}','${esc(t.label||'(sem label)')}');closeTokenDrawer()" aria-label="Excluir token"><i class="fa-solid fa-trash"></i></button>
+    `;
+
+    // Carrega acessos do token
+    api('GET', `/api/admin/logs?token_id=${t.id}&limit=10`)
+        .then(r => {
+            const logs = r.data || r;
+            const logsEl = document.getElementById('tokDrawerLogs');
+            if (!logsEl) return;
+            if (!logs.length) { logsEl.textContent = 'Nenhum acesso registrado.'; return; }
+            logsEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">` + logs.map(l => `
+                <div style="display:flex;justify-content:space-between;gap:8px;font-size:0.8rem;padding:5px 0;border-bottom:1px solid var(--border-soft)">
+                    <span style="color:var(--text-soft)">${esc(l.ip_address || '—')}</span>
+                    <span style="color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</span>
+                </div>
+            `).join('') + `</div>`;
+        })
+        .catch(() => {
+            const logsEl = document.getElementById('tokDrawerLogs');
+            if (logsEl) logsEl.textContent = 'Não foi possível carregar os acessos.';
+        });
+}
+
+// ─── HELPERS DE TEMPO RELATIVO ─────────────────────────────
+
+function _relTime(iso) {
+    if (!iso) return '—';
+    const diffMs  = new Date(iso).getTime() - Date.now();
+    const diffSec = Math.round(diffMs / 1000);
+    const abs     = Math.abs(diffSec);
+    const rtf = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
+    if (abs < 60)   return diffSec < 0 ? 'agora há pouco' : 'em segundos';
+    if (abs < 3600) return rtf.format(Math.round(diffSec / 60), 'minute');
+    if (abs < 86400) return rtf.format(Math.round(diffSec / 3600), 'hour');
+    return rtf.format(Math.round(diffSec / 86400), 'day');
 }
 
 // ─── SEND CV MODAL ────────────────────────────────────────
@@ -5833,17 +6366,118 @@ function renderLogs() {
     if (countEl) countEl.textContent = _logTotal ? `${_logTotal} registros` : '';
 
     if (!_logData.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum resultado</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:40px">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:1.4rem;opacity:0.3"></i>
+                <span>Nenhum resultado</span>
+            </div>
+        </td></tr>`;
         return;
     }
     tbody.innerHTML = _logData.map(l => `
-        <tr onclick="openLogDetail(${JSON.stringify(l).replace(/"/g,'&quot;')})">
-            <td data-label="Token"><span>${smartLogLabel(l)}</span></td>
+        <tr onclick="openLogDetail(${JSON.stringify(l).replace(/"/g,'&quot;')})" style="cursor:pointer">
+            <td data-label="Evento"><span>${smartLogLabel(l)}</span></td>
             <td data-label="Currículo"><span>${smartCvName(l)}</span></td>
-            <td data-label="IP" style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
-            <td data-label="Data" style="font-size:0.82rem">${fmtDate(l.downloaded_at, true)}</td>
+            <td data-label="Origem" style="font-size:0.78rem">${smartLogOrigin(l)}</td>
+            <td data-label="Data" style="font-size:0.82rem" title="${fmtDate(l.downloaded_at, true)}">${_relTime(l.downloaded_at)}</td>
         </tr>
     `).join('');
+}
+
+function smartLogOrigin(l) {
+    const ip = l.ip_address || '';
+    if (ip.startsWith('admin-send-')) {
+        const ua = l.user_agent || '';
+        const m  = ua.match(/^Send to ([^<(]+?)(?:\s*<|\s+via|\s*$)/);
+        const recipient = m ? m[1].trim() : '?';
+        return `<span style="color:var(--text-soft)" title="${esc(ua)}">${esc(recipient)}</span>`;
+    }
+    if (!ip) return '<span style="color:var(--text-dim)">—</span>';
+    return `<span style="font-family:var(--font-mono)" title="IP do visitante">${esc(ip)}</span>`;
+}
+
+// ─── LOG KPIS ──────────────────────────────────────────────
+
+async function loadLogKpis() {
+    const fmt = d => d.toLocaleDateString('en-CA');
+    const now   = new Date();
+    const today = fmt(now);
+    const ago7  = fmt(new Date(now - 7  * 86400000));
+    const ago30 = fmt(new Date(now - 30 * 86400000));
+
+    const reset = id => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
+    ['kpiLogHoje','kpiLog7d','kpiLog30d','kpiLogTotal'].forEach(reset);
+
+    try {
+        const [r1, r7, r30, rAll] = await Promise.all([
+            api('GET', `/api/admin/logs?limit=1&from=${today}`),
+            api('GET', `/api/admin/logs?limit=1&from=${ago7}`),
+            api('GET', `/api/admin/logs?limit=1&from=${ago30}`),
+            api('GET', '/api/admin/logs?limit=1'),
+        ]);
+        const set = (id, r) => { const el = document.getElementById(id); if (el) el.textContent = r.total ?? '?'; };
+        set('kpiLogHoje',  r1);
+        set('kpiLog7d',    r7);
+        set('kpiLog30d',   r30);
+        set('kpiLogTotal', rAll);
+    } catch { /* silencioso: KPIs são acessórios */ }
+}
+
+function applyLogPreset(preset) {
+    const fmt = d => d.toLocaleDateString('en-CA');
+    const now  = new Date();
+    const from = document.getElementById('logFrom');
+    const to   = document.getElementById('logTo');
+
+    // Destaca card clicado
+    document.querySelectorAll('#logKpis .tab-kpi-card').forEach(c => c.classList.remove('kpi-selected'));
+    event?.currentTarget?.classList.add('kpi-selected');
+
+    if (preset === 'today') {
+        if (from) from.value = fmt(now);
+        if (to)   to.value   = fmt(now);
+    } else if (preset === '7d') {
+        if (from) from.value = fmt(new Date(now - 7  * 86400000));
+        if (to)   to.value   = fmt(now);
+    } else if (preset === '30d') {
+        if (from) from.value = fmt(new Date(now - 30 * 86400000));
+        if (to)   to.value   = fmt(now);
+    } else { // 'all'
+        if (from) from.value = '';
+        if (to)   to.value   = '';
+    }
+    _resetAndLoadLogs();
+}
+
+function exportLogsCsv() {
+    if (!_logData.length) return showToast('Sem dados para exportar', 'error');
+    const rows = [['Data/hora', 'Evento', 'Currículo', 'Origem', 'Token/Label']];
+    _logData.forEach(l => {
+        const ip = l.ip_address || '';
+        const evento = ip.startsWith('admin-send-') ? ip.replace('admin-send-','') : 'download';
+        const origem = (() => {
+            if (ip.startsWith('admin-send-')) {
+                const m = (l.user_agent||'').match(/^Send to ([^<(]+?)(?:\s*<|\s+via|\s*$)/);
+                return m ? m[1].trim() : ip;
+            }
+            return ip || '—';
+        })();
+        rows.push([
+            fmtDate(l.downloaded_at, true),
+            evento,
+            l.cv_versions?.name || l.cv_name_snapshot || '—',
+            origem,
+            l.download_tokens?.label || '(download direto)',
+        ]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `logs-${new Date().toLocaleDateString('en-CA')}.csv` });
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    showToast(`${_logData.length} registros exportados`);
 }
 
 function clearLogFilters() {
@@ -6495,6 +7129,70 @@ function closeKpiDetail() { document.getElementById('kpiDetailModal').classList.
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('kpiDetailModal')?.classList.contains('open')) closeKpiDetail();
 });
+
+// ─── ATALHOS DE TECLADO GLOBAIS ────────────────────────────
+(function _initKeyboardShortcuts() {
+    let _gPressed = false, _gTimer = null;
+
+    document.addEventListener('keydown', e => {
+        // Ignora quando foco está em campo de texto
+        const tag = e.target.tagName;
+        const editable = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
+
+        // Esc: fecha drawers/modais abertos
+        if (e.key === 'Escape') {
+            if (!document.getElementById('shortcutsOverlay')?.hidden) { closeShortcuts(); return; }
+            if (document.getElementById('tokenDrawer')?.classList.contains('open')) { closeTokenDrawer(); return; }
+        }
+
+        if (editable) return;
+
+        // ? → toggle shortcuts
+        if (e.key === '?') { e.preventDefault(); toggleShortcuts(); return; }
+
+        // / → foca busca da aba ativa
+        if (e.key === '/') {
+            e.preventDefault();
+            const tab = typeof _activeTab !== 'undefined' ? _activeTab : '';
+            const map = { tokens: 'tokenSearch', logs: 'logSearch', cvs: 'cvSearch', vagas: 'vagasSearch' };
+            const id  = map[tab];
+            if (id) document.getElementById(id)?.focus();
+            return;
+        }
+
+        // n → expande form de criação de token (aba tokens)
+        if (e.key === 'n' || e.key === 'N') {
+            const tab = typeof _activeTab !== 'undefined' ? _activeTab : '';
+            if (tab === 'tokens') {
+                e.preventDefault();
+                const btn = document.getElementById('tokenFormToggleBtn');
+                if (btn && btn.getAttribute('aria-expanded') === 'false') btn.click();
+                setTimeout(() => document.getElementById('tokenCV')?.focus(), 100);
+            }
+            return;
+        }
+
+        // g + [t/l/c/v/m] → navegar abas
+        if (e.key === 'g') { _gPressed = true; clearTimeout(_gTimer); _gTimer = setTimeout(() => { _gPressed = false; }, 1000); return; }
+        if (_gPressed) {
+            _gPressed = false;
+            clearTimeout(_gTimer);
+            const tabMap = { t: 'tokens', l: 'logs', c: 'cvs', v: 'vagas', m: 'metricas' };
+            const dest = tabMap[e.key];
+            if (dest) { e.preventDefault(); switchTab(dest); }
+        }
+    });
+})();
+
+function toggleShortcuts() {
+    const el = document.getElementById('shortcutsOverlay');
+    if (!el) return;
+    el.hidden = !el.hidden;
+}
+function closeShortcuts() {
+    const el = document.getElementById('shortcutsOverlay');
+    if (el) el.hidden = true;
+}
 
 function _kpiSection(title, html) {
     return `<div class="kpi-detail-section"><div class="kpi-detail-section-title">${esc(title)}</div>${html || '<div class="kpi-detail-row meta">Sem dados</div>'}</div>`;
