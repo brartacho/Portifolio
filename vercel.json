@@ -3,6 +3,14 @@
     {
       "path": "/api/track",
       "schedule": "0 8 */4 * *"
+    },
+    {
+      "path": "/api/demo/cleanup",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/demo/health",
+      "schedule": "*/10 * * * *"
     }
   ],
   "rewrites": [
