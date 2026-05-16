@@ -2162,8 +2162,20 @@
             font-variant-numeric: tabular-nums; cursor: help;
         }
         .metrics-kpis-secondary { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
-        .metrics-kpis-secondary .metrics-kpi-card { cursor: default; }
-        .metrics-kpis-secondary .metrics-kpi-card:hover { transform: none; }
+        /* Bloco explicativo colapsável dentro dos drill-downs (fechado por padrão) */
+        .kpi-detail-explain { margin-top: 10px; font-size: 0.78rem; color: var(--text-dim); }
+        .kpi-detail-explain summary { cursor: pointer; padding: 6px 0; user-select: none; }
+        .kpi-detail-explain summary::marker, .kpi-detail-explain summary::-webkit-details-marker { display: none; }
+        .kpi-detail-explain summary::before { content: '▸ '; display: inline-block; }
+        .kpi-detail-explain[open] summary::before { content: '▾ '; }
+        .kpi-detail-explain summary:hover { color: var(--text); }
+        .kpi-detail-explain p { padding: 6px 0 4px; line-height: 1.5; margin: 0; }
+        .kpi-detail-explain code { background: var(--bg-dark); padding: 1px 5px; border-radius: 3px; font-size: 0.92em; }
+        @media (max-width: 600px) {
+            .kpi-detail-row { gap: 8px; word-break: break-word; }
+            .kpi-detail-row .meta { font-size: 0.7rem; }
+            .kpi-detail-section { margin-bottom: 14px; }
+        }
 
         /* Funil — duas visões lado a lado */
         .metrics-funnel-grid {
@@ -2820,34 +2832,34 @@
 
             <!-- KPIs sessão + retenção -->
             <div class="metrics-kpis metrics-kpis-secondary">
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('sessoes')">
                     <div class="metrics-kpi-label">Sessões</div>
                     <div class="metrics-kpi-value" id="kpi-sessions">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('bounce')">
                     <div class="metrics-kpi-label">Bounce rate</div>
                     <div class="metrics-kpi-value" id="kpi-bounce">—</div>
                     <div class="metrics-kpi-sub">sessão com 1 pageview, sem engajamento</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('pages-per-session')">
                     <div class="metrics-kpi-label">Páginas / sessão</div>
                     <div class="metrics-kpi-value" id="kpi-pages-per-session">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('avg-duration')">
                     <div class="metrics-kpi-label">Duração média</div>
                     <div class="metrics-kpi-value" id="kpi-avg-duration">—</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('retention-7d')">
                     <div class="metrics-kpi-label">Retenção 7d</div>
                     <div class="metrics-kpi-value" id="kpi-retention-7d">—</div>
                     <div class="metrics-kpi-sub">retornaram dentro de 7 dias</div>
                 </div>
-                <div class="metrics-kpi-card">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('retention-30d')">
                     <div class="metrics-kpi-label">Retenção 30d</div>
                     <div class="metrics-kpi-value" id="kpi-retention-30d">—</div>
                     <div class="metrics-kpi-sub">retornaram dentro de 30 dias</div>
                 </div>
-                <div class="metrics-kpi-card" title="Logins no showcase demo do painel admin">
+                <div class="metrics-kpi-card" onclick="openKpiDetail('demo')" title="Logins no showcase demo do painel admin">
                     <div class="metrics-kpi-label">Acessos demo</div>
                     <div class="metrics-kpi-value" id="kpi-demo-accesses" style="color:#a78bfa">—</div>
                 </div>
@@ -6389,12 +6401,19 @@ function openKpiDetail(kind) {
     if (!_lastAnalyticsData) return;
     document.getElementById('kpiDetailModal').classList.add('open');
     const titles = {
-        visitas:        'Visitas — detalhes',
-        unicos:         'Visitantes únicos — detalhes',
-        engajados:      'Engajados — detalhes',
-        'cv-clicks':    'Cliques em CV — detalhes',
-        'cv-downloads': 'Downloads reais — detalhes',
-        recorrentes:   'Recorrentes — detalhes',
+        visitas:             'Visitas — detalhes',
+        unicos:              'Visitantes únicos — detalhes',
+        engajados:           'Engajados — detalhes',
+        'cv-clicks':         'Cliques em CV — detalhes',
+        'cv-downloads':      'Downloads reais — detalhes',
+        recorrentes:         'Recorrentes — detalhes',
+        sessoes:             'Sessões — detalhes',
+        bounce:              'Bounce rate — detalhes',
+        'pages-per-session': 'Páginas por sessão — detalhes',
+        'avg-duration':      'Duração média — detalhes',
+        'retention-7d':      'Retenção 7 dias — detalhes',
+        'retention-30d':     'Retenção 30 dias — detalhes',
+        demo:                'Acessos demo — detalhes',
     };
     document.getElementById('kpiDetailTitle').textContent = titles[kind] || 'Detalhes';
     (_kpiRenderers[kind] || (() => {}))(_lastAnalyticsData);
@@ -6514,6 +6533,170 @@ const _kpiRenderers = {
         }).join('')}</div>` : '';
         body.innerHTML = _kpiSection('Resumo', `<div class="kpi-detail-list">${_kpiRow('Visitantes recorrentes', `<strong>${kpis.recurring_visitors ?? 0}</strong>`)}</div>`)
             + _kpiSection('Top 10 (anonimizados)', list);
+    },
+
+    sessoes: data => {
+        const { kpis = {} } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const total = Number(kpis.total_sessions ?? 0);
+        const pv    = Number(kpis.pageviews ?? 0);
+        const diff  = pv - total;
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de sessões',  `<strong>${total}</strong>`)}
+            ${_kpiRow('Bounce rate',       `<strong>${kpis.bounce_rate ?? 0}%</strong>`)}
+            ${_kpiRow('Páginas / sessão',  `<strong>${kpis.pages_per_session ?? 0}</strong>`)}
+            ${_kpiRow('Duração média',     `<strong>${_fmtDuration(kpis.avg_session_seconds)}</strong>`)}
+        </div>`;
+        const cmp = `<div class="kpi-detail-list">
+            ${_kpiRow('Visitas no período',  `<strong>${pv}</strong>`)}
+            ${_kpiRow('Sessões com tracking', `<strong>${total}</strong>`)}
+            ${diff > 0 ? _kpiRow('Visitas sem session_id', `<span class="meta">${diff} (anteriores ao tracking)</span>`) : ''}
+        </div>`;
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Uma <strong>sessão</strong> é a sequência de eventos do mesmo visitante com menos de 30 minutos de inatividade entre eles. O ID é gerado no <code>localStorage</code> ao primeiro acesso e expira automaticamente. Visitas mais antigas que o tracking de sessão não contam.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Comparativo', cmp) + explain;
+    },
+
+    bounce: data => {
+        const { kpis = {}, top_pages = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const total = Number(kpis.total_sessions ?? 0);
+        const rate  = Number(kpis.bounce_rate ?? 0);
+        const bouncing = Math.round(rate * total / 100);
+        const ranked = (top_pages || []).filter(p => p.views > 0)
+            .map(p => ({ ...p, eng_rate: p.views ? Math.round((p.engaged || 0) / p.views * 1000) / 10 : 0 }))
+            .sort((a, b) => a.eng_rate - b.eng_rate).slice(0, 10);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Bounce rate',          `<strong>${rate}%</strong>`)}
+            ${_kpiRow('Sessões bouncing',     `<strong>${bouncing}</strong> de ${total}`)}
+            ${_kpiRow('Sessões com engajamento', `<strong>${total - bouncing}</strong>`)}
+        </div>`;
+        const rank = ranked.length ? `<div class="kpi-detail-list">${ranked.map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.eng_rate}% engaj. · ${p.engaged || 0}/${p.views}</span>`);
+        }).join('')}</div>` : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Sessão "bouncing" = teve apenas <strong>1 pageview</strong> e <strong>nenhum evento <code>engaged</code></strong> (que dispara após 30s de permanência). Indica visitas que abriram e saíram sem interagir.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Páginas com menor engajamento (candidatas a bounce)', rank)
+            + explain;
+    },
+
+    'pages-per-session': data => {
+        const { kpis = {}, top_pages = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const avg = Number(kpis.pages_per_session ?? 0);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Média de páginas / sessão', `<strong>${avg}</strong>`)}
+            ${_kpiRow('Total de sessões',         `<strong>${kpis.total_sessions ?? 0}</strong>`)}
+            ${_kpiRow('Total de pageviews',       `<strong>${kpis.pageviews ?? 0}</strong>`)}
+        </div>`;
+        const pages = top_pages.length ? `<div class="kpi-detail-list">${top_pages.slice(0, 10).map(p => {
+            const label = (p.path || '/') === '/' ? 'Início' : p.path;
+            return _kpiRow(esc(label), `<span class="meta">${p.views} visitas · ${p.unique_visitors} únicos</span>`);
+        }).join('')}</div>` : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Quantas páginas, em média, cada sessão visita antes de encerrar. <strong>1.0</strong> = visitantes nunca navegam internamente. <strong>≥ 2.0</strong> = exploração ativa do portfólio.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo) + _kpiSection('Top páginas no período', pages) + explain;
+    },
+
+    'avg-duration': data => {
+        const { kpis = {}, hourly = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Duração média da sessão', `<strong>${_fmtDuration(kpis.avg_session_seconds)}</strong>`)}
+            ${_kpiRow('Total de sessões',        `<strong>${kpis.total_sessions ?? 0}</strong>`)}
+        </div>`;
+        const hourlySorted = (hourly || []).slice().sort((a, b) => Number(b.views) - Number(a.views)).slice(0, 8);
+        const hourlyHtml = hourlySorted.length ? `<div class="kpi-detail-list">${hourlySorted.map(h => {
+            const hh = String(h.hour).padStart(2, '0');
+            return _kpiRow(`${hh}h–${String((Number(h.hour) + 1) % 24).padStart(2, '0')}h (BRT)`, `<span class="meta">${h.views} visitas · ${h.unique_visitors} únicos</span>`);
+        }).join('')}</div>` : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Diferença em segundos entre o primeiro e o último evento registrado da sessão. Sessões com 1 só evento têm duração 0.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Horários de pico (top 8 por visitas)', hourlyHtml)
+            + explain;
+    },
+
+    'retention-7d': data => {
+        const { retention = {}, top_recurring = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const total = Number(retention.total_visitors ?? 0);
+        const ret7  = Number(retention.returned_in_7d ?? 0);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Retenção 7 dias',           `<strong>${retention.retention_7d_pct ?? 0}%</strong>`)}
+            ${_kpiRow('Visitantes que retornaram', `<strong>${ret7}</strong> de ${total}`)}
+            ${_kpiRow('Não retornaram em 7d',      `<strong>${Math.max(0, total - ret7)}</strong>`)}
+        </div>`;
+        const list = top_recurring.length ? `<div class="kpi-detail-list">${top_recurring.slice(0, 10).map(r => {
+            const meta = [`primeira: ${fmtDate(r.first_seen, true)}`, `última: ${fmtDate(r.last_seen, true)}`, r.top_country || ''].filter(Boolean).join(' · ');
+            return `<div class="kpi-detail-row"><span><span class="kpi-hash">#${esc(r.hash7 || '???')}</span> · <strong>${r.visit_count} visitas</strong></span><span class="meta">${meta}</span></div>`;
+        }).join('')}</div>` : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Percentual de visitantes únicos do período que voltaram ao site dentro de até <strong>7 dias</strong> após a primeira visita (com pelo menos 1h de intervalo entre acessos, evitando reload imediato).</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Visitantes recorrentes (anonimizados)', list)
+            + explain;
+    },
+
+    'retention-30d': data => {
+        const { retention = {}, top_recurring = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const total = Number(retention.total_visitors ?? 0);
+        const ret30 = Number(retention.returned_in_30d ?? 0);
+        const ret7  = Number(retention.returned_in_7d ?? 0);
+        const r7    = Number(retention.retention_7d_pct ?? 0);
+        const r30   = Number(retention.retention_30d_pct ?? 0);
+        const cresc = (r30 - r7).toFixed(1);
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Retenção 30 dias',          `<strong>${r30}%</strong>`)}
+            ${_kpiRow('Visitantes que retornaram', `<strong>${ret30}</strong> de ${total}`)}
+            ${_kpiRow('Não retornaram em 30d',     `<strong>${Math.max(0, total - ret30)}</strong>`)}
+        </div>`;
+        const cmp = `<div class="kpi-detail-list">
+            ${_kpiRow('Retornaram em 7 dias',  `<strong>${ret7}</strong> (${r7}%)`)}
+            ${_kpiRow('Retornaram em 30 dias', `<strong>${ret30}</strong> (${r30}%)`)}
+            ${_kpiRow('Crescimento 7d → 30d',  `<span class="meta">+${cresc}pp</span>`)}
+        </div>`;
+        const list = top_recurring.length ? `<div class="kpi-detail-list">${top_recurring.slice(0, 10).map(r => {
+            const meta = [`primeira: ${fmtDate(r.first_seen, true)}`, `última: ${fmtDate(r.last_seen, true)}`, r.top_country || ''].filter(Boolean).join(' · ');
+            return `<div class="kpi-detail-row"><span><span class="kpi-hash">#${esc(r.hash7 || '???')}</span> · <strong>${r.visit_count} visitas</strong></span><span class="meta">${meta}</span></div>`;
+        }).join('')}</div>` : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Percentual de visitantes únicos do período que voltaram dentro de até <strong>30 dias</strong>. Comparar com a janela de 7 dias mostra quantos retornam mais tarde — sinal de interesse persistente.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Comparativo 7d × 30d', cmp)
+            + _kpiSection('Visitantes recorrentes (anonimizados)', list)
+            + explain;
+    },
+
+    demo: data => {
+        const { demo_accesses = 0, latest_demo_accesses = [] } = data;
+        const body = document.getElementById('kpiDetailBody');
+        const resumo = `<div class="kpi-detail-list">
+            ${_kpiRow('Total de acessos demo', `<strong style="color:#a78bfa">${demo_accesses}</strong>`)}
+        </div>`;
+        const list = latest_demo_accesses.length
+            ? `<div class="kpi-detail-list">${latest_demo_accesses.map(d => {
+                const emailMeta = d.meta && typeof d.meta === 'object' && d.meta.email
+                    ? ` · ${esc(String(d.meta.email).slice(0, 30))}` : '';
+                const meta = [fmtDate(d.occurred_at, true), d.country || '?', d.device || '', d.browser || ''].filter(Boolean).join(' · ') + emailMeta;
+                return `<div class="kpi-detail-row"><span>Login no showcase</span><span class="meta">${meta}</span></div>`;
+            }).join('')}</div>`
+            : '';
+        const explain = `<details class="kpi-detail-explain"><summary>O que isto mede?</summary>
+            <p>Cada vez que alguém usa as credenciais <code>demo@artacho.dev</code> na página <code>/projeto-sistema-admin</code> e entra no showcase do painel administrativo. A sessão demo é descartável: usa um banco isolado e é resetada ao fechar a aba.</p>
+        </details>`;
+        body.innerHTML = _kpiSection('Resumo', resumo)
+            + _kpiSection('Últimos acessos demo (até 20)', list)
+            + explain;
     },
 };
 

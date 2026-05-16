@@ -121,7 +121,7 @@ export default async function handler(req, res) {
                projectClicksRes, contactClicksRes, adminLockRes,
                hourlyRes, dowRes, funnelUniqueRes, sessionsRes, refConvRes, retentionRes,
                pvPrevRes, uniquePrevRes, engagedPrevRes, cvClickPrevRes,
-               downloadsPrevRes, recurringPrevRes, demoRes] = await Promise.all([
+               downloadsPrevRes, recurringPrevRes, demoRes, latestDemoRes] = await Promise.all([
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t)),
             supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t)),
@@ -159,6 +159,13 @@ export default async function handler(req, res) {
             supabase.rpc('analytics_recurring_visitors',  { from_ts: fPrev, to_ts: tPrev, exclude_admin: excAdm }),
             // Demo access (do PR #17 - showcase)
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'demo_access').gte('occurred_at', f).lte('occurred_at', t)),
+            // Drill-down de "Acessos demo": últimos 20 eventos
+            adminFilter(supabase.from('site_events')
+                .select('occurred_at, country, device, browser, meta')
+                .eq('event', 'demo_access')
+                .gte('occurred_at', f).lte('occurred_at', t)
+                .order('occurred_at', { ascending: false })
+                .limit(20)),
         ]);
 
         const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
@@ -234,6 +241,14 @@ export default async function handler(req, res) {
             ),
             admin_lock_clicks: adminLockRes.count ?? 0,
             demo_accesses: demoRes.count ?? 0,
+            latest_demo_accesses: latestDemoRes.data ?? [],
+            retention: {
+                total_visitors:    Number(retentionRow.total_visitors    ?? 0),
+                returned_in_7d:    Number(retentionRow.returned_in_7d    ?? 0),
+                returned_in_30d:   Number(retentionRow.returned_in_30d   ?? 0),
+                retention_7d_pct:  Number(retentionRow.retention_7d_pct  ?? 0),
+                retention_30d_pct: Number(retentionRow.retention_30d_pct ?? 0),
+            },
             funnel: {
                 pageview:    pageviews,
                 engaged,
