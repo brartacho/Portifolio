@@ -83,15 +83,28 @@ export default async function handler(req, res) {
         const { f, t } = dateRange(from, to);
         const excAdm = req.query.exclude_admin === '1';
 
+        // Janela do período imediatamente anterior (mesma duração) para cálculo de deltas
+        const fMs   = Date.parse(f);
+        const tMs   = Date.parse(t);
+        const span  = Math.max(0, tMs - fMs);
+        const fPrev = new Date(fMs - span - 1).toISOString();
+        const tPrev = new Date(fMs - 1).toISOString();
+
         const adminFilter = q => excAdm
             ? q.or('meta->>admin.is.null,meta->>admin.neq.true')
+            : q;
+        const adminFilterDl = q => excAdm
+            ? q.or('is_admin.is.null,is_admin.eq.false')
             : q;
 
         const [pageviewsRes, uniqueRes, engagedRes, cvClickRes, contactRes, caseRes,
                emailRes, downloadsRes, seriesRes, topPagesRes, referrersRes,
                utmRes, devicesRes, countriesRes, recurringRes,
                latestVisitsRes, latestClicksRes, topRecurringRes,
-               projectClicksRes, contactClicksRes, adminLockRes] = await Promise.all([
+               projectClicksRes, contactClicksRes, adminLockRes,
+               hourlyRes, dowRes, funnelUniqueRes, sessionsRes, refConvRes, retentionRes,
+               pvPrevRes, uniquePrevRes, engagedPrevRes, cvClickPrevRes,
+               downloadsPrevRes, recurringPrevRes] = await Promise.all([
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t)),
             supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t)),
@@ -99,7 +112,7 @@ export default async function handler(req, res) {
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'case_open').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'email_request').gte('occurred_at', f).lte('occurred_at', t)),
-            supabase.from('download_logs').select('id', { count: 'exact', head: true }).not('ip_address', 'like', 'admin-%').gte('downloaded_at', f).lte('downloaded_at', t),
+            adminFilterDl(supabase.from('download_logs').select('id', { count: 'exact', head: true }).gte('downloaded_at', f).lte('downloaded_at', t)),
             supabase.rpc('analytics_series',            { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             supabase.rpc('analytics_top_pages',         { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             supabase.rpc('analytics_top_referrers',     { from_ts: f, to_ts: t, exclude_admin: excAdm }),
@@ -113,6 +126,20 @@ export default async function handler(req, res) {
             adminFilter(supabase.from('site_events').select('meta').eq('event', 'project_click').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('meta').eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'admin_lock_click').gte('occurred_at', f).lte('occurred_at', t)),
+            // Premium — novas RPCs
+            supabase.rpc('analytics_hourly',              { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_dow',                 { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_funnel_unique',       { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_sessions',            { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_referrer_conversion', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            supabase.rpc('analytics_retention',           { from_ts: f, to_ts: t, exclude_admin: excAdm }),
+            // Período anterior (delta) — leve, só counts
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', fPrev).lte('occurred_at', tPrev)),
+            supabase.rpc('analytics_unique_visitors', { from_ts: fPrev, to_ts: tPrev, exclude_admin: excAdm }),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', fPrev).lte('occurred_at', tPrev)),
+            adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'cv_download_click').gte('occurred_at', fPrev).lte('occurred_at', tPrev)),
+            adminFilterDl(supabase.from('download_logs').select('id', { count: 'exact', head: true }).gte('downloaded_at', fPrev).lte('downloaded_at', tPrev)),
+            supabase.rpc('analytics_recurring_visitors',  { from_ts: fPrev, to_ts: tPrev, exclude_admin: excAdm }),
         ]);
 
         const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
@@ -126,7 +153,23 @@ export default async function handler(req, res) {
         const engaged         = engagedRes.count ?? 0;
         const cv_clicks       = cvClickRes.count ?? 0;
         const cv_downloads    = downloadsRes.count ?? 0;
+        const recurring       = Number(recurringRes.data?.[0]?.count ?? 0);
 
+        // Período anterior (deltas)
+        const prev = {
+            pageviews:    pvPrevRes.count ?? 0,
+            unique:       Number(uniquePrevRes.data?.[0]?.count ?? 0),
+            engaged:      engagedPrevRes.count ?? 0,
+            cv_clicks:    cvClickPrevRes.count ?? 0,
+            cv_downloads: downloadsPrevRes.count ?? 0,
+            recurring:    Number(recurringPrevRes.data?.[0]?.count ?? 0),
+        };
+
+        const sessionsRow = sessionsRes.data?.[0] ?? {};
+        const retentionRow = retentionRes.data?.[0] ?? {};
+        const funnelUniqueRow = funnelUniqueRes.data?.[0] ?? {};
+
+        res.setHeader('Cache-Control', 'private, max-age=60');
         return res.status(200).json({
             kpis: {
                 pageviews,
@@ -138,14 +181,26 @@ export default async function handler(req, res) {
                 case_opens:         caseRes.count ?? 0,
                 cv_downloads,
                 conversion_rate:    pageviews > 0 ? Math.round((cv_downloads / pageviews) * 1000) / 10 : 0,
-                recurring_visitors: Number(recurringRes.data?.[0]?.count ?? 0),
+                recurring_visitors: recurring,
+                // Métricas de sessão
+                total_sessions:        Number(sessionsRow.total_sessions ?? 0),
+                bounce_rate:           Number(sessionsRow.bounce_rate ?? 0),
+                pages_per_session:     Number(sessionsRow.pages_per_session ?? 0),
+                avg_session_seconds:   Number(sessionsRow.avg_duration_seconds ?? 0),
+                // Retenção
+                retention_7d_pct:      Number(retentionRow.retention_7d_pct ?? 0),
+                retention_30d_pct:     Number(retentionRow.retention_30d_pct ?? 0),
             },
+            kpis_prev: prev,
             series:        seriesRes.data    ?? [],
             top_pages:     topPagesRes.data  ?? [],
             top_referrers: referrersRes.data ?? [],
             utm_sources:   utmRes.data       ?? [],
             devices:       devicesRes.data   ?? [],
             countries:     countriesRes.data ?? [],
+            hourly:        hourlyRes.data    ?? [],
+            dow:           dowRes.data       ?? [],
+            referrer_conversion: refConvRes.data ?? [],
             latest_visits:    latestVisitsRes.data ?? [],
             latest_cv_clicks: latestClicksRes.data ?? [],
             top_recurring:    topRecurringRes.data ?? [],
@@ -165,7 +220,30 @@ export default async function handler(req, res) {
                 cv_click:    cv_clicks,
                 cv_download: cv_downloads,
             },
+            funnel_unique: {
+                pageview:    Number(funnelUniqueRow.step_pageview ?? 0),
+                engaged:     Number(funnelUniqueRow.step_engaged ?? 0),
+                cv_click:    Number(funnelUniqueRow.step_cv_click ?? 0),
+                cv_download: Number(funnelUniqueRow.step_cv_download ?? 0),
+            },
         });
+    }
+
+    // Visitor journey — drill-down de timeline de eventos de um visitor (hash7)
+    if (req.query.__h === 'visitor-journey') {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        const hash7 = String(req.query.hash7 || '').toLowerCase();
+        if (!/^[a-f0-9]{7}$/.test(hash7)) {
+            return res.status(400).json({ error: 'hash7 inválido' });
+        }
+        const { from = '', to = '' } = req.query;
+        const { f, t } = dateRange(from, to);
+        const { data, error } = await supabase.rpc('analytics_visitor_journey', {
+            visitor_hash7: hash7, from_ts: f, to_ts: t,
+        });
+        if (error) return res.status(500).json({ error: error.message });
+        res.setHeader('Cache-Control', 'private, max-age=60');
+        return res.status(200).json({ hash7, events: data ?? [] });
     }
 
     // Login attempts — roteado de /api/admin/login-attempts via rewrite

@@ -4,6 +4,9 @@ import { getSupabase } from './_lib/supabase.js';
 const ALLOWED_EVENTS = new Set([
     'pageview', 'cv_download_click', 'email_request',
     'contact_click', 'case_open', 'engaged',
+    'project_click', 'admin_lock_click',
+    'scroll_depth', 'time_on_page', 'outbound_click',
+    'print_attempt', 'cv_view',
 ]);
 
 const BOT_RE = /bot|crawl|spider|preview|slack|telegram|whatsapp|facebook|twitter|linkedinbot|google-structured|bytespider|headless|puppet|playwright|cypress/i;
@@ -99,7 +102,8 @@ export default async function handler(req, res) {
     if (!ua || BOT_RE.test(ua)) return res.status(204).end();
 
     const body = req.body || {};
-    const { event, path, referrer, utm_source, utm_medium, utm_campaign, meta } = body;
+    const { event, path, referrer, utm_source, utm_medium, utm_campaign, meta,
+            session_id, time_on_page_ms, scroll_max_pct } = body;
 
     if (!ALLOWED_EVENTS.has(event)) return res.status(400).end();
 
@@ -117,6 +121,15 @@ export default async function handler(req, res) {
 
     try {
         const supabase = getSupabase();
+        const top = Number.isFinite(Number(time_on_page_ms))
+            ? Math.max(0, Math.min(Math.floor(Number(time_on_page_ms)), 86_400_000))
+            : null;
+        const smp = Number.isFinite(Number(scroll_max_pct))
+            ? Math.max(0, Math.min(Math.floor(Number(scroll_max_pct)), 100))
+            : null;
+        const sid = typeof session_id === 'string' && /^[a-zA-Z0-9\-_]{8,64}$/.test(session_id)
+            ? session_id : null;
+
         await supabase.from('site_events').insert({
             event,
             path: path ? String(path).slice(0, 500) : null,
@@ -127,6 +140,9 @@ export default async function handler(req, res) {
             utm_campaign: utm_campaign ? String(utm_campaign).slice(0, 200) : null,
             device, browser, os, country,
             meta: meta && typeof meta === 'object' ? meta : null,
+            session_id:      sid,
+            time_on_page_ms: top,
+            scroll_max_pct:  smp,
         });
     } catch {
         // Falha silenciosa — tracking nunca quebra o site
