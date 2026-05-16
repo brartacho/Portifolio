@@ -2755,6 +2755,10 @@
                     <div class="metrics-kpi-label">Recorrentes</div>
                     <div class="metrics-kpi-value" id="kpi-recurring">—</div>
                 </div>
+                <div class="metrics-kpi-card" title="Logins no showcase demo do painel admin">
+                    <div class="metrics-kpi-label">Acessos demo</div>
+                    <div class="metrics-kpi-value" id="kpi-demo-accesses" style="color:#a78bfa">—</div>
+                </div>
             </div>
 
             <!-- Gráfico de série temporal -->
@@ -5921,6 +5925,7 @@ function renderAnalytics(data) {
     setKpi('kpi-cv-clicks',    kpis.cv_download_clicks ?? '—');
     setKpi('kpi-cv-downloads', kpis.cv_downloads ?? '—');
     setKpi('kpi-recurring',    kpis.recurring_visitors ?? '—');
+    setKpi('kpi-demo-accesses', data.demo_accesses ?? '—');
     const erEl = document.getElementById('kpi-engaged-rate');
     if (erEl) erEl.textContent = kpis.engaged_rate != null ? `${kpis.engaged_rate}% das visitas` : '—';
     const cnvEl = document.getElementById('kpi-conversion');
