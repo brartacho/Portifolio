@@ -14,6 +14,7 @@
     { "source": "/api/admin/login-attempts",   "destination": "/api/admin/applications?__h=login-attempts" },
     { "source": "/api/admin/mark-my-visits",   "destination": "/api/admin/applications?__h=mark-my-visits" },
     { "source": "/api/admin/storage-stats",    "destination": "/api/admin/applications?__h=storage-stats" },
+    { "source": "/api/admin/visitor-journey",  "destination": "/api/admin/applications?__h=visitor-journey" },
     { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
     { "source": "/api/demo/config",        "destination": "/api/demo?resource=config" },
     { "source": "/api/demo/init",          "destination": "/api/demo?resource=init" },

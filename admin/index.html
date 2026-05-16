@@ -2155,10 +2155,64 @@
         .metrics-funnel-step-count { font-size: 0.8rem; color: var(--text); font-variant-numeric: tabular-nums; width: 48px; text-align: right; flex-shrink: 0; }
         .metrics-funnel-step-pct { font-size: 0.72rem; color: var(--text-dim); width: 42px; text-align: right; flex-shrink: 0; }
         .metrics-empty { text-align:center; color:var(--text-dim); padding:40px 20px; font-size:0.88rem; }
+
+        /* Delta indicator (vs período anterior) */
+        .metrics-kpi-delta {
+            font-size: 0.7rem; margin-top: 6px; min-height: 16px;
+            font-variant-numeric: tabular-nums; cursor: help;
+        }
+        .metrics-kpis-secondary { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+        .metrics-kpis-secondary .metrics-kpi-card { cursor: default; }
+        .metrics-kpis-secondary .metrics-kpi-card:hover { transform: none; }
+
+        /* Funil — duas visões lado a lado */
+        .metrics-funnel-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 14px; margin-bottom: 20px;
+        }
+        .metrics-funnel-grid .metrics-funnel-card { margin-bottom: 0; }
+
+        /* Padrões temporais (hora-do-dia / DOW) */
+        .metrics-temporal-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 14px; margin-bottom: 20px;
+        }
+        .metrics-temporal-grid .metrics-chart-card { margin-bottom: 0; }
+
+        /* Tabela genérica para painéis (conversão por origem) */
+        .metrics-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .metrics-table th {
+            text-align: left; padding: 6px 8px; color: var(--text-dim);
+            font-weight: 500; border-bottom: 1px solid var(--border-soft);
+        }
+        .metrics-table th.num, .metrics-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .metrics-table td {
+            padding: 7px 8px; border-bottom: 1px solid var(--border-soft);
+            color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+        }
+        .metrics-table tr:last-child td { border-bottom: none; }
+        .metrics-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Visitor journey (drill-down de hash7) */
+        .visitor-journey { display: flex; flex-direction: column; gap: 4px; }
+        .vj-row {
+            display: grid; grid-template-columns: 130px 110px 1fr 70px;
+            gap: 10px; padding: 8px 6px; border-bottom: 1px solid var(--border-soft);
+            font-size: 0.78rem; align-items: center;
+        }
+        .vj-row:last-child { border-bottom: none; }
+        .vj-time  { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+        .vj-event { font-weight: 600; font-family: var(--font-mono); font-size: 0.74rem; }
+        .vj-path  { color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vj-sess  { color: var(--text-dim); font-family: var(--font-mono); font-size: 0.7rem; text-align: right; }
+
         @media (max-width: 600px) {
             .metrics-kpis { grid-template-columns: repeat(2, 1fr); }
             .metrics-panels-grid { grid-template-columns: 1fr; }
             .metrics-funnel-step-label { width: 100px; font-size: 0.72rem; }
+            .metrics-funnel-grid, .metrics-temporal-grid { grid-template-columns: 1fr; }
+            .vj-row { grid-template-columns: 1fr; gap: 2px; }
+            .vj-sess { text-align: left; }
         }
 
         /* ─── Sub-abas Vagas ───────────────────────────────── */
@@ -2733,28 +2787,65 @@
                 <div class="metrics-kpi-card highlight" onclick="openKpiDetail('visitas')">
                     <div class="metrics-kpi-label">Visitas</div>
                     <div class="metrics-kpi-value" id="kpi-pageviews">—</div>
+                    <div class="metrics-kpi-delta" id="kpi-pageviews-delta"></div>
                 </div>
                 <div class="metrics-kpi-card" onclick="openKpiDetail('unicos')">
                     <div class="metrics-kpi-label">Visitantes únicos</div>
                     <div class="metrics-kpi-value" id="kpi-unique">—</div>
+                    <div class="metrics-kpi-delta" id="kpi-unique-delta"></div>
                 </div>
                 <div class="metrics-kpi-card" onclick="openKpiDetail('engajados')">
                     <div class="metrics-kpi-label">Engajados</div>
                     <div class="metrics-kpi-value" id="kpi-engaged">—</div>
                     <div class="metrics-kpi-sub" id="kpi-engaged-rate">—% das visitas</div>
+                    <div class="metrics-kpi-delta" id="kpi-engaged-delta"></div>
                 </div>
                 <div class="metrics-kpi-card" onclick="openKpiDetail('cv-clicks')">
                     <div class="metrics-kpi-label">Cliques em CV</div>
                     <div class="metrics-kpi-value" id="kpi-cv-clicks">—</div>
+                    <div class="metrics-kpi-delta" id="kpi-cv-clicks-delta"></div>
                 </div>
                 <div class="metrics-kpi-card highlight" onclick="openKpiDetail('cv-downloads')">
                     <div class="metrics-kpi-label">Downloads reais</div>
                     <div class="metrics-kpi-value" id="kpi-cv-downloads">—</div>
                     <div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div>
+                    <div class="metrics-kpi-delta" id="kpi-cv-downloads-delta"></div>
                 </div>
                 <div class="metrics-kpi-card" onclick="openKpiDetail('recorrentes')">
                     <div class="metrics-kpi-label">Recorrentes</div>
                     <div class="metrics-kpi-value" id="kpi-recurring">—</div>
+                    <div class="metrics-kpi-delta" id="kpi-recurring-delta"></div>
+                </div>
+            </div>
+
+            <!-- KPIs sessão + retenção -->
+            <div class="metrics-kpis metrics-kpis-secondary">
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Sessões</div>
+                    <div class="metrics-kpi-value" id="kpi-sessions">—</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Bounce rate</div>
+                    <div class="metrics-kpi-value" id="kpi-bounce">—</div>
+                    <div class="metrics-kpi-sub">sessão com 1 pageview, sem engajamento</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Páginas / sessão</div>
+                    <div class="metrics-kpi-value" id="kpi-pages-per-session">—</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Duração média</div>
+                    <div class="metrics-kpi-value" id="kpi-avg-duration">—</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Retenção 7d</div>
+                    <div class="metrics-kpi-value" id="kpi-retention-7d">—</div>
+                    <div class="metrics-kpi-sub">retornaram dentro de 7 dias</div>
+                </div>
+                <div class="metrics-kpi-card">
+                    <div class="metrics-kpi-label">Retenção 30d</div>
+                    <div class="metrics-kpi-value" id="kpi-retention-30d">—</div>
+                    <div class="metrics-kpi-sub">retornaram dentro de 30 dias</div>
                 </div>
                 <div class="metrics-kpi-card" title="Logins no showcase demo do painel admin">
                     <div class="metrics-kpi-label">Acessos demo</div>
@@ -2770,35 +2861,85 @@
                 </div>
             </div>
 
-            <!-- Funil -->
-            <div class="metrics-funnel-card">
-                <h4>Funil de conversão</h4>
-                <div class="metrics-funnel-steps" id="metricsFunnel">
-                    <div class="metrics-funnel-step">
-                        <span class="metrics-funnel-step-label">Visitas</span>
-                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-pageview" style="width:100%"></div></div>
-                        <span class="metrics-funnel-step-count" id="funnel-val-pageview">—</span>
-                        <span class="metrics-funnel-step-pct" id="funnel-pct-pageview">100%</span>
-                    </div>
-                    <div class="metrics-funnel-step">
-                        <span class="metrics-funnel-step-label">Engajados</span>
-                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-engaged" style="width:0%"></div></div>
-                        <span class="metrics-funnel-step-count" id="funnel-val-engaged">—</span>
-                        <span class="metrics-funnel-step-pct" id="funnel-pct-engaged">—</span>
-                    </div>
-                    <div class="metrics-funnel-step">
-                        <span class="metrics-funnel-step-label">Clicou no CV</span>
-                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-click" style="width:0%"></div></div>
-                        <span class="metrics-funnel-step-count" id="funnel-val-cv-click">—</span>
-                        <span class="metrics-funnel-step-pct" id="funnel-pct-cv-click">—</span>
-                    </div>
-                    <div class="metrics-funnel-step">
-                        <span class="metrics-funnel-step-label">Baixou o CV</span>
-                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-download" style="width:0%"></div></div>
-                        <span class="metrics-funnel-step-count" id="funnel-val-cv-download">—</span>
-                        <span class="metrics-funnel-step-pct" id="funnel-pct-cv-download">—</span>
+            <!-- Funil — duas visões lado a lado: absoluto e pareado por visitante -->
+            <div class="metrics-funnel-grid">
+                <div class="metrics-funnel-card">
+                    <h4>Funil de conversão <small style="color:var(--text-dim);font-weight:400">(total de eventos)</small></h4>
+                    <div class="metrics-funnel-steps" id="metricsFunnel">
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Visitas</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-pageview" style="width:100%"></div></div>
+                            <span class="metrics-funnel-step-count" id="funnel-val-pageview">—</span>
+                            <span class="metrics-funnel-step-pct" id="funnel-pct-pageview">100%</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Engajados</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-engaged" style="width:0%"></div></div>
+                            <span class="metrics-funnel-step-count" id="funnel-val-engaged">—</span>
+                            <span class="metrics-funnel-step-pct" id="funnel-pct-engaged">—</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Clicou no CV</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-click" style="width:0%"></div></div>
+                            <span class="metrics-funnel-step-count" id="funnel-val-cv-click">—</span>
+                            <span class="metrics-funnel-step-pct" id="funnel-pct-cv-click">—</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Baixou o CV</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="funnel-bar-cv-download" style="width:0%"></div></div>
+                            <span class="metrics-funnel-step-count" id="funnel-val-cv-download">—</span>
+                            <span class="metrics-funnel-step-pct" id="funnel-pct-cv-download">—</span>
+                        </div>
                     </div>
                 </div>
+
+                <div class="metrics-funnel-card">
+                    <h4>Funil pareado <small style="color:var(--text-dim);font-weight:400">(visitantes únicos)</small></h4>
+                    <div class="metrics-funnel-steps">
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Visitas</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="fu-bar-pageview" style="width:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee)"></div></div>
+                            <span class="metrics-funnel-step-count" id="fu-val-pageview">—</span>
+                            <span class="metrics-funnel-step-pct" id="fu-pct-pageview">100%</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Engajados</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="fu-bar-engaged" style="width:0%;background:linear-gradient(90deg,#7c3aed,#22d3ee)"></div></div>
+                            <span class="metrics-funnel-step-count" id="fu-val-engaged">—</span>
+                            <span class="metrics-funnel-step-pct" id="fu-pct-engaged">—</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Clicou no CV</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="fu-bar-cv-click" style="width:0%;background:linear-gradient(90deg,#7c3aed,#22d3ee)"></div></div>
+                            <span class="metrics-funnel-step-count" id="fu-val-cv-click">—</span>
+                            <span class="metrics-funnel-step-pct" id="fu-pct-cv-click">—</span>
+                        </div>
+                        <div class="metrics-funnel-step">
+                            <span class="metrics-funnel-step-label">Baixou o CV</span>
+                            <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="fu-bar-cv-download" style="width:0%;background:linear-gradient(90deg,#7c3aed,#22d3ee)"></div></div>
+                            <span class="metrics-funnel-step-count" id="fu-val-cv-download">—</span>
+                            <span class="metrics-funnel-step-pct" id="fu-pct-cv-download">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Padrões temporais -->
+            <div class="metrics-temporal-grid">
+                <div class="metrics-chart-card">
+                    <h4>Hora do dia (BRT)</h4>
+                    <div style="position:relative;height:160px"><canvas id="hourlyChart"></canvas></div>
+                </div>
+                <div class="metrics-chart-card">
+                    <h4>Dia da semana</h4>
+                    <div style="position:relative;height:160px"><canvas id="dowChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Conversão por origem -->
+            <div class="metrics-panel" style="margin-top:16px">
+                <h4>Conversão por origem</h4>
+                <div id="metricsRefConversion"><div class="metrics-empty">Carregando…</div></div>
             </div>
 
             <!-- Grid de painéis -->
@@ -5875,7 +6016,10 @@ function fmtDate(iso, withTime = false) {
 // ─── ANALYTICS / MÉTRICAS ─────────────────────────────────
 let _analyticsPeriod = 7;
 let _analyticsChart = null;
-let _lastAnalyticsData = null;
+let _hourlyChart    = null;
+let _dowChart       = null;
+let _lastAnalyticsData  = null;
+let _lastAnalyticsRange = null; // { from, to } em BRT YYYY-MM-DD
 
 let _metricsExcludeAdmin = false;
 function toggleMetricsExcludeAdmin(el) {
@@ -5904,6 +6048,7 @@ async function loadAnalytics() {
     const fromDate = new Date(today);
     fromDate.setDate(fromDate.getDate() - (_analyticsPeriod - 1));
     const from = fmt(fromDate);
+    _lastAnalyticsRange = { from, to };
     try {
         const excludeParam = _metricsExcludeAdmin ? '&exclude_admin=1' : '';
         const data = await api('GET', `/api/admin/analytics?from=${from}&to=${to}${excludeParam}&_=${Date.now()}`);
@@ -5915,10 +6060,35 @@ async function loadAnalytics() {
     }
 }
 
-function renderAnalytics(data) {
-    const { kpis = {}, series = [], top_pages = [], top_referrers = [], devices = [], countries = [], funnel = {} } = data;
+// Calcula delta percentual entre período atual e anterior; null se não há base
+function _metricsDelta(curr, prev) {
+    const c = Number(curr ?? 0);
+    const p = Number(prev ?? 0);
+    if (p === 0) return c > 0 ? { dir: 'up', pct: null, raw: c } : null;
+    const diff = c - p;
+    const pct = Math.round((diff / p) * 1000) / 10;
+    return { dir: diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat'), pct, raw: diff };
+}
 
-    // KPIs
+function _renderDelta(elId, delta, opts) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!delta) { el.innerHTML = ''; el.removeAttribute('title'); return; }
+    const arrow = delta.dir === 'up' ? '▲' : (delta.dir === 'down' ? '▼' : '■');
+    const color = delta.dir === 'up'
+        ? (opts && opts.inverse ? '#fb7185' : '#34d399')
+        : (delta.dir === 'down' ? (opts && opts.inverse ? '#34d399' : '#fb7185') : '#a8a8c0');
+    const pctTxt = delta.pct == null ? 'novo' : (delta.pct > 0 ? '+' : '') + delta.pct + '%';
+    el.innerHTML = `<span style="color:${color};font-weight:600">${arrow} ${pctTxt}</span>`;
+    el.title = `Variação vs período anterior (${delta.raw > 0 ? '+' : ''}${delta.raw})`;
+}
+
+function renderAnalytics(data) {
+    const { kpis = {}, kpis_prev = {}, series = [], top_pages = [], top_referrers = [],
+            devices = [], countries = [], funnel = {}, funnel_unique = {},
+            hourly = [], dow = [], referrer_conversion = [] } = data;
+
+    // KPIs principais
     const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
     setKpi('kpi-pageviews',    kpis.pageviews    ?? '—');
     setKpi('kpi-unique',       kpis.unique_visitors ?? '—');
@@ -5932,15 +6102,29 @@ function renderAnalytics(data) {
     const cnvEl = document.getElementById('kpi-conversion');
     if (cnvEl) cnvEl.textContent = kpis.conversion_rate != null ? `${kpis.conversion_rate}% conversão` : '—';
 
-    // Título dinâmico conforme o período selecionado
+    // Deltas vs período anterior
+    _renderDelta('kpi-pageviews-delta',    _metricsDelta(kpis.pageviews,          kpis_prev.pageviews));
+    _renderDelta('kpi-unique-delta',       _metricsDelta(kpis.unique_visitors,    kpis_prev.unique));
+    _renderDelta('kpi-engaged-delta',      _metricsDelta(kpis.engaged_rate,       kpis_prev.pageviews ? Math.round((kpis_prev.engaged / kpis_prev.pageviews) * 1000) / 10 : 0));
+    _renderDelta('kpi-cv-clicks-delta',    _metricsDelta(kpis.cv_download_clicks, kpis_prev.cv_clicks));
+    _renderDelta('kpi-cv-downloads-delta', _metricsDelta(kpis.cv_downloads,       kpis_prev.cv_downloads));
+    _renderDelta('kpi-recurring-delta',    _metricsDelta(kpis.recurring_visitors, kpis_prev.recurring));
+
+    // Card Sessões + Retenção
+    setKpi('kpi-sessions',         kpis.total_sessions     ?? '—');
+    setKpi('kpi-bounce',           kpis.bounce_rate != null ? kpis.bounce_rate + '%' : '—');
+    setKpi('kpi-pages-per-session',kpis.pages_per_session  ?? '—');
+    setKpi('kpi-avg-duration',     _fmtDuration(kpis.avg_session_seconds));
+    setKpi('kpi-retention-7d',     kpis.retention_7d_pct  != null ? kpis.retention_7d_pct  + '%' : '—');
+    setKpi('kpi-retention-30d',    kpis.retention_30d_pct != null ? kpis.retention_30d_pct + '%' : '—');
+
+    // Título dinâmico
     const titleEl = document.getElementById('metricsChartTitle');
     if (titleEl) titleEl.textContent = _metricsPeriodLabel(_analyticsPeriod);
 
-    // Série temporal (Chart.js) — preenche dias vazios com zero para representar o período inteiro
-    const _to   = new Date();
-    const _from = new Date(Date.now() - (_analyticsPeriod - 1) * 86400000);
-    const _fmt  = d => d.toISOString().slice(0, 10);
-    const filledSeries = _fillTimelineGaps(series, 'day', _fmt(_from), _fmt(_to), ['pageviews', 'unique_visitors']);
+    // Série temporal — gap-filler agora usa from/to BRT (alinhado com loadAnalytics)
+    const range = _lastAnalyticsRange || {};
+    const filledSeries = _fillTimelineGaps(series, 'day', range.from || '', range.to || '', ['pageviews', 'unique_visitors']);
     const labels  = filledSeries.map(s => new Date(s.bucket).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', timeZone: 'UTC' }));
     const pvData  = filledSeries.map(s => s.pageviews ?? 0);
     const uniqData = filledSeries.map(s => s.unique_visitors ?? 0);
@@ -6073,6 +6257,131 @@ function renderAnalytics(data) {
             `).join('');
         }
     }
+
+    // Funil pareado (% de visitantes únicos)
+    const fuKeys   = ['pageview','engaged','cv-click','cv-download'];
+    const fuVals   = [funnel_unique.pageview ?? 0, funnel_unique.engaged ?? 0, funnel_unique.cv_click ?? 0, funnel_unique.cv_download ?? 0];
+    const fuMax    = fuVals[0] || 1;
+    fuKeys.forEach((key, i) => {
+        const bar  = document.getElementById(`fu-bar-${key}`);
+        const val  = document.getElementById(`fu-val-${key}`);
+        const pct  = document.getElementById(`fu-pct-${key}`);
+        if (!bar || !val || !pct) return;
+        const w    = Math.round((fuVals[i] / fuMax) * 100);
+        bar.style.width  = w + '%';
+        val.textContent  = fuVals[i];
+        pct.textContent  = i === 0 ? '100%' : (fuMax > 0 ? Math.round((fuVals[i] / fuMax) * 100) + '%' : '—');
+    });
+
+    // Hora-do-dia (0-23, BRT)
+    _renderHourlyChart(hourly);
+
+    // Dia-da-semana
+    _renderDowChart(dow);
+
+    // Conversão por origem
+    const rcEl = document.getElementById('metricsRefConversion');
+    if (rcEl) {
+        if (!referrer_conversion.length) { rcEl.innerHTML = '<div class="metrics-empty">Sem dados ainda</div>'; }
+        else {
+            rcEl.innerHTML = `
+                <table class="metrics-table">
+                    <thead><tr><th>Origem</th><th class="num">Visitas</th><th class="num">CV</th><th class="num">Conv.</th></tr></thead>
+                    <tbody>${referrer_conversion.slice(0, 10).map(r => `
+                        <tr>
+                            <td title="${esc(r.host)}">${esc(r.host)}</td>
+                            <td class="num">${r.views}</td>
+                            <td class="num">${r.cv_clicks}</td>
+                            <td class="num"><strong style="color:${r.conversion_rate > 0 ? 'var(--cyan)' : 'var(--text-dim)'}">${r.conversion_rate}%</strong></td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>`;
+        }
+    }
+}
+
+function _fmtDuration(secs) {
+    const s = Number(secs ?? 0);
+    if (!s) return '—';
+    if (s < 60) return `${Math.round(s)}s`;
+    const m = Math.floor(s / 60), r = Math.round(s % 60);
+    return r ? `${m}m ${r}s` : `${m}m`;
+}
+
+function _renderHourlyChart(hourly) {
+    const ctx = document.getElementById('hourlyChart');
+    if (!ctx) return;
+    const byHour = new Map((hourly || []).map(r => [Number(r.hour), Number(r.views)]));
+    const labels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + 'h');
+    const data   = Array.from({ length: 24 }, (_, i) => byHour.get(i) || 0);
+    if (_hourlyChart) { _hourlyChart.destroy(); _hourlyChart = null; }
+    _hourlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Visitas', data, backgroundColor: 'rgba(124,58,237,0.35)', borderColor: 'rgba(124,58,237,0.9)', borderWidth: 1, borderRadius: 3 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#5c5c80', font: { size: 9 } }, grid: { display: false } },
+                y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
+            },
+        },
+    });
+}
+
+function _renderDowChart(dow) {
+    const ctx = document.getElementById('dowChart');
+    if (!ctx) return;
+    const byDow = new Map((dow || []).map(r => [Number(r.dow), Number(r.views)]));
+    const labels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const data   = Array.from({ length: 7 }, (_, i) => byDow.get(i) || 0);
+    if (_dowChart) { _dowChart.destroy(); _dowChart = null; }
+    _dowChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Visitas', data, backgroundColor: 'rgba(34,211,238,0.3)', borderColor: 'rgba(34,211,238,0.85)', borderWidth: 1, borderRadius: 3 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#5c5c80', font: { size: 10 } }, grid: { display: false } },
+                y: { ticks: { color: '#5c5c80', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true },
+            },
+        },
+    });
+}
+
+// Drill-down de jornada do visitante (hash7) — abre modal com timeline
+async function openVisitorJourney(hash7) {
+    if (!/^[a-f0-9]{7}$/.test(String(hash7 || '').toLowerCase())) return;
+    document.getElementById('kpiDetailModal').classList.add('open');
+    document.getElementById('kpiDetailTitle').textContent = `Jornada do visitante ${hash7}`;
+    const body = document.getElementById('kpiDetailBody');
+    body.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:40px"><i class="fa-solid fa-circle-notch fa-spin fa-lg"></i></div>';
+    try {
+        const r = _lastAnalyticsRange || {};
+        const qs = new URLSearchParams({ hash7, from: r.from || '', to: r.to || '' });
+        const data = await api('GET', `/api/admin/visitor-journey?${qs}`);
+        const events = data.events || [];
+        if (!events.length) {
+            body.innerHTML = '<div class="metrics-empty">Nenhum evento encontrado para esse visitante no período.</div>';
+            return;
+        }
+        const fmtTs = ts => new Date(ts).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const evColor = e => ({ pageview: 'var(--cyan)', engaged: '#7c3aed', cv_download_click: '#f59e0b', cv_view: '#f59e0b', contact_click: '#34d399', case_open: '#22d3ee', project_click: '#22d3ee' }[e] || 'var(--text-soft)');
+        body.innerHTML = `
+            <div class="visitor-journey">
+                ${events.map(ev => `
+                    <div class="vj-row">
+                        <span class="vj-time">${fmtTs(ev.occurred_at)}</span>
+                        <span class="vj-event" style="color:${evColor(ev.event)}">${esc(ev.event)}</span>
+                        <span class="vj-path">${esc(ev.path || '—')}</span>
+                        ${ev.session_id ? `<span class="vj-sess" title="Sessão">${esc(ev.session_id.slice(0, 8))}</span>` : ''}
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) {
+        body.innerHTML = `<div class="metrics-empty">Erro ao carregar jornada: ${esc(e.message || 'desconhecido')}</div>`;
+    }
 }
 
 // ─── DRILL-DOWN DOS CARDS DE MÉTRICAS ─────────────────────
@@ -6103,7 +6412,10 @@ function _kpiRow(left, right) {
 }
 function _kpiEventRow(occurred_at, path, country, device, hash7, isAdmin) {
     const adminBadge = isAdmin ? `<span style="color:#4ade80;font-size:0.7rem;margin-left:5px">● você</span>` : '';
-    const meta = [fmtDate(occurred_at, true), country || '?', device || '', hash7 ? `<span class="kpi-hash">#${esc(hash7)}</span>` : ''].filter(Boolean).join(' · ');
+    const hashEl = hash7
+        ? `<span class="kpi-hash" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted" title="Ver jornada deste visitante" onclick="event.stopPropagation();openVisitorJourney('${esc(hash7)}')">#${esc(hash7)}</span>`
+        : '';
+    const meta = [fmtDate(occurred_at, true), country || '?', device || '', hashEl].filter(Boolean).join(' · ');
     const rowStyle = isAdmin ? ' style="background:rgba(74,222,128,0.05)"' : '';
     return `<div class="kpi-detail-row"${rowStyle}><span>${esc(path || '/')}${adminBadge}</span><span class="meta">${meta}</span></div>`;
 }

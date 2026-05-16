@@ -62,6 +62,7 @@ export default async function handler(req, res) {
                     cv_name_snapshot: cv.name,
                     cv_id_snapshot: id,
                     ip_address: `admin-send-${cleanChannel}`,
+                    is_admin: true,
                     user_agent: `Send to ${cleanRecipient} via ${cleanChannel} (manual attach)`,
                     empresa: cleanEmpresa,
                     vaga:    cleanVaga,
