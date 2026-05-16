@@ -328,15 +328,131 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
 .app-footer{padding:18px;text-align:center;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim)}
 .app-footer span{color:var(--cyan)}
 
+/* Accordions (CVs upload + Tokens form) */
+.cvs-upload-section,.token-form-section{margin-bottom:14px}
+.cvs-upload-toggle,.token-form-toggle{width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:0.86rem;font-weight:600;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.15s}
+.cvs-upload-toggle:hover,.token-form-toggle:hover{border-color:var(--cyan)}
+.cvs-upload-toggle span,.token-form-toggle span{display:inline-flex;align-items:center;gap:8px;color:var(--text)}
+.cvs-upload-toggle span i,.token-form-toggle span i{color:var(--cyan)}
+.cvs-upload-chevron,.token-form-chevron{transition:transform 0.2s;color:var(--text-dim);font-size:0.78rem}
+.cvs-upload-toggle[aria-expanded="true"] .cvs-upload-chevron,.token-form-toggle[aria-expanded="true"] .token-form-chevron{transform:rotate(180deg);color:var(--cyan)}
+.cvs-upload-collapsible,.token-form-collapsible{display:none;margin-top:10px;animation:slideDown 0.2s ease}
+.cvs-upload-collapsible.open,.token-form-collapsible.open{display:block}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:1024px){
+    .cvs-upload-toggle,.token-form-toggle{display:none}
+    .cvs-upload-collapsible,.token-form-collapsible{display:block;margin-top:0}
+}
+
+/* Sortable headers */
+th.sortable{cursor:pointer;user-select:none;transition:color 0.15s}
+th.sortable:hover{color:var(--cyan)}
+.sort-arrow{font-size:0.7em;margin-left:4px;color:var(--text-dim)}
+th.sort-active{color:var(--cyan)}
+th.sort-active .sort-arrow{color:var(--cyan)}
+.col-cadastrado{display:none}
+@media(min-width:768px){.col-cadastrado{display:table-cell}}
+.col-actions{text-align:right}
+.row-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+
+/* Table loading overlay */
+.tbl-wrap{position:relative}
+.tbl-overlay{position:absolute;inset:0;background:rgba(20,20,32,0.6);backdrop-filter:blur(2px);z-index:5;display:none;align-items:center;justify-content:center;border-radius:10px;pointer-events:none}
+.tbl-overlay.visible{display:flex}
+.tbl-overlay-spinner{font-size:0.82rem;color:var(--cyan);display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg-elevated);border:1px solid var(--cyan-mid);border-radius:8px}
+
+/* Skeleton */
+.skel-row td{padding:11px 14px}
+.skel-cell{display:inline-block;height:13px;background:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 100%);background-size:200% 100%;border-radius:4px;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;font-size:0.78rem;color:var(--text-soft)}
+.pagination .btn{padding:5px 12px;font-size:0.74rem}
+.pagination .btn:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Log drawer */
+.log-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;display:none}
+.log-drawer-overlay.open{display:block}
+.log-drawer{position:fixed;top:0;right:-460px;width:460px;max-width:100vw;height:100vh;background:var(--bg-soft);border-left:1px solid var(--border);z-index:200;transition:right 0.25s ease;display:flex;flex-direction:column;overflow:hidden}
+.log-drawer.open{right:0}
+.log-drawer-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:0.88rem;font-weight:700}
+.log-drawer-body{flex:1;overflow-y:auto;padding:16px 18px}
+.ld-section{margin-bottom:18px}
+.ld-section-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:8px;font-weight:600}
+.ld-row{display:flex;align-items:flex-start;gap:8px;font-size:0.82rem;margin-bottom:6px;color:var(--text-soft);word-break:break-word}
+.ld-row strong{color:var(--text);font-weight:600;min-width:90px;flex-shrink:0}
+.ld-mono{font-family:var(--font-mono);font-size:0.78rem;color:var(--text)}
+
+/* Vagas filtros extras */
+.vagas-filters-badge{background:var(--cyan);color:#0a0a0f;font-size:0.62rem;padding:1px 5px;border-radius:8px;font-weight:700;display:inline-flex;align-items:center}
+.vagas-sort-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.vagas-sort-chip{padding:4px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text-soft);border-radius:13px;font-size:0.7rem;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+.vagas-sort-chip.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+.sort-icon{font-size:0.7em}
+.vaga-meta-mobile{font-size:0.68rem;color:var(--text-dim);margin-top:3px}
+@media(min-width:640px){.vaga-meta-mobile{display:none}}
+@media(max-width:640px){.col-gestor,.col-date{display:none}}
+
+/* Vagas analysis period bar */
+.vagas-analysis-period-bar{display:flex;gap:6px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.vagas-period-dates{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.period-date{width:140px}
+.period-toggle-switch{position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0}
+.period-toggle-switch input{opacity:0;width:0;height:0}
+.period-toggle-track{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:18px;transition:background 0.2s}
+.period-toggle-track::before{content:'';position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:white;border-radius:50%;transition:transform 0.2s}
+.period-toggle-switch input:checked + .period-toggle-track{background:var(--cyan)}
+.period-toggle-switch input:checked + .period-toggle-track::before{transform:translateX(16px)}
+.period-archived-toggle{display:inline-flex;align-items:center;gap:6px;font-size:0.74rem;color:var(--text-soft);cursor:pointer}
+.vagas-bucket-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+
+/* Share modal */
+.share-url-box{background:var(--bg);border:1px solid var(--cyan-mid);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:0.84rem;color:var(--cyan);word-break:break-all;margin-bottom:14px;user-select:all}
+.share-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.share-btn{flex:1;min-width:120px;padding:9px 13px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);font-size:0.82rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;transition:all 0.15s}
+.share-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.share-btn-copy{background:var(--cyan);color:#0a0a0f;border-color:var(--cyan)}
+.share-btn-copy:hover{background:#1bc1da;color:#0a0a0f}
+
+/* Badges legados (compat com produção) */
+.badge-active{background:var(--success-soft);color:var(--success)}
+.badge-expired{background:var(--danger-soft);color:var(--danger)}
+.badge-revoked{background:rgba(255,255,255,0.06);color:var(--text-dim)}
+.badge-esgotado{background:var(--warning-soft);color:var(--warning)}
+
+/* Stage badge na tabela de vagas */
+.stage-badge{font-size:0.7rem;padding:3px 9px;border-radius:6px;font-weight:600;white-space:nowrap;display:inline-block}
+.stage-badge.status-em_processo{background:var(--cyan-soft);color:var(--cyan)}
+.stage-badge.status-aprovado{background:var(--success-soft);color:var(--success)}
+.stage-badge.status-recusado{background:var(--danger-soft);color:var(--danger)}
+
+/* Tabela compacta para vagas */
+.vagas-table thead th{cursor:pointer;user-select:none}
+.vagas-table thead th:hover{color:var(--cyan)}
+
+/* CV button label (visível só no mobile) */
+.cv-action-btn{padding:5px 8px}
+.cv-btn-lbl{display:none}
+@media(max-width:640px){.cv-btn-lbl{display:inline-block;margin-left:4px;font-size:0.7rem}}
+.hide-on-mobile{display:none}
+@media(min-width:640px){.hide-on-mobile{display:inline}}
+
+/* Th filter clear */
+.th-filter-clear{background:none;border:none;color:var(--text-dim);font-size:0.78rem;cursor:pointer;padding:5px 7px;transition:color 0.15s}
+.th-filter-clear:hover{color:var(--cyan)}
+
 /* Mobile */
 @media(max-width:640px){
     .app-content{padding:14px 12px 80px}
     .panel{padding:14px}
     .drawer{width:100vw}
+    .log-drawer{width:100vw}
     .row-2{grid-template-columns:1fr}
     .metrics-kpis{grid-template-columns:repeat(2,1fr)}
     .filter-bar{flex-direction:column;align-items:stretch}
     .filter-search{min-width:0}
+    .vagas-period-dates{margin-left:0}
 }
 </style>
 </head>
@@ -424,7 +540,7 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
 <div id="appScreen">
     <div class="demo-banner">
         <span class="demo-banner-pill">demo</span>
-        <span>Modo demonstração · dados fictícios <b>(Game of Thrones)</b> isolados na sua sessão · banco descartável reseta em 24h</span>
+        <span>Modo demonstração · dados fictícios isolados na sua sessão · banco descartável reseta em 24h</span>
     </div>
 
     <header class="app-header">
@@ -447,97 +563,162 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
 
         <!-- ─── CVS ─── -->
         <div class="tab-panel active" id="tab-cvs">
-            <div class="storage-card">
-                <div class="storage-head">
-                    <div>
-                        <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
-                        <div class="storage-sub">Dados fictícios — quota simulada</div>
+
+            <div class="cvs-upload-section">
+                <button class="cvs-upload-toggle" onclick="toggleCvsUpload()" id="cvsUploadToggleBtn" aria-expanded="false">
+                    <span><i class="fa-solid fa-plus"></i> Adicionar versão de currículo</span>
+                    <i class="fa-solid fa-chevron-down cvs-upload-chevron"></i>
+                </button>
+                <div class="cvs-upload-collapsible" id="cvsUploadCollapsible">
+                    <div class="storage-card">
+                        <div class="storage-head">
+                            <div>
+                                <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
+                                <div class="storage-sub">Demo — quota simulada</div>
+                            </div>
+                        </div>
+                        <div class="storage-bar-track"><div class="storage-bar-fill" id="storageBarFill" style="width:24%"></div></div>
+                        <div class="storage-meta"><span id="storagePct">24% de 1 GB</span><span id="storageFiles">5 arquivos</span></div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title"><i class="fa-solid fa-file-arrow-up"></i> Nova versão de currículo</div>
+                        <div class="form-group-inline">
+                            <label>Nome da versão</label>
+                            <input type="text" id="cvName" placeholder="Ex: QA Sênior — Padrão" autocomplete="off">
+                        </div>
+                        <div class="form-group-inline">
+                            <label>Descrição (opcional)</label>
+                            <input type="text" id="cvDesc" placeholder="Adaptado para vagas sênior" autocomplete="off">
+                        </div>
+                        <div class="form-group-inline">
+                            <label>Arquivo (escolha um dos PDFs de exemplo)</label>
+                            <select id="cvFile">
+                                <option value="cv-jon-snow-qa-senior.pdf">Jon Snow — QA Sênior</option>
+                                <option value="cv-jon-snow-qa-auto.pdf">Jon Snow — QA Automation</option>
+                                <option value="cv-jon-snow-sdet.pdf">Jon Snow — SDET</option>
+                                <option value="cv-jon-snow-test-analyst.pdf">Jon Snow — Test Analyst</option>
+                                <option value="cv-jon-snow-bilingue.pdf">Jon Snow — Bilíngue EN</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-cyan" onclick="createCV()"><i class="fa-solid fa-plus"></i> Adicionar currículo</button>
                     </div>
                 </div>
-                <div class="storage-bar-track"><div class="storage-bar-fill" style="width:24%"></div></div>
-                <div class="storage-meta"><span>24% de 1 GB</span><span id="cvCount2">5 arquivos</span></div>
             </div>
 
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
-                <div class="filter-bar">
-                    <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
-                        <span class="th-filter-count" id="cvCount"></span>
+            <div class="cvs-list-section">
+                <div class="panel">
+                    <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
+                    <div class="filter-bar">
+                        <div class="filter-search">
+                            <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
+                            <span class="th-filter-count" id="cvCount"></span>
+                            <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                        </select>
                     </div>
-                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()">
-                        <option value="">Todos os status</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="inativo">Inativo</option>
-                    </select>
-                    <button class="btn btn-cyan btn-sm" onclick="openNewCV()"><i class="fa-solid fa-plus"></i> Novo CV</button>
-                </div>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>Nome</th><th>Arquivo</th><th>Status</th><th>Adicionado</th><th></th></tr></thead>
-                        <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
-                    </table>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="name" onclick="toggleSort('cvs','name')">Nome<span class="sort-arrow">↕</span></th>
+                                    <th>Arquivo</th>
+                                    <th>Status</th>
+                                    <th class="sortable sort-active" data-sort="created_at" onclick="toggleSort('cvs','created_at')">Adicionado<span class="sort-arrow">▼</span></th>
+                                    <th class="col-actions"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- ─── TOKENS ─── -->
         <div class="tab-panel" id="tab-tokens">
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-key"></i> Gerar novo token</div>
-                <div class="row-2">
-                    <div class="form-group-inline">
-                        <label>Currículo</label>
-                        <select id="tokenCV"></select>
-                    </div>
-                    <div class="form-group-inline">
-                        <label>Label (identificação)</label>
-                        <input type="text" id="tokenLabel" placeholder="Ex: Targaryen Tech · Missandei · Sr QA">
+
+            <div class="token-form-section">
+                <button class="token-form-toggle" onclick="toggleTokenForm()" id="tokenFormToggleBtn" aria-expanded="false">
+                    <span><i class="fa-solid fa-key"></i> Gerar novo token</span>
+                    <i class="fa-solid fa-chevron-down token-form-chevron"></i>
+                </button>
+                <div class="token-form-collapsible" id="tokenFormCollapsible">
+                    <div class="panel">
+                        <div class="panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
+                        <div class="row-2">
+                            <div class="form-group-inline">
+                                <label>Currículo</label>
+                                <select id="tokenCV"><option value="">Selecione…</option></select>
+                            </div>
+                            <div class="form-group-inline">
+                                <label>Label (identificação)</label>
+                                <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA">
+                            </div>
+                        </div>
+                        <div class="form-group-inline">
+                            <label>Validade</label>
+                            <div class="expiry-opts" id="expiryOpts">
+                                <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
+                                <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
+                                <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
+                                <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
+                                <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
+                                <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
+                            </div>
+                            <input type="datetime-local" id="expiryDate" style="display:none;margin-top:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-display);font-size:0.82rem;outline:none">
+                        </div>
+                        <div class="form-group-inline">
+                            <label>Máximo de usos</label>
+                            <select id="tokenMaxUses">
+                                <option value="1">1 uso (one-time)</option>
+                                <option value="3">3 usos</option>
+                                <option value="5" selected>5 usos</option>
+                                <option value="10">10 usos</option>
+                                <option value="">Ilimitado</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
                     </div>
                 </div>
-                <div class="form-group-inline">
-                    <label>Validade</label>
-                    <div class="expiry-opts" id="expiryOpts">
-                        <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
-                        <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
-                        <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
-                        <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
-                        <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
-                    </div>
-                </div>
-                <div class="form-group-inline">
-                    <label>Máximo de usos</label>
-                    <select id="tokenMaxUses">
-                        <option value="1">1 uso (one-time)</option>
-                        <option value="3">3 usos</option>
-                        <option value="5" selected>5 usos</option>
-                        <option value="10">10 usos</option>
-                        <option value="">Ilimitado</option>
-                    </select>
-                </div>
-                <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
             </div>
 
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
-                <div class="filter-bar">
-                    <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
-                        <span class="th-filter-count" id="tokenCount"></span>
+            <div class="token-list-section">
+                <div class="panel">
+                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                    <div class="filter-bar">
+                        <div class="filter-search">
+                            <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
+                            <span class="th-filter-count" id="tokenCount"></span>
+                            <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="expirado">Expirado</option>
+                            <option value="revogado">Revogado</option>
+                            <option value="esgotado">Esgotado</option>
+                        </select>
                     </div>
-                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()">
-                        <option value="">Todos</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="expirado">Expirado</option>
-                        <option value="revogado">Revogado</option>
-                        <option value="esgotado">Esgotado</option>
-                    </select>
-                </div>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>Label</th><th>Currículo</th><th>Status</th><th>Usos</th><th>Expira</th><th></th></tr></thead>
-                        <tbody id="tokenTable"></tbody>
-                    </table>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
+                                    <th>Currículo</th>
+                                    <th>Status</th>
+                                    <th class="sortable" data-sort="use_count" onclick="toggleSort('tokens','use_count')">Usos<span class="sort-arrow">↕</span></th>
+                                    <th class="sortable sort-active" data-sort="expires_at" onclick="toggleSort('tokens','expires_at')">Expira<span class="sort-arrow">▲</span></th>
+                                    <th class="col-actions"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -545,24 +726,50 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
         <!-- ─── LOGS ─── -->
         <div class="tab-panel" id="tab-logs">
             <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads e envios</div>
+                <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
                 <div class="filter-bar">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar empresa, vaga, CV…" oninput="renderLogs()">
+                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar label, destinatário, currículo, IP…" oninput="_debouncedLogLoad()">
                         <span class="th-filter-count" id="logCount"></span>
+                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <select class="th-filter-select" id="logTipoFilter" onchange="renderLogs()">
+                    <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:210px;flex-shrink:0">
                         <option value="">Todos os eventos</option>
                         <option value="download">Acesso do recrutador</option>
                         <option value="email">Envio por email</option>
-                        <option value="whatsapp">Envio WhatsApp</option>
+                        <option value="whatsapp">Envio WhatsApp (tudo)</option>
+                        <option value="whatsapp-link">Envio WhatsApp · link</option>
+                        <option value="whatsapp-attach">Envio WhatsApp · arquivo</option>
                     </select>
+                    <div class="filter-date-group">
+                        <span class="th-filter-label">De</span>
+                        <input class="th-filter-input" type="date" id="logFrom" title="Data inicial" onchange="_resetAndLoadLogs()" style="width:135px">
+                        <span class="th-filter-label">Até</span>
+                        <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()" style="width:135px">
+                    </div>
                 </div>
-                <div class="tbl-wrap">
+                <div class="tbl-wrap" id="logTblWrap">
+                    <div class="tbl-overlay" id="logOverlay">
+                        <span class="tbl-overlay-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando…
+                        </span>
+                    </div>
                     <table>
-                        <thead><tr><th>Currículo</th><th>Origem</th><th>Empresa</th><th>Data/hora</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="download_tokens.label" onclick="toggleSort('logs','download_tokens.label')">Token / Label<span class="sort-arrow">↕</span></th>
+                                <th class="sortable" data-sort="cv" onclick="toggleSort('logs','cv')">Currículo<span class="sort-arrow">↕</span></th>
+                                <th class="sortable" data-sort="ip_address" onclick="toggleSort('logs','ip_address')">IP<span class="sort-arrow">↕</span></th>
+                                <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
+                            </tr>
+                        </thead>
                         <tbody id="logTable"></tbody>
                     </table>
+                </div>
+                <div class="pagination" id="logPagination" style="display:none">
+                    <button class="btn btn-sm" id="logPrevBtn" onclick="setLogPage(_logPage - 1)">‹ Anterior</button>
+                    <span id="logPageInfo"></span>
+                    <button class="btn btn-sm" id="logNextBtn" onclick="setLogPage(_logPage + 1)">Próxima ›</button>
                 </div>
             </div>
         </div>
@@ -575,31 +782,92 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
             </div>
 
             <div id="vagasListView">
-                <div class="filter-bar" style="margin-bottom:10px;justify-content:space-between">
-                    <div class="vagas-filters" id="vagasFilters">
-                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all')">Todas</button>
-                        <button class="vagas-filter-chip" data-filter="em_processo" onclick="setVagasFilter('em_processo')">Em processo</button>
-                        <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado')">Aprovado</button>
-                        <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado')">Recusado</button>
-                        <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas')"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+                    <div id="vagasFiltersPanel">
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                            <div class="vagas-filters" id="vagasFilters">
+                                <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
+                                <button class="vagas-filter-chip" data-filter="em_processo" onclick="setVagasFilter('em_processo',this)">Em processo</button>
+                                <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
+                                <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
+                                <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                            </div>
+                            <div class="vagas-filters" id="vagasFiltersModalidade">
+                                <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
+                                <button class="vagas-filter-chip" data-filter="Presencial" onclick="setVagasModalidadeFilter('Presencial',this)">Presencial</button>
+                                <button class="vagas-filter-chip" data-filter="Híbrida" onclick="setVagasModalidadeFilter('Híbrida',this)">Híbrida</button>
+                                <button class="vagas-filter-chip" data-filter="Remota" onclick="setVagasModalidadeFilter('Remota',this)">Remota</button>
+                            </div>
+                            <div class="vagas-filters" id="vagasFiltersTipo">
+                                <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasTipoFilter('all',this)">Contratação</button>
+                                <button class="vagas-filter-chip" data-filter="CLT" onclick="setVagasTipoFilter('CLT',this)">CLT</button>
+                                <button class="vagas-filter-chip" data-filter="PJ" onclick="setVagasTipoFilter('PJ',this)">PJ</button>
+                                <button class="vagas-filter-chip" data-filter="Freelancer" onclick="setVagasTipoFilter('Freelancer',this)">Freelancer</button>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-cyan btn-sm" onclick="openNewVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-sm btn-cyan" onclick="openNewVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                    </div>
                 </div>
-                <div class="filter-bar" style="margin-bottom:10px">
+
+                <div class="filter-bar" style="margin-bottom:12px">
                     <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderVagas()">
+                        <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderApplicationsTable()">
                         <span class="th-filter-count" id="vagasCount"></span>
+                        <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="filter-date-group">
+                        <span class="th-filter-label">De</span>
+                        <input class="th-filter-input" type="date" id="vagasDateFrom" title="Data de envio inicial" onchange="renderApplicationsTable()" style="width:135px">
+                        <span class="th-filter-label">Até</span>
+                        <input class="th-filter-input" type="date" id="vagasDateTo" title="Data de envio final" onchange="renderApplicationsTable()" style="width:135px">
+                        <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
-                <div class="tbl-wrap">
-                    <table>
-                        <thead><tr><th>Empresa / Vaga</th><th>Gestor</th><th>Enviado em</th><th>Modalidade</th><th>Etapa atual</th></tr></thead>
-                        <tbody id="vagasTable"></tbody>
+
+                <div id="vagasTableWrap" style="overflow-x:auto">
+                    <table class="vagas-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortVagas('empresa')">Empresa / Vaga <span id="sort-empresa" class="sort-icon"></span></th>
+                                <th class="col-gestor" onclick="sortVagas('gestor')">Gestor <span id="sort-gestor" class="sort-icon"></span></th>
+                                <th class="col-date" onclick="sortVagas('data_envio')">Enviado em <span id="sort-data_envio" class="sort-icon">↓</span></th>
+                                <th class="col-cadastrado" onclick="sortVagas('created_at')">Cadastrado <span id="sort-created_at" class="sort-icon"></span></th>
+                                <th onclick="sortVagas('stage')">Etapa atual <span id="sort-stage" class="sort-icon"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="vagasTableBody">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- ─── ANÁLISE DE VAGAS ──────────────────────── -->
             <div id="vagasAnalysisView" style="display:none">
+
+                <div class="vagas-analysis-period-bar" id="vagasAnalysisPeriodBar">
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('today',this)">Hoje</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('week',this)">Semana</button>
+                    <button class="metrics-period-btn active" onclick="setVagasAnalysisPeriod('month',this)">Mês</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('year',this)">Ano</button>
+                    <button class="metrics-period-btn" onclick="setVagasAnalysisPeriod('all',this)">Tudo</button>
+                    <div class="vagas-period-dates">
+                        <span class="th-filter-label">De</span>
+                        <input type="date" id="vagasAnalysisFrom" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <span class="th-filter-label">até</span>
+                        <input type="date" id="vagasAnalysisTo" class="th-filter-input period-date" onchange="setVagasAnalysisPeriod('custom',null)">
+                        <label class="period-archived-toggle">
+                            <span class="period-toggle-switch">
+                                <input type="checkbox" id="vagasIncludeArchived" onchange="renderVagasAnalysis()">
+                                <span class="period-toggle-track"></span>
+                            </span>
+                            <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
+                        </label>
+                    </div>
+                </div>
+
                 <div class="metrics-kpis">
                     <div class="metrics-kpi-card highlight">
                         <div class="metrics-kpi-label">Total</div>
@@ -607,7 +875,7 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
                     </div>
                     <div class="metrics-kpi-card">
                         <div class="metrics-kpi-label">Em processo</div>
-                        <div class="metrics-kpi-value" id="vkpi-processo" style="color:#eab308">—</div>
+                        <div class="metrics-kpi-value" id="vkpi-em-processo" style="color:#eab308">—</div>
                     </div>
                     <div class="metrics-kpi-card">
                         <div class="metrics-kpi-label">Aprovadas</div>
@@ -618,14 +886,26 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
                         <div class="metrics-kpi-value" id="vkpi-recusado" style="color:#ef4444">—</div>
                     </div>
                 </div>
+
                 <div class="metrics-chart-card">
-                    <h4>Candidaturas por dia da semana</h4>
-                    <div style="position:relative;height:200px"><canvas id="vagasChart"></canvas></div>
+                    <h4 id="vagasChartTitle" style="margin:0 0 12px">Candidaturas por dia da semana</h4>
+                    <div class="vagas-bucket-bar" id="vagasChartModeBar" style="flex-wrap:wrap;gap:6px;margin-bottom:16px">
+                        <button class="metrics-period-btn"        data-mode="timeline" onclick="setVagasChartMode('timeline',this)">Tempo</button>
+                        <button class="metrics-period-btn active" data-mode="dow"      onclick="setVagasChartMode('dow',this)">Dia da semana</button>
+                        <button class="metrics-period-btn"        data-mode="wom"      onclick="setVagasChartMode('wom',this)">Semana do mês</button>
+                        <button class="metrics-period-btn"        data-mode="dom"      onclick="setVagasChartMode('dom',this)">Dia do mês</button>
+                        <button class="metrics-period-btn"        data-mode="moy"      onclick="setVagasChartMode('moy',this)">Mês</button>
+                    </div>
+                    <div style="position:relative;height:200px">
+                        <canvas id="vagasChart"></canvas>
+                    </div>
                 </div>
+
                 <div class="metrics-panels-grid">
-                    <div class="metrics-panel"><h4>Resultado</h4><div id="distResult"></div></div>
-                    <div class="metrics-panel"><h4>Modalidade</h4><div id="distModalidade"></div></div>
-                    <div class="metrics-panel"><h4>Tipo</h4><div id="distTipo"></div></div>
+                    <div class="metrics-panel"><h4>Resultado</h4><div id="vagasDistResult"></div></div>
+                    <div class="metrics-panel"><h4>Modalidade</h4><div id="vagasDistModalidade"></div></div>
+                    <div class="metrics-panel"><h4>Tipo de contratação</h4><div id="vagasDistTipo"></div></div>
+                    <div class="metrics-panel"><h4>Etapa atual</h4><div id="vagasDistStage"></div></div>
                 </div>
             </div>
         </div>
@@ -680,6 +960,32 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
     </div>
     <div class="drawer-body" id="drawerBody"></div>
 </aside>
+
+
+
+<!-- ─── LOG DETAIL DRAWER ─── -->
+<div class="log-drawer-overlay" id="logDrawerOverlay" onclick="closeLogDetail()"></div>
+<div class="log-drawer" id="logDrawer">
+    <div class="log-drawer-header">
+        <span id="ldTitle">Detalhes do evento</span>
+        <button class="drawer-close" onclick="closeLogDetail()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="log-drawer-body" id="ldBody"></div>
+</div>
+
+<!-- ─── SHARE MODAL (criação de token) ─── -->
+<div class="modal-overlay" id="shareModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeShareModal()" style="position:absolute;top:14px;right:14px"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-header" style="margin-bottom:8px"><span class="modal-title">Token criado com sucesso!</span></div>
+        <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:14px" id="shareModalMeta">—</p>
+        <div class="share-url-box" id="shareUrl">—</div>
+        <div class="share-actions">
+            <button class="share-btn share-btn-copy" onclick="copyShareUrl()"><i class="fa-solid fa-copy"></i> Copiar link</button>
+            <button class="share-btn" onclick="closeShareModal()"><i class="fa-solid fa-check"></i> Pronto</button>
+        </div>
+    </div>
+</div>
 
 <!-- ─── MODAL ─── -->
 <div class="modal-overlay" id="modalOverlay">
@@ -855,9 +1161,93 @@ document.addEventListener('keydown', e => {
 // ════════════════════════════════════════════════════════
 let _cvs = [], _tokens = [], _logs = [], _applications = [], _analytics = null;
 let _vagasFilter = 'all';
+let _vagasModalidadeFilter = 'all';
+let _vagasTipoFilter = 'all';
+let _vagasSort = { col: 'data_envio', dir: 'desc' };
 let _selectedExpiry = 24;
+let _expiryDateValue = null;
 let _activeTab = 'cvs';
 let _period = 7;
+let _openAppId = null;
+
+// Sort state por tabela
+let _cvSort     = { col: 'created_at',  dir: 'desc' };
+let _tokenSort  = { col: 'expires_at',  dir: 'asc'  };
+let _logSort    = { col: 'downloaded_at', dir: 'desc' };
+
+// Logs paginação client-side
+let _logPage = 1, _logTotal = 0, _logPages = 1, _logSearchTimer = null;
+const LOG_PAGE_SIZE = 50;
+
+// Vagas analysis
+let _vagasAnalysisPeriod = 'month';
+let _vagasChartMode      = 'dow';
+
+// Share modal state
+let _lastSharedToken = null;
+
+// Ordena array por chave; suporta dot-notation (cv.name)
+function _getKey(obj, col) {
+    if (col === 'cv') return (obj.demo_cv_versions?.name || obj.cv_versions?.name || obj.cv_name_snapshot || '');
+    if (col === 'download_tokens.label') return (obj.demo_download_tokens?.label || obj.download_tokens?.label || obj.label_snapshot || '');
+    return obj[col];
+}
+function _sortData(arr, col, dir) {
+    const mult = dir === 'asc' ? 1 : -1;
+    return [...arr].sort((a, b) => {
+        const av = _getKey(a, col), bv = _getKey(b, col);
+        if (av == null && bv == null) return 0;
+        if (av == null) return  1;
+        if (bv == null) return -1;
+        if (typeof av === 'number' && typeof bv === 'number') return mult * (av - bv);
+        return mult * String(av).localeCompare(String(bv), 'pt-BR');
+    });
+}
+function toggleSort(table, col) {
+    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : table === 'logs' ? _logSort : null;
+    if (!state) return;
+    if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
+    else { state.col = col; state.dir = 'asc'; }
+    if (table === 'cvs')    renderCVs();
+    if (table === 'tokens') renderTokens();
+    if (table === 'logs')   { _logPage = 1; renderLogs(); }
+}
+function updateSortHeaders(table) {
+    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : _logSort;
+    const tab = document.getElementById(`tab-${table}`);
+    if (!tab) return;
+    tab.querySelectorAll('th.sortable').forEach(th => {
+        const col = th.dataset.sort;
+        const arrow = th.querySelector('.sort-arrow');
+        if (!arrow) return;
+        if (col === state.col) {
+            th.classList.add('sort-active');
+            arrow.textContent = state.dir === 'asc' ? '▲' : '▼';
+        } else {
+            th.classList.remove('sort-active');
+            arrow.textContent = '↕';
+        }
+    });
+}
+
+// Normaliza join Supabase: demo_cv_versions → cv_versions
+function _normalizeCv(arr) {
+    return (arr || []).map(item => ({ ...item, cv_versions: item.demo_cv_versions ?? item.cv_versions ?? null }));
+}
+
+// Accordions (mobile)
+function toggleCvsUpload() {
+    const btn = document.getElementById('cvsUploadToggleBtn');
+    const col = document.getElementById('cvsUploadCollapsible');
+    const open = col.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+}
+function toggleTokenForm() {
+    const btn = document.getElementById('tokenFormToggleBtn');
+    const col = document.getElementById('tokenFormCollapsible');
+    const open = col.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+}
 
 function esc(s) {
     if (s == null) return '';
@@ -922,41 +1312,59 @@ async function loadCVs() {
         renderCVs();
         // Atualiza select de tokens
         const sel = document.getElementById('tokenCV');
-        if (sel) {
-            sel.innerHTML = '<option value="">Selecione…</option>' + _cvs.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-        }
-        document.getElementById('cvCount2').textContent = `${_cvs.length} arquivo${_cvs.length === 1 ? '' : 's'}`;
+        if (sel) sel.innerHTML = '<option value="">Selecione…</option>' + _cvs.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+        // Storage card stats fake (com nº real de arquivos)
+        const filesEl = document.getElementById('storageFiles');
+        if (filesEl) filesEl.textContent = `${_cvs.length} arquivo${_cvs.length === 1 ? '' : 's'}`;
     } catch (e) { showToast(e.message, 'error'); }
 }
 
 function renderCVs() {
-    const search = document.getElementById('cvSearch').value.toLowerCase();
-    const status = document.getElementById('cvStatusFilter').value;
-    let list = _cvs.filter(c => {
-        if (search && !c.name.toLowerCase().includes(search) && !c.file_name.toLowerCase().includes(search)) return false;
-        if (status === 'ativo' && !c.active) return false;
-        if (status === 'inativo' && c.active) return false;
-        return true;
-    });
-    document.getElementById('cvCount').textContent = `${list.length} ${list.length === 1 ? 'item' : 'itens'}`;
+    updateSortHeaders('cvs');
+    const search = (document.getElementById('cvSearch')?.value || '').toLowerCase();
+    const status = document.getElementById('cvStatusFilter')?.value || '';
+    let data = _cvs;
+    if (search) data = data.filter(c =>
+        (c.name || '').toLowerCase().includes(search) ||
+        (c.description || '').toLowerCase().includes(search) ||
+        (c.file_name || '').toLowerCase().includes(search)
+    );
+    if (status === 'ativo')   data = data.filter(c => c.active);
+    if (status === 'inativo') data = data.filter(c => !c.active);
+    data = _sortData(data, _cvSort.col, _cvSort.dir);
+
+    const countEl = document.getElementById('cvCount');
+    if (countEl) countEl.textContent = _cvs.length
+        ? (data.length !== _cvs.length ? `${data.length} de ${_cvs.length}` : `${_cvs.length} registros`)
+        : '';
+
     const tb = document.getElementById('cvTable');
-    if (!list.length) {
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum CV encontrado.</td></tr>';
+    if (!data.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum currículo encontrado</td></tr>';
         return;
     }
-    tb.innerHTML = list.map(c => `
+    tb.innerHTML = data.map(c => `
         <tr>
-            <td><b>${esc(c.name)}</b><div style="font-size:0.72rem;color:var(--text-dim)">${esc(c.description || '')}</div></td>
-            <td><span style="font-family:var(--font-mono);font-size:0.74rem">${esc(c.file_name)}</span></td>
-            <td><span class="badge badge-${c.active ? 'green' : 'gray'}">${c.active ? 'Ativo' : 'Inativo'}</span></td>
+            <td><strong style="color:var(--text)">${esc(c.name)}</strong>${c.description ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px">${esc(c.description)}</div>` : ''}</td>
+            <td><span style="font-family:var(--font-mono);font-size:0.76rem;color:var(--text-soft)">${esc(c.file_name)}</span></td>
+            <td><span class="badge ${c.active ? 'badge-active' : 'badge-esgotado'}">${c.active ? '● ativo' : '○ inativo'}</span></td>
             <td style="color:var(--text-dim);font-size:0.78rem">${fmtDate(c.created_at)}</td>
             <td>
-                <button class="btn btn-sm" title="Pré-visualizar" onclick="previewCV('${c.id}','${esc(c.file_name)}')"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn btn-sm" title="${c.active ? 'Desativar' : 'Ativar'}" onclick="toggleCVActive('${c.id}',${!c.active})"><i class="fa-solid fa-${c.active ? 'eye-slash' : 'check'}"></i></button>
-                <button class="btn btn-sm btn-danger" title="Excluir" onclick="deleteCV('${c.id}','${esc(c.name)}')"><i class="fa-solid fa-trash"></i></button>
+                <div class="row-actions">
+                    <button class="btn btn-sm cv-action-btn" title="Pré-visualizar" onclick="previewCV('${c.id}','${esc(c.file_name)}')"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-sm cv-action-btn" title="Editar" onclick='openEditCV(${JSON.stringify({ id: c.id, name: c.name, description: c.description || '', active: c.active })})'><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
+                    <button class="btn btn-sm cv-action-btn" title="${c.active ? 'Desativar' : 'Ativar'}" onclick="toggleCVActive('${c.id}',${!c.active})"><i class="fa-solid fa-${c.active ? 'eye-slash' : 'check'}"></i></button>
+                    <button class="btn btn-danger btn-sm" title="Excluir" onclick="deleteCV('${c.id}','${esc(c.name)}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </td>
         </tr>
     `).join('');
+}
+
+function clearCvFilters() {
+    ['cvSearch', 'cvStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    _cvSort = { col: 'created_at', dir: 'desc' };
+    renderCVs();
 }
 
 function previewCV(_id, fileName) {
@@ -980,34 +1388,43 @@ async function deleteCV(id, name) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-function openNewCV() {
-    openModal('Novo CV (demo)', `
-        <div class="form-group-inline"><label>Nome</label><input type="text" id="newCvName" placeholder="Ex: Brienne of Tarth · QA Pleno"></div>
-        <div class="form-group-inline"><label>Descrição</label><input type="text" id="newCvDesc" placeholder="Honor and loyalty in test coverage"></div>
-        <div class="form-group-inline"><label>Arquivo (escolha um existente)</label>
-            <select id="newCvFile">
-                <option value="cv-demo-jon-snow.pdf">cv-demo-jon-snow.pdf</option>
-                <option value="cv-demo-daenerys-targaryen.pdf">cv-demo-daenerys-targaryen.pdf</option>
-                <option value="cv-demo-tyrion-lannister.pdf">cv-demo-tyrion-lannister.pdf</option>
-                <option value="cv-demo-arya-stark.pdf">cv-demo-arya-stark.pdf</option>
-                <option value="cv-demo-bran-stark.pdf">cv-demo-bran-stark.pdf</option>
-            </select>
-        </div>
-        <div class="modal-actions">
-            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-cyan btn-sm" onclick="saveNewCV()">Criar</button>
-        </div>
-    `);
-}
-
-async function saveNewCV() {
-    const name = document.getElementById('newCvName').value.trim();
-    const description = document.getElementById('newCvDesc').value.trim();
-    const file_name = document.getElementById('newCvFile').value;
+// Criação via accordion (não modal)
+async function createCV() {
+    const name = document.getElementById('cvName').value.trim();
+    const description = document.getElementById('cvDesc').value.trim();
+    const file_name = document.getElementById('cvFile').value;
     if (!name) return showToast('Nome obrigatório', 'error');
     try {
         await dapi('POST', '/api/demo/cv-versions', { name, description, file_name });
-        showToast('CV criado');
+        showToast('CV adicionado');
+        document.getElementById('cvName').value = '';
+        document.getElementById('cvDesc').value = '';
+        loadCVs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// Editar metadados do CV (nome, descrição, ativo)
+function openEditCV(cv) {
+    openModal('Editar currículo', `
+        <div class="form-group-inline"><label>Nome</label><input type="text" id="editCvName" value="${esc(cv.name)}"></div>
+        <div class="form-group-inline"><label>Descrição</label><input type="text" id="editCvDesc" value="${esc(cv.description || '')}"></div>
+        <div class="form-group-inline"><label><input type="checkbox" id="editCvActive" ${cv.active ? 'checked' : ''}> Ativo</label></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-cyan btn-sm" onclick="saveEditCV('${cv.id}')"><i class="fa-solid fa-check"></i> Salvar</button>
+        </div>
+    `);
+}
+async function saveEditCV(id) {
+    const body = {
+        name: document.getElementById('editCvName').value.trim(),
+        description: document.getElementById('editCvDesc').value.trim(),
+        active: document.getElementById('editCvActive').checked,
+    };
+    if (!body.name) return showToast('Nome obrigatório', 'error');
+    try {
+        await dapi('PUT', `/api/demo/cv-versions?id=${id}`, body);
+        showToast('CV atualizado');
         closeModal();
         loadCVs();
     } catch (e) { showToast(e.message, 'error'); }
@@ -1019,12 +1436,21 @@ async function saveNewCV() {
 function setExpiry(btn) {
     document.querySelectorAll('.expiry-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    _selectedExpiry = parseInt(btn.dataset.hours);
+    const h = btn.dataset.hours;
+    const dateInput = document.getElementById('expiryDate');
+    if (h === 'custom') {
+        _selectedExpiry = 'custom';
+        if (dateInput) { dateInput.style.display = 'block'; dateInput.focus(); }
+    } else {
+        _selectedExpiry = parseInt(h);
+        if (dateInput) dateInput.style.display = 'none';
+    }
 }
 
 async function loadTokens() {
     try {
-        _tokens = await dapi('GET', '/api/demo/tokens');
+        const raw = await dapi('GET', '/api/demo/tokens');
+        _tokens = _normalizeCv(raw).map(t => ({ ...t, status: tokenStatus(t) }));
         renderTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
@@ -1035,47 +1461,58 @@ function tokenStatus(t) {
     if (t.expires_at && new Date(t.expires_at) < new Date()) return 'expirado';
     return 'ativo';
 }
-function tokenBadge(s) {
-    return { ativo: 'green', expirado: 'gray', revogado: 'red', esgotado: 'yellow' }[s] || 'gray';
-}
 
 function renderTokens() {
-    const search = document.getElementById('tokenSearch').value.toLowerCase();
-    const statusF = document.getElementById('tokenStatusFilter').value;
-    let list = _tokens.filter(t => {
-        const st = tokenStatus(t);
-        if (statusF && statusF !== st) return false;
-        if (search) {
-            const hay = `${t.label || ''} ${t.cv_versions?.name || ''}`.toLowerCase();
-            if (!hay.includes(search)) return false;
-        }
-        return true;
-    });
-    document.getElementById('tokenCount').textContent = `${list.length} ${list.length === 1 ? 'item' : 'itens'}`;
+    updateSortHeaders('tokens');
+    const search  = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
+    const statusF = document.getElementById('tokenStatusFilter')?.value || '';
+    let data = _tokens;
+    if (search) data = data.filter(t =>
+        (t.label || '').toLowerCase().includes(search) ||
+        (t.cv_versions?.name || '').toLowerCase().includes(search)
+    );
+    if (statusF) data = data.filter(t => t.status === statusF);
+    data = _sortData(data, _tokenSort.col, _tokenSort.dir);
+
+    const countEl = document.getElementById('tokenCount');
+    if (countEl) countEl.textContent = _tokens.length
+        ? (data.length !== _tokens.length ? `${data.length} de ${_tokens.length}` : `${_tokens.length} registros`)
+        : '';
+
     const tb = document.getElementById('tokenTable');
-    if (!list.length) {
-        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token.</td></tr>';
+    if (!data.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>';
         return;
     }
-    tb.innerHTML = list.map(t => {
-        const s = tokenStatus(t);
+    tb.innerHTML = data.map(t => {
+        const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
+        const uses = t.max_uses != null ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
         return `<tr>
-            <td><b style="font-family:var(--font-mono)">${esc(t.label || '—')}</b></td>
-            <td style="font-size:0.78rem">${esc(t.cv_versions?.name || '—')}</td>
-            <td><span class="badge badge-${tokenBadge(s)}">${s}</span></td>
-            <td style="font-family:var(--font-mono);font-size:0.78rem">${t.use_count}${t.max_uses != null ? `/${t.max_uses}` : '/∞'}</td>
+            <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
+            <td style="font-size:0.82rem">${esc(t.cv_versions?.name || '—')}</td>
+            <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
+            <td style="font-family:var(--font-mono);font-size:0.8rem">${uses}</td>
             <td style="font-size:0.78rem;color:var(--text-dim)">${t.expires_at ? fmtDate(t.expires_at, true) : '—'}</td>
             <td>
-                <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar hash"><i class="fa-solid fa-copy"></i></button>
-                ${s === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                <button class="btn btn-sm btn-danger" onclick="deleteToken('${t.id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                <div class="row-actions">
+                    <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar link"><i class="fa-solid fa-copy"></i></button>
+                    ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}','${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </td>
         </tr>`;
     }).join('');
 }
 
+function clearTokenFilters() {
+    ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    _tokenSort = { col: 'expires_at', dir: 'asc' };
+    renderTokens();
+}
+
 function copyTokenHash(hash) {
-    navigator.clipboard.writeText(`https://artacho.dev/cv?token=${hash}`);
+    const url = `https://artacho.dev/cv?token=${hash}`;
+    navigator.clipboard.writeText(url);
     showToast('Link copiado!');
 }
 
@@ -1083,25 +1520,45 @@ async function createToken() {
     const cv_version_id = document.getElementById('tokenCV').value;
     const label = document.getElementById('tokenLabel').value.trim();
     const max_uses = document.getElementById('tokenMaxUses').value || null;
-    if (!cv_version_id) return showToast('Selecione um CV', 'error');
+    if (!cv_version_id) return showToast('Selecione um currículo', 'error');
     if (!label) return showToast('Informe um label', 'error');
+
+    let hours = _selectedExpiry;
+    let expires_at = null;
+    if (hours === 'custom') {
+        const dateVal = document.getElementById('expiryDate').value;
+        if (!dateVal) return showToast('Informe a data de expiração', 'error');
+        expires_at = new Date(dateVal).toISOString();
+        hours = null;
+    }
+
     try {
-        const tk = await dapi('POST', '/api/demo/tokens', { cv_version_id, label, hours: _selectedExpiry, max_uses });
-        openModal('Token criado', `
-            <p style="margin-bottom:12px;font-size:0.84rem">Hash gerado para <b>${esc(label)}</b>:</p>
-            <div class="token-hash-modal">https://artacho.dev/cv?token=${esc(tk.hash)}</div>
-            <p style="font-size:0.74rem;color:var(--text-dim)">Salve este link agora. Em um sistema real, ele só aparece uma vez.</p>
-            <div class="modal-actions">
-                <button class="btn btn-cyan btn-sm" onclick="copyTokenHash('${esc(tk.hash)}');closeModal()"><i class="fa-solid fa-copy"></i> Copiar link</button>
-            </div>
-        `);
+        const tk = await dapi('POST', '/api/demo/tokens', { cv_version_id, label, hours, expires_at, max_uses });
         document.getElementById('tokenLabel').value = '';
+        openShareModal(tk, label);
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
+function openShareModal(tk, label) {
+    _lastSharedToken = tk;
+    document.getElementById('shareModalMeta').textContent = `${label || 'Sem label'} · ${tk.expires_at ? `expira ${fmtDate(tk.expires_at, true)}` : 'sem expiração'} · ${tk.max_uses != null ? tk.max_uses + ' usos' : 'usos ilimitados'}`;
+    document.getElementById('shareUrl').textContent = `https://artacho.dev/cv?token=${tk.hash}`;
+    document.getElementById('shareModal').classList.add('open');
+}
+function closeShareModal() {
+    document.getElementById('shareModal').classList.remove('open');
+}
+function copyShareUrl() {
+    if (!_lastSharedToken) return;
+    copyTokenHash(_lastSharedToken.hash);
+}
+document.getElementById('shareModal').addEventListener('click', e => {
+    if (e.target.id === 'shareModal') closeShareModal();
+});
+
 async function revokeToken(id) {
-    if (!confirm('Revogar este token?')) return;
+    if (!confirm('Revogar este token? O link deixará de funcionar.')) return;
     try {
         await dapi('PUT', `/api/demo/tokens?id=${id}`, { revoked: true });
         showToast('Token revogado');
@@ -1109,8 +1566,8 @@ async function revokeToken(id) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function deleteToken(id) {
-    if (!confirm('Excluir token permanentemente?')) return;
+async function deleteToken(id, label) {
+    if (!confirm(`Excluir token "${label || '(sem label)'}" permanentemente?`)) return;
     try {
         await dapi('DELETE', `/api/demo/tokens?id=${id}`);
         showToast('Token excluído');
@@ -1121,104 +1578,325 @@ async function deleteToken(id) {
 // ════════════════════════════════════════════════════════
 // LOGS
 // ════════════════════════════════════════════════════════
-async function loadLogs() {
-    const search = document.getElementById('logSearch').value;
-    const tipo = document.getElementById('logTipoFilter').value;
-    try {
-        const r = await dapi('GET', `/api/demo/logs?search=${encodeURIComponent(search)}&tipo=${tipo}`);
-        _logs = r.data;
-        document.getElementById('logCount').textContent = `${r.total} ${r.total === 1 ? 'item' : 'itens'}`;
-        renderLogs();
-    } catch (e) { showToast(e.message, 'error'); }
+function smartLogLabel(l) {
+    if (l.download_tokens?.label) return esc(l.download_tokens.label);
+    if (l.label_snapshot) return esc(l.label_snapshot);
+    const ip = l.ip_address || '';
+    const ua = l.user_agent || '';
+    if (ip.startsWith('admin-send-')) {
+        const channel = ip.replace('admin-send-', '');
+        const m = ua.match(/^Send to ([^<\(]+?)(?:\s*<|\s+via|\s*$)/);
+        const recipient = m ? m[1].trim() : '?';
+        const channelLabel = channel === 'whatsapp-link' ? 'WhatsApp · link'
+                           : channel === 'whatsapp'      ? 'WhatsApp · arquivo'
+                           : channel === 'email'         ? 'Email'
+                           : channel;
+        return `<span title="${esc(ua)}">${esc(channelLabel)} · <strong>${esc(recipient)}</strong></span>`;
+    }
+    if (ua && !ua.startsWith('Send to')) {
+        return '<span style="color:var(--text-dim)" title="Download direto via token">(download direto)</span>';
+    }
+    return '<span style="color:var(--text-dim)">(sem label)</span>';
 }
+
+function smartCvName(l) {
+    const live = l.demo_cv_versions?.name || l.cv_versions?.name;
+    const snap = l.cv_name_snapshot;
+    if (live) return esc(live);
+    if (snap) {
+        return `${esc(snap)} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--danger);background:var(--danger-soft);border:1px solid rgba(239,68,68,0.2);padding:1px 6px;border-radius:4px;margin-left:4px">excluído</span>`;
+    }
+    return '<span style="color:var(--text-dim)">—</span>';
+}
+
+function _showLogOverlay()  { document.getElementById('logOverlay')?.classList.add('visible'); }
+function _hideLogOverlay()  { document.getElementById('logOverlay')?.classList.remove('visible'); }
+
+function _renderLogSkeletons(n = 10) {
+    const widths = [['58%','65%','72%','40%'],['45%','75%','55%','50%'],['70%','45%','68%','55%'],['52%','60%','78%','45%'],['65%','52%','50%','60%']];
+    document.getElementById('logTable').innerHTML = Array.from({ length: n }, (_, i) => {
+        const w = widths[i % widths.length];
+        return `<tr class="skel-row"><td><span class="skel-cell" style="width:${w[0]}"></span></td><td><span class="skel-cell" style="width:${w[1]}"></span></td><td><span class="skel-cell" style="width:${w[2]}"></span></td><td><span class="skel-cell" style="width:${w[3]}"></span></td></tr>`;
+    }).join('');
+}
+
+async function loadLogs() {
+    const search = document.getElementById('logSearch')?.value || '';
+    const tipo   = document.getElementById('logTipoFilter')?.value || '';
+    const from   = document.getElementById('logFrom')?.value || '';
+    const to     = document.getElementById('logTo')?.value || '';
+
+    if (!document.getElementById('logTable').children.length) _renderLogSkeletons();
+    _showLogOverlay();
+
+    try {
+        const params = new URLSearchParams({ limit: '200', page: '1' });
+        if (search) params.set('search', search);
+        if (tipo)   params.set('tipo', tipo);
+        if (from)   params.set('from', from);
+        if (to)     params.set('to', to);
+        const r = await dapi('GET', `/api/demo/logs?${params}`);
+        const all = _normalizeCv(r.data || r);
+        _logTotal = all.length;
+        // Sort client-side
+        const sorted = _sortData(all, _logSort.col, _logSort.dir);
+        _logPages = Math.max(1, Math.ceil(_logTotal / LOG_PAGE_SIZE));
+        if (_logPage > _logPages) _logPage = _logPages;
+        const start = (_logPage - 1) * LOG_PAGE_SIZE;
+        _logs = sorted.slice(start, start + LOG_PAGE_SIZE);
+        renderLogs();
+        _updateLogPagination();
+    } catch (e) {
+        showToast(e.message, 'error');
+    } finally {
+        _hideLogOverlay();
+    }
+}
+
+function _debouncedLogLoad() {
+    _logPage = 1;
+    _showLogOverlay();
+    clearTimeout(_logSearchTimer);
+    _logSearchTimer = setTimeout(loadLogs, 300);
+}
+function _resetAndLoadLogs() { _logPage = 1; loadLogs(); }
+function setLogPage(p) {
+    const np = Math.max(1, Math.min(_logPages || 1, p));
+    if (np === _logPage) return;
+    _logPage = np;
+    loadLogs();
+}
+function _updateLogPagination() {
+    const el = document.getElementById('logPagination');
+    if (!el) return;
+    if (_logPages <= 1) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    document.getElementById('logPrevBtn').disabled = _logPage <= 1;
+    document.getElementById('logNextBtn').disabled = _logPage >= _logPages;
+    document.getElementById('logPageInfo').textContent = `Página ${_logPage} de ${_logPages}`;
+}
+
 function renderLogs() {
+    updateSortHeaders('logs');
+    const countEl = document.getElementById('logCount');
+    if (countEl) countEl.textContent = _logTotal ? `${_logTotal} registros` : '';
+
     const tb = document.getElementById('logTable');
     if (!_logs.length) {
-        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum log.</td></tr>';
+        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum resultado</td></tr>';
         return;
     }
-    tb.innerHTML = _logs.map(l => {
-        const isAdmin = l.ip_address?.startsWith('admin-');
-        let origem;
-        if (l.ip_address === 'admin-send-email') origem = '<i class="fa-solid fa-envelope" style="color:#a78bfa"></i> Envio por email';
-        else if (l.ip_address === 'admin-send-whatsapp-link') origem = '<i class="fa-brands fa-whatsapp" style="color:#25d366"></i> WhatsApp (link)';
-        else if (l.ip_address === 'admin-send-whatsapp') origem = '<i class="fa-brands fa-whatsapp" style="color:#25d366"></i> WhatsApp (arquivo)';
-        else origem = `<i class="fa-solid fa-download" style="color:var(--cyan)"></i> Acesso · <span style="font-family:var(--font-mono);font-size:0.72rem">${esc(l.ip_address || '—')}</span>`;
-        return `<tr>
-            <td><b style="font-size:0.82rem">${esc(l.cv_name_snapshot || '—')}</b></td>
-            <td style="font-size:0.8rem">${origem}</td>
-            <td style="font-size:0.8rem">${esc(l.empresa || '—')} <span style="color:var(--text-dim);font-size:0.74rem">${l.vaga ? `· ${esc(l.vaga)}` : ''}</span></td>
-            <td style="font-family:var(--font-mono);font-size:0.74rem;color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</td>
-        </tr>`;
-    }).join('');
+    tb.innerHTML = _logs.map((l, i) => `
+        <tr class="row-clickable" onclick="openLogDetail(${i})">
+            <td>${smartLogLabel(l)}</td>
+            <td>${smartCvName(l)}</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
+            <td style="font-size:0.78rem;color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</td>
+        </tr>
+    `).join('');
+}
+
+function clearLogFilters() {
+    ['logSearch', 'logFrom', 'logTo', 'logTipoFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    _logSort = { col: 'downloaded_at', dir: 'desc' };
+    _logPage = 1;
+    loadLogs();
+}
+
+// ─── Log detail drawer ────────────────────────────────────
+function openLogDetail(idx) {
+    const l = _logs[idx];
+    if (!l) return;
+    renderLogDetail(l);
+    document.getElementById('logDrawer').classList.add('open');
+    document.getElementById('logDrawerOverlay').classList.add('open');
+}
+function closeLogDetail() {
+    document.getElementById('logDrawer').classList.remove('open');
+    document.getElementById('logDrawerOverlay').classList.remove('open');
+}
+function renderLogDetail(l) {
+    const channel = (l.ip_address || '').startsWith('admin-send-') ? l.ip_address.replace('admin-send-', '') : null;
+    const channelLabel = channel === 'whatsapp-link' ? 'WhatsApp (link rastreado)'
+                       : channel === 'whatsapp-attach' ? 'WhatsApp (arquivo)'
+                       : channel === 'whatsapp' ? 'WhatsApp'
+                       : channel === 'email' ? 'Email'
+                       : channel ? channel
+                       : 'Download direto';
+    const cvName = (l.demo_cv_versions?.name || l.cv_versions?.name || l.cv_name_snapshot || '—');
+    const tokenLabel = (l.demo_download_tokens?.label || l.download_tokens?.label || '—');
+
+    document.getElementById('ldTitle').textContent = channelLabel;
+    document.getElementById('ldBody').innerHTML = `
+        <div class="ld-section">
+            <div class="ld-section-title">Identificação</div>
+            <div class="ld-row"><strong>Canal</strong><span>${esc(channelLabel)}</span></div>
+            <div class="ld-row"><strong>Token / Label</strong><span>${esc(tokenLabel)}</span></div>
+            <div class="ld-row"><strong>Currículo</strong><span>${esc(cvName)}</span></div>
+        </div>
+        ${l.empresa || l.vaga ? `
+        <div class="ld-section">
+            <div class="ld-section-title">Contexto</div>
+            ${l.empresa ? `<div class="ld-row"><strong>Empresa</strong><span>${esc(l.empresa)}</span></div>` : ''}
+            ${l.vaga ? `<div class="ld-row"><strong>Vaga</strong><span>${esc(l.vaga)}</span></div>` : ''}
+        </div>` : ''}
+        <div class="ld-section">
+            <div class="ld-section-title">Rastreio</div>
+            <div class="ld-row"><strong>IP</strong><span class="ld-mono">${esc(l.ip_address || '—')}</span></div>
+            <div class="ld-row"><strong>User-Agent</strong><span class="ld-mono" style="font-size:0.72rem">${esc(l.user_agent || '—')}</span></div>
+            <div class="ld-row"><strong>Data/hora</strong><span>${fmtDate(l.downloaded_at, true)}</span></div>
+        </div>
+    `;
 }
 
 // ════════════════════════════════════════════════════════
 // VAGAS
 // ════════════════════════════════════════════════════════
-function setVagasFilter(f) {
+function getAppStatus(app) { return app.result || 'em_processo'; }
+function getAppCurrentStageName(app) {
+    const stages = app.stages || [];
+    const cur = stages.find(s => s.status === 'running');
+    if (cur) return cur.name;
+    const last = stages.filter(s => s.status === 'done' || s.status === 'rejected').slice(-1)[0];
+    if (last) return last.name;
+    return '—';
+}
+
+function setVagasFilter(f, btn) {
     _vagasFilter = f;
-    document.querySelectorAll('.vagas-filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
-    renderVagas();
+    document.querySelectorAll('#vagasFilters .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn?.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasModalidadeFilter(f, btn) {
+    _vagasModalidadeFilter = f;
+    document.querySelectorAll('#vagasFiltersModalidade .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn?.classList.add('active');
+    renderApplicationsTable();
+}
+function setVagasTipoFilter(f, btn) {
+    _vagasTipoFilter = f;
+    document.querySelectorAll('#vagasFiltersTipo .vagas-filter-chip').forEach(b => b.classList.remove('active'));
+    btn?.classList.add('active');
+    renderApplicationsTable();
+}
+function clearVagasSearch() {
+    const el = document.getElementById('vagasSearch');
+    if (el) el.value = '';
+    renderApplicationsTable();
+}
+function clearVagasDate() {
+    const f = document.getElementById('vagasDateFrom'); if (f) f.value = '';
+    const t = document.getElementById('vagasDateTo');   if (t) t.value = '';
+    renderApplicationsTable();
+}
+function sortVagas(col) {
+    if (_vagasSort.col === col) _vagasSort.dir = _vagasSort.dir === 'asc' ? 'desc' : 'asc';
+    else { _vagasSort.col = col; _vagasSort.dir = 'asc'; }
+    renderApplicationsTable();
 }
 
 async function loadVagas() {
     try {
-        _applications = await dapi('GET', '/api/demo/applications');
-        renderVagas();
+        const raw = await dapi('GET', '/api/demo/applications');
+        _applications = _normalizeCv(raw);
+        renderApplicationsTable();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-function vagaCurrentStage(app) {
-    const stages = app.stages || [];
-    const cur = stages.find(s => s.status === 'running');
-    if (cur) return { name: cur.name, type: 'current' };
-    const last = stages.filter(s => s.status === 'done' || s.status === 'rejected').slice(-1)[0];
-    if (last) return { name: last.name, type: last.status };
-    return { name: '—', type: 'pending' };
-}
+function renderApplicationsTable() {
+    const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
 
-function renderVagas() {
-    const search = document.getElementById('vagasSearch').value.toLowerCase();
-    let list = _applications.filter(a => {
-        if (_vagasFilter === 'arquivadas' && !a.archived) return false;
-        if (_vagasFilter !== 'arquivadas' && a.archived) return false;
-        if (['em_processo','aprovado','recusado'].includes(_vagasFilter) && a.result !== _vagasFilter) return false;
-        if (search) {
-            const hay = `${a.empresa} ${a.vaga || ''} ${a.gestor_nome || ''}`.toLowerCase();
-            if (!hay.includes(search)) return false;
+    let filtered = _applications;
+    if (_vagasFilter === 'arquivadas') {
+        filtered = filtered.filter(a => a.archived);
+    } else {
+        filtered = filtered.filter(a => !a.archived);
+        if (_vagasFilter !== 'all') filtered = filtered.filter(a => getAppStatus(a) === _vagasFilter);
+    }
+    if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(a => a.modalidade === _vagasModalidadeFilter);
+    if (_vagasTipoFilter !== 'all')       filtered = filtered.filter(a => a.tipo_contratacao === _vagasTipoFilter);
+
+    const dateFrom = document.getElementById('vagasDateFrom')?.value;
+    const dateTo   = document.getElementById('vagasDateTo')?.value;
+    if (dateFrom) filtered = filtered.filter(a => a.data_envio && a.data_envio.slice(0,10) >= dateFrom);
+    if (dateTo)   filtered = filtered.filter(a => a.data_envio && a.data_envio.slice(0,10) <= dateTo);
+    const dateBtn = document.getElementById('vagasDateClear');
+    if (dateBtn) dateBtn.style.display = (dateFrom || dateTo) ? '' : 'none';
+
+    if (search) filtered = filtered.filter(a =>
+        (a.empresa || '').toLowerCase().includes(search) ||
+        (a.vaga || '').toLowerCase().includes(search) ||
+        (a.gestor_nome || '').toLowerCase().includes(search)
+    );
+
+    // Sort
+    const mult = _vagasSort.dir === 'asc' ? 1 : -1;
+    filtered = [...filtered].sort((a, b) => {
+        switch (_vagasSort.col) {
+            case 'empresa':    return mult * (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR');
+            case 'gestor':     return mult * (a.gestor_nome || '').localeCompare(b.gestor_nome || '', 'pt-BR');
+            case 'data_envio': return mult * (a.data_envio || '').localeCompare(b.data_envio || '');
+            case 'created_at': return mult * (a.created_at || '').localeCompare(b.created_at || '');
+            case 'stage':      return mult * getAppCurrentStageName(a).localeCompare(getAppCurrentStageName(b), 'pt-BR');
+            default:           return 0;
         }
-        return true;
     });
-    document.getElementById('vagasCount').textContent = `${list.length} ${list.length === 1 ? 'vaga' : 'vagas'}`;
-    const tb = document.getElementById('vagasTable');
-    if (!list.length) {
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura.</td></tr>';
+
+    // Sort icons
+    document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
+    const activeIcon = document.getElementById(`sort-${_vagasSort.col}`);
+    if (activeIcon) activeIcon.textContent = _vagasSort.dir === 'asc' ? ' ↑' : ' ↓';
+
+    const countEl = document.getElementById('vagasCount');
+    if (countEl) countEl.textContent = _applications.length
+        ? (filtered.length !== _applications.length ? `${filtered.length} de ${_applications.length}` : `${_applications.length} registros`)
+        : '';
+
+    const tb = document.getElementById('vagasTableBody');
+    if (!filtered.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
         return;
     }
-    tb.innerHTML = list.map(a => {
-        const cs = vagaCurrentStage(a);
-        const resultBadge = a.result === 'aprovado' ? '<span class="badge badge-green">Aprovado</span>'
-                          : a.result === 'recusado' ? '<span class="badge badge-red">Recusado</span>'
-                          : `<span class="badge badge-${cs.type === 'current' ? 'cyan' : cs.type === 'rejected' ? 'red' : 'gray'}">${esc(cs.name)}</span>`;
-        return `<tr class="row-clickable" onclick="openVagaDrawer('${a.id}')">
-            <td><b>${esc(a.empresa)}</b><div style="font-size:0.74rem;color:var(--text-dim)">${esc(a.vaga || '—')}</div></td>
-            <td style="font-size:0.82rem">${esc(a.gestor_nome || '—')}</td>
-            <td style="font-size:0.78rem;color:var(--text-dim)">${fmtDate(a.data_envio)}</td>
-            <td style="font-size:0.78rem">${esc(a.modalidade || '—')}</td>
-            <td>${resultBadge}</td>
+    tb.innerHTML = filtered.map(app => {
+        const status     = getAppStatus(app);
+        const stage      = esc(getAppCurrentStageName(app));
+        const empresa    = esc(app.empresa || '—');
+        const vaga       = esc(app.vaga || '');
+        const gestor     = esc(app.gestor_nome || '—');
+        const dt         = app.data_envio ? fmtDate(app.data_envio) : '—';
+        const dtCadastro = app.created_at ? fmtDate(app.created_at) : '—';
+        const tagBadges  = [app.modalidade, app.tipo_contratacao].filter(Boolean)
+            .map(t => `<span style="display:inline-block;font-size:0.62rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);margin-right:3px">${esc(t)}</span>`).join('');
+        const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
+        return `<tr class="row-clickable" onclick="openVagaDrawer('${app.id}')">
+            <td>
+                <div style="font-size:0.84rem;font-weight:500">${empresa}</div>
+                ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
+                ${tagBadges ? `<div style="margin-top:3px">${tagBadges}</div>` : ''}
+                ${metaMobile ? `<div class="vaga-meta-mobile">${metaMobile}</div>` : ''}
+            </td>
+            <td class="col-gestor" style="font-size:0.76rem;color:var(--text-soft)">${gestor}</td>
+            <td class="col-date" style="font-size:0.74rem;color:var(--text-dim)">${dt}</td>
+            <td class="col-cadastrado" style="font-size:0.74rem;color:var(--text-dim)">${dtCadastro}</td>
+            <td><span class="stage-badge status-${status}">${stage}</span></td>
         </tr>`;
     }).join('');
 }
 
+// Alias para compat com switchTab
+function renderVagas() { renderApplicationsTable(); }
+
 function openVagaDrawer(id) {
     const app = _applications.find(a => a.id === id);
     if (!app) return;
+    _openAppId = id;
     document.getElementById('drawerTitle').textContent = `${app.empresa} — ${app.vaga || '—'}`;
     renderDrawerBody(app);
     document.getElementById('drawer').classList.add('open');
     document.getElementById('drawerOverlay').classList.add('open');
 }
+
 
 function renderDrawerBody(app) {
     const body = document.getElementById('drawerBody');
@@ -1296,15 +1974,17 @@ function renderDrawerBody(app) {
 }
 
 function closeDrawer() {
+    _openAppId = null;
     document.getElementById('drawer').classList.remove('open');
     document.getElementById('drawerOverlay').classList.remove('open');
 }
 
 async function setResult(id, result) {
     try {
-        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { result });
+        const raw = await dapi('PUT', `/api/demo/applications?id=${id}`, { result });
+        const updated = _normalizeCv([raw])[0];
         _applications = _applications.map(a => a.id === id ? updated : a);
-        renderVagas();
+        renderApplicationsTable();
         renderDrawerBody(updated);
         showToast('Resultado atualizado');
     } catch (e) { showToast(e.message, 'error'); }
@@ -1320,18 +2000,20 @@ async function advanceStage(id, idx) {
     s.status = next[s.status] || 'running';
     if (s.status === 'done' || s.status === 'running') s.date = new Date().toISOString().slice(0, 10);
     try {
-        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { stages });
+        const raw = await dapi('PUT', `/api/demo/applications?id=${id}`, { stages });
+        const updated = _normalizeCv([raw])[0];
         _applications = _applications.map(a => a.id === id ? updated : a);
-        renderVagas();
+        renderApplicationsTable();
         renderDrawerBody(updated);
     } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function toggleArchive(id, archived) {
     try {
-        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { archived: !archived });
+        const raw = await dapi('PUT', `/api/demo/applications?id=${id}`, { archived: !archived });
+        const updated = _normalizeCv([raw])[0];
         _applications = _applications.map(a => a.id === id ? updated : a);
-        renderVagas();
+        renderApplicationsTable();
         renderDrawerBody(updated);
         showToast(archived ? 'Desarquivada' : 'Arquivada');
     } catch (e) { showToast(e.message, 'error'); }
@@ -1342,7 +2024,7 @@ async function deleteVaga(id) {
     try {
         await dapi('DELETE', `/api/demo/applications?id=${id}`);
         _applications = _applications.filter(a => a.id !== id);
-        renderVagas();
+        renderApplicationsTable();
         closeDrawer();
         showToast('Excluída');
     } catch (e) { showToast(e.message, 'error'); }
@@ -1363,16 +2045,20 @@ function editVaga(id) {
 function vagaFormHTML(app) {
     return `
         <div class="row-2">
-            <div class="form-group-inline"><label>Empresa</label><input id="vfEmpresa" value="${esc(app?.empresa || '')}" placeholder="Targaryen Tech"></div>
+            <div class="form-group-inline"><label>Empresa</label><input id="vfEmpresa" value="${esc(app?.empresa || '')}" placeholder="Ex: Nubank"></div>
             <div class="form-group-inline"><label>Vaga</label><input id="vfVaga" value="${esc(app?.vaga || '')}" placeholder="QA Engineer"></div>
         </div>
         <div class="row-2">
-            <div class="form-group-inline"><label>Gestor</label><input id="vfGestor" value="${esc(app?.gestor_nome || '')}" placeholder="Missandei"></div>
-            <div class="form-group-inline"><label>Email</label><input id="vfEmail" value="${esc(app?.gestor_email || '')}" placeholder="missandei@targaryentech.demo"></div>
+            <div class="form-group-inline"><label>Gestor</label><input id="vfGestor" value="${esc(app?.gestor_nome || '')}" placeholder="Ex: Ana Costa"></div>
+            <div class="form-group-inline"><label>Email</label><input id="vfEmail" value="${esc(app?.gestor_email || '')}" placeholder="a.costa@nubank.com.br"></div>
         </div>
         <div class="row-2">
-            <div class="form-group-inline"><label>WhatsApp</label><input id="vfPhone" value="${esc(app?.gestor_phone || '')}" placeholder="99 99999-9999"></div>
+            <div class="form-group-inline"><label>WhatsApp</label><input id="vfPhone" value="${esc(app?.gestor_phone || '')}" placeholder="11 99999-9999"></div>
             <div class="form-group-inline"><label>CV</label><select id="vfCv"></select></div>
+        </div>
+        <div class="row-2">
+            <div class="form-group-inline"><label>LinkedIn da empresa</label><input id="vfLinkedin" value="${esc(app?.linkedin_empresa || '')}" placeholder="https://linkedin.com/company/…"></div>
+            <div class="form-group-inline"><label>Link da vaga</label><input id="vfLinkVaga" value="${esc(app?.link_vaga || '')}" placeholder="https://…"></div>
         </div>
         <div class="row-2">
             <div class="form-group-inline"><label>Modalidade</label>
@@ -1410,23 +2096,27 @@ async function saveVaga(id) {
         gestor_email: document.getElementById('vfEmail').value.trim(),
         gestor_phone: document.getElementById('vfPhone').value.trim(),
         cv_version_id: document.getElementById('vfCv').value || null,
+        linkedin_empresa: document.getElementById('vfLinkedin').value.trim() || null,
+        link_vaga: document.getElementById('vfLinkVaga').value.trim() || null,
         modalidade: document.getElementById('vfMod').value || null,
         tipo_contratacao: document.getElementById('vfTipo').value || null,
         observacoes: document.getElementById('vfObs').value.trim(),
     };
     try {
         if (id) {
-            const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, body);
+            const updatedRaw = await dapi('PUT', `/api/demo/applications?id=${id}`, body);
+            const updated = _normalizeCv([updatedRaw])[0];
             _applications = _applications.map(a => a.id === id ? updated : a);
             showToast('Candidatura atualizada');
         } else {
             body.stages = [{ name: 'Enviado', status: 'running', date: new Date().toISOString().slice(0, 10) }];
-            const created = await dapi('POST', '/api/demo/applications', body);
+            const createdRaw = await dapi('POST', '/api/demo/applications', body);
+            const created = _normalizeCv([createdRaw])[0];
             _applications.unshift(created);
             showToast('Candidatura criada');
         }
         closeModal();
-        renderVagas();
+        renderApplicationsTable();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -1439,37 +2129,116 @@ function switchVagasSubtab(name) {
 }
 
 let _vagasChart = null;
-function renderVagasAnalysis() {
-    const active = _applications.filter(a => !a.archived);
-    document.getElementById('vkpi-total').textContent = active.length;
-    document.getElementById('vkpi-processo').textContent = active.filter(a => (a.result || 'em_processo') === 'em_processo').length;
-    document.getElementById('vkpi-aprovado').textContent = active.filter(a => a.result === 'aprovado').length;
-    document.getElementById('vkpi-recusado').textContent = active.filter(a => a.result === 'recusado').length;
 
-    // Chart por dia da semana
-    const dows = [0,0,0,0,0,0,0];
-    active.forEach(a => { if (a.data_envio) dows[new Date(a.data_envio).getDay()]++; });
-    const ctx = document.getElementById('vagasChart');
-    if (_vagasChart) _vagasChart.destroy();
-    _vagasChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'], datasets: [{ label: 'Candidaturas', data: dows, backgroundColor: '#22d3ee', borderRadius: 5 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#5c5c80' }, grid: { color: '#1e1e2e' }, beginAtZero: true }, x: { ticks: { color: '#5c5c80' }, grid: { display: false } } } }
+function _vagasAnalysisRange() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    let from = null, to = null;
+    switch (_vagasAnalysisPeriod) {
+        case 'today': from = today; to = today; break;
+        case 'week':  from = new Date(today); from.setDate(from.getDate() - 6); to = today; break;
+        case 'month': from = new Date(today); from.setDate(from.getDate() - 29); to = today; break;
+        case 'year':  from = new Date(today); from.setDate(from.getDate() - 364); to = today; break;
+        case 'all':   from = null; to = null; break;
+        case 'custom':
+            const f = document.getElementById('vagasAnalysisFrom')?.value;
+            const t = document.getElementById('vagasAnalysisTo')?.value;
+            if (f) from = new Date(f + 'T00:00:00');
+            if (t) to   = new Date(t + 'T23:59:59');
+            break;
+    }
+    return { from, to };
+}
+
+function setVagasAnalysisPeriod(period, btn) {
+    _vagasAnalysisPeriod = period;
+    document.querySelectorAll('#vagasAnalysisPeriodBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderVagasAnalysis();
+}
+function setVagasChartMode(mode, btn) {
+    _vagasChartMode = mode;
+    document.querySelectorAll('#vagasChartModeBar .metrics-period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderVagasAnalysis();
+}
+
+function renderVagasAnalysis() {
+    const includeArchived = document.getElementById('vagasIncludeArchived')?.checked;
+    const { from, to } = _vagasAnalysisRange();
+
+    let data = _applications;
+    if (!includeArchived) data = data.filter(a => !a.archived);
+    if (from || to) data = data.filter(a => {
+        const dt = a.data_envio ? new Date(a.data_envio) : null;
+        if (!dt) return false;
+        if (from && dt < from) return false;
+        if (to && dt > to) return false;
+        return true;
     });
 
-    // Distribuições
-    function dist(key, root) {
-        const cnt = {};
-        active.forEach(a => { const v = a[key] || '—'; cnt[v] = (cnt[v] || 0) + 1; });
-        const total = active.length || 1;
-        const sorted = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
-        document.getElementById(root).innerHTML = sorted.map(([k, v]) =>
-            `<div class="metrics-row"><span class="metrics-row-label">${esc(k)}</span><span class="metrics-row-value">${v} (${Math.round(v/total*100)}%)</span></div>`
-        ).join('') || '<div style="color:var(--text-dim);font-size:0.78rem">Sem dados.</div>';
+    const total = data.length;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('vkpi-total', total);
+    set('vkpi-em-processo', data.filter(a => getAppStatus(a) === 'em_processo').length);
+    set('vkpi-aprovado',   data.filter(a => getAppStatus(a) === 'aprovado').length);
+    set('vkpi-recusado',   data.filter(a => getAppStatus(a) === 'recusado').length);
+
+    // Chart
+    const ctx = document.getElementById('vagasChart');
+    if (_vagasChart) { _vagasChart.destroy(); _vagasChart = null; }
+    let labels = [], counts = [], title = '';
+    if (_vagasChartMode === 'dow') {
+        labels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        counts = [0,0,0,0,0,0,0];
+        data.forEach(a => { if (a.data_envio) counts[new Date(a.data_envio).getDay()]++; });
+        title = 'Candidaturas por dia da semana';
+    } else if (_vagasChartMode === 'dom') {
+        labels = Array.from({length:31}, (_,i) => String(i+1));
+        counts = Array(31).fill(0);
+        data.forEach(a => { if (a.data_envio) counts[new Date(a.data_envio).getDate()-1]++; });
+        title = 'Candidaturas por dia do mês';
+    } else if (_vagasChartMode === 'moy') {
+        labels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        counts = Array(12).fill(0);
+        data.forEach(a => { if (a.data_envio) counts[new Date(a.data_envio).getMonth()]++; });
+        title = 'Candidaturas por mês';
+    } else if (_vagasChartMode === 'wom') {
+        labels = ['1ª','2ª','3ª','4ª','5ª'];
+        counts = Array(5).fill(0);
+        data.forEach(a => { if (a.data_envio) { const d = new Date(a.data_envio).getDate(); counts[Math.min(4, Math.floor((d-1)/7))]++; } });
+        title = 'Candidaturas por semana do mês';
+    } else if (_vagasChartMode === 'timeline') {
+        const bucket = {};
+        data.forEach(a => { if (a.data_envio) { const k = a.data_envio.slice(0,10); bucket[k] = (bucket[k] || 0) + 1; } });
+        const keys = Object.keys(bucket).sort();
+        labels = keys.map(k => k.slice(5));
+        counts = keys.map(k => bucket[k]);
+        title = 'Candidaturas ao longo do tempo';
     }
-    dist('result', 'distResult');
-    dist('modalidade', 'distModalidade');
-    dist('tipo_contratacao', 'distTipo');
+    document.getElementById('vagasChartTitle').textContent = title;
+    _vagasChart = new Chart(ctx, {
+        type: _vagasChartMode === 'timeline' ? 'line' : 'bar',
+        data: { labels, datasets: [{ label: 'Candidaturas', data: counts, backgroundColor: '#22d3ee', borderColor: '#22d3ee', borderRadius: 5, tension: 0.3, fill: _vagasChartMode === 'timeline' ? { target:'origin', above:'rgba(34,211,238,0.1)' } : false, pointRadius: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color:'#5c5c80', precision:0 }, grid:{color:'#1e1e2e'} }, x: { ticks:{color:'#5c5c80'}, grid:{display:false} } } }
+    });
+
+    // 4 distribuições
+    function dist(key, target, fmt) {
+        const cnt = {};
+        data.forEach(a => { let v = fmt ? fmt(a) : (a[key] || '—'); cnt[v] = (cnt[v] || 0) + 1; });
+        const totalN = data.length || 1;
+        const sorted = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
+        const el = document.getElementById(target);
+        if (!el) return;
+        el.innerHTML = sorted.length ? sorted.map(([k, v]) =>
+            `<div class="metrics-row"><span class="metrics-row-label">${esc(k)}</span><span class="metrics-row-value">${v} (${Math.round(v/totalN*100)}%)</span></div>`
+        ).join('') : '<div style="color:var(--text-dim);font-size:0.78rem">Sem dados.</div>';
+    }
+    const labelResult = a => ({ em_processo: 'Em processo', aprovado: 'Aprovado', recusado: 'Recusado' }[getAppStatus(a)] || '—');
+    dist(null, 'vagasDistResult', labelResult);
+    dist('modalidade', 'vagasDistModalidade');
+    dist('tipo_contratacao', 'vagasDistTipo');
+    dist(null, 'vagasDistStage', a => getAppCurrentStageName(a));
 }
 
 // ════════════════════════════════════════════════════════
@@ -1559,10 +2328,10 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 // TOUR
 // ════════════════════════════════════════════════════════
 const TOUR = [
-    { target: '.app-header',         emoji: '👋', title: 'Bem-vindo ao painel admin',  body: 'Este é o painel real que uso para gerenciar minhas candidaturas. Tudo aqui é fictício (personagens de Game of Thrones) — feche a aba para resetar tudo.', tab: 'cvs' },
-    { target: '[data-tab="cvs"]',    emoji: '📄', title: 'Currículos versionados',     body: 'Cada CV adaptado fica salvo aqui. Posso ativar/desativar versões e enviar a certa para cada vaga. Os PDFs da demo são currículos fictícios de Jon Snow, Daenerys, Tyrion, Arya e Bran.', tab: 'cvs' },
+    { target: '.app-header',         emoji: '👋', title: 'Bem-vindo ao painel admin',  body: 'Este é o painel real que uso para gerenciar minhas candidaturas. Os dados são fictícios e isolados na sua sessão — feche a aba para resetar tudo.', tab: 'cvs' },
+    { target: '[data-tab="cvs"]',    emoji: '📄', title: 'Currículos versionados',     body: 'Cada versão do CV (geral, automation, SDET, bilíngue, etc.) fica salva aqui. Posso ativar/desativar versões e enviar a certa para cada tipo de vaga.', tab: 'cvs' },
     { target: '[data-tab="tokens"]', emoji: '🔑', title: 'Tokens de acesso',           body: 'Gero links únicos com validade e limite de usos. O recrutador acessa o CV sem precisar de conta — e eu rastreio quem abriu.', tab: 'tokens' },
-    { target: '[data-tab="logs"]',   emoji: '📊', title: 'Logs de acesso',             body: 'Cada acesso, download ou envio por email/WhatsApp fica registrado aqui. IPs sempre mascarados como hash (LGPD).', tab: 'logs' },
+    { target: '[data-tab="logs"]',   emoji: '📊', title: 'Logs de acesso',             body: 'Cada acesso, download ou envio por email/WhatsApp fica registrado aqui. IPs sempre mascarados como hash anônimo (LGPD).', tab: 'logs' },
     { target: '[data-tab="vagas"]',  emoji: '💼', title: 'Gestão de candidaturas',     body: 'Toda candidatura registrada com etapas, observações e link com o recrutador. Clique em uma linha para abrir o detalhe.', tab: 'vagas' },
     { target: '[data-tab="metricas"]', emoji: '📈', title: 'Métricas em tempo real',   body: 'KPIs do site público, série temporal de visitas e funil completo de conversão. Tudo construído com Chart.js + Supabase RPCs.', tab: 'metricas' },
     { target: '#tourReplay',         emoji: '🎬', title: 'Pronto para explorar',       body: 'Pode interagir com qualquer aba. Tudo funciona de verdade contra o banco demo descartável. Clique no 🎬 a qualquer momento para refazer o tour.', tab: null },
