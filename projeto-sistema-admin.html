@@ -203,6 +203,19 @@ nav {
 .login-box p { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 24px; }
 .form-group { text-align: left; margin-bottom: 14px; }
 .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.input-wrap { position: relative; }
+.input-wrap input { padding-right: 40px; }
+.input-eye {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-muted);
+    cursor: pointer; padding: 2px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+.input-eye:hover { color: var(--text-sub); }
 .form-group input {
     width: 100%;
     background: rgba(255,255,255,0.04);
@@ -663,7 +676,12 @@ footer {
         </div>
         <div class="form-group">
             <label>Senha</label>
-            <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off">
+            <div class="input-wrap">
+                <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off">
+                <button type="button" class="input-eye" onclick="togglePass()" id="btnEye" aria-label="Mostrar senha">
+                    <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                </button>
+            </div>
         </div>
         <div class="login-hint">
             <b>Email:</b> demo@artacho.dev<br>
@@ -886,6 +904,15 @@ function revealDemo() {
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('demoPanel').style.display   = 'block';
     renderTable();
+}
+
+// ── PASSWORD TOGGLE ───────────────────────────────────────
+function togglePass() {
+    const input = document.getElementById('loginPass');
+    const icon  = document.getElementById('eyeIcon');
+    const show  = input.type === 'password';
+    input.type  = show ? 'text' : 'password';
+    icon.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
 }
 
 // ── KEYBOARD ──────────────────────────────────────────────
