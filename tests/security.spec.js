@@ -429,3 +429,45 @@ test.describe('Rate limiting — força bruta no login', () => {
         expect(res.headers()['retry-after']).toBeDefined();
     });
 });
+
+// ─── FASE 2: Cookie HttpOnly Auth ─────────────────────────────────────────
+
+test.describe('Cookie httpOnly — login nao expoe token no body', () => {
+    test('POST /api/admin/login com credenciais erradas — body sem campo token', async ({ request }) => {
+        const res = await request.post(`${BASE}/api/admin/login`, {
+            data: { username: 'nope@test.com', password: 'wrongpass', fillMs: 2000 },
+        });
+        expect(res.status()).toBe(401);
+        const body = await res.json().catch(() => ({}));
+        expect(body).not.toHaveProperty('token');
+    });
+
+    test('DELETE /api/admin/sessions sem cookie valido — idempotente (200 ou 401)', async ({ request }) => {
+        const res = await request.delete(`${BASE}/api/admin/sessions`);
+        expect([200, 401]).toContain(res.status());
+    });
+
+    test('PATCH /api/admin/sessions sem cookie → 401', async ({ request }) => {
+        const res = await request.patch(`${BASE}/api/admin/sessions`, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        expect(res.status()).toBe(401);
+    });
+
+    test('GET /api/admin/sessions sem cookie → 401', async ({ request }) => {
+        const res = await request.get(`${BASE}/api/admin/sessions`);
+        expect(res.status()).toBe(401);
+    });
+
+    test('GET /api/admin/cv-versions sem cookie e sem Bearer → 401', async ({ request }) => {
+        const res = await request.get(`${BASE}/api/admin/cv-versions`);
+        expect(res.status()).toBe(401);
+    });
+
+    test('GET /api/admin/sessions com JWT Bearer forjado → 401', async ({ request }) => {
+        const res = await request.get(`${BASE}/api/admin/sessions`, {
+            headers: { Authorization: `Bearer ${forgedJwt()}` },
+        });
+        expect(res.status()).toBe(401);
+    });
+});
