@@ -3,1097 +3,1632 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema ARTACHO.dev — Showcase</title>
+<title>Sistema ARTACHO.dev — Demo do painel admin</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
-:root {
-    --bg: #0a0a0f;
-    --bg2: #0f0f18;
-    --bg3: #13131e;
-    --card: #16161f;
-    --border: rgba(255,255,255,0.07);
-    --cyan: #22d3ee;
-    --cyan-dim: rgba(34,211,238,0.12);
-    --violet: #7c3aed;
-    --violet-dim: rgba(124,58,237,0.12);
-    --text: #f0f0f5;
-    --text-muted: #64748b;
-    --text-sub: #94a3b8;
-    --green: #4ade80;
-    --yellow: #facc15;
-    --red: #f87171;
-    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-    --font-mono: 'Fira Code', monospace;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+    --bg:#0a0a0f;
+    --bg-soft:#0f0f17;
+    --bg-elevated:#141420;
+    --bg-surface:#1a1a28;
+    --card-bg:rgba(20,20,32,0.97);
+    --border:#1e1e2e;
+    --border-soft:rgba(255,255,255,0.06);
+    --text:#f0f0f5;
+    --text-soft:#a8a8c0;
+    --text-dim:#5c5c80;
+    --cyan:#22d3ee;
+    --cyan-soft:rgba(34,211,238,0.08);
+    --cyan-mid:rgba(34,211,238,0.15);
+    --violet:#7c3aed;
+    --violet-soft:rgba(124,58,237,0.10);
+    --success:#4ade80;
+    --success-soft:rgba(74,222,128,0.08);
+    --danger:#ef4444;
+    --danger-soft:rgba(239,68,68,0.08);
+    --warning:#f59e0b;
+    --warning-soft:rgba(245,158,11,0.08);
+    --font-display:"Plus Jakarta Sans",sans-serif;
+    --font-mono:"Fira Code",monospace;
 }
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    line-height: 1.6;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
+body{background:var(--bg);color:var(--text);font-family:var(--font-display);min-height:100vh;line-height:1.5;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
 
-/* NAV */
-nav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.nav-back {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-sub);
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-.nav-back:hover { color: var(--cyan); }
-.nav-breadcrumb {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-.nav-breadcrumb span { color: var(--cyan); }
-.nav-right { display: flex; align-items: center; gap: 16px; }
-.nav-gh {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-sub);
-    text-decoration: none;
-    font-size: 0.82rem;
-    font-weight: 500;
-    padding: 5px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-.nav-gh:hover { border-color: var(--cyan); color: var(--cyan); }
+/* ─── HERO ─────────────────────────────────────── */
+.hero-screen{min-height:100vh;padding:0 24px}
+.hero-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border-soft)}
+.hero-back{display:inline-flex;align-items:center;gap:8px;color:var(--text-dim);font-size:0.85rem;font-weight:500}
+.hero-back:hover{color:var(--cyan)}
+.hero-breadcrumb{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim)}
+.hero-breadcrumb span{color:var(--cyan)}
 
-/* HERO */
-.hero {
-    padding: 80px 32px 60px;
-    text-align: center;
-    max-width: 900px;
-    margin: 0 auto;
-}
-.hero-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: var(--cyan);
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-}
-.hero h1 {
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 800;
-    letter-spacing: -1px;
-    line-height: 1.1;
-    margin-bottom: 16px;
-}
-.hero h1 span { color: var(--cyan); }
-.hero-sub {
-    color: var(--text-sub);
-    font-size: 1rem;
-    margin-bottom: 48px;
-}
+.hero{padding:60px 0 40px;text-align:center;max-width:900px;margin:0 auto}
+.hero-eyebrow{font-family:var(--font-mono);font-size:0.75rem;color:var(--cyan);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:18px}
+.hero h1{font-size:clamp(1.8rem,5vw,3rem);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:14px}
+.hero h1 span{color:var(--cyan)}
+.hero-sub{color:var(--text-soft);font-size:0.95rem;margin-bottom:40px;max-width:560px;margin-left:auto;margin-right:auto}
 
-/* SPLIT CARDS */
-.split-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 800px;
-    margin: 0 auto 64px;
-    padding: 0 32px;
-}
-@media (max-width: 640px) {
-    .split-container { grid-template-columns: 1fr; padding: 0 16px; }
-}
-.split-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    text-align: left;
-    opacity: 0;
-    transform: translateX(0);
-    animation: none;
-}
-.split-card.public { animation: slideLeft 0.6s ease 0.2s forwards; }
-.split-card.private { animation: slideRight 0.6s ease 0.2s forwards; }
-@keyframes slideLeft {
-    from { opacity: 0; transform: translateX(40px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes slideRight {
-    from { opacity: 0; transform: translateX(-40px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-.split-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-}
-.split-card.public .split-icon { background: var(--cyan-dim); color: var(--cyan); }
-.split-card.private .split-icon { background: var(--violet-dim); color: #a78bfa; }
-.split-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-.split-card.private h3 { color: #a78bfa; }
-.split-card.public h3 { color: var(--cyan); }
-.split-card p { font-size: 0.82rem; color: var(--text-sub); line-height: 1.6; margin-bottom: 14px; }
-.split-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.split-tag {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.05);
-    color: var(--text-sub);
-    border: 1px solid var(--border);
-}
+.split-container{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:780px;margin:0 auto 56px}
+@media (max-width:640px){.split-container{grid-template-columns:1fr}}
+.split-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:left;opacity:0;animation:slideUp 0.5s ease 0.15s forwards}
+.split-card:nth-child(2){animation-delay:0.3s}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.split-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;margin-bottom:14px}
+.split-card.pub .split-icon{background:var(--cyan-soft);color:var(--cyan)}
+.split-card.priv .split-icon{background:var(--violet-soft);color:#a78bfa}
+.split-card h3{font-size:0.95rem;font-weight:700;margin-bottom:6px}
+.split-card.pub h3{color:var(--cyan)}
+.split-card.priv h3{color:#a78bfa}
+.split-card p{font-size:0.8rem;color:var(--text-soft);line-height:1.55;margin-bottom:12px}
+.split-tags{display:flex;flex-wrap:wrap;gap:5px}
+.split-tag{font-family:var(--font-mono);font-size:0.64rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--text-soft);border:1px solid var(--border-soft)}
 
-/* LOGIN SECTION */
-#loginSection {
-    max-width: 400px;
-    margin: 0 auto 80px;
-    padding: 0 24px;
-}
-.login-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 36px 32px;
-    text-align: center;
-}
-.login-icon {
-    width: 56px;
-    height: 56px;
-    background: var(--violet-dim);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 1.4rem;
-    color: #a78bfa;
-}
-.login-box h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
-.login-box p { font-size: 0.82rem; color: var(--text-sub); margin-bottom: 24px; }
-.form-group { text-align: left; margin-bottom: 14px; }
-.form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
-.input-wrap { position: relative; }
-.input-wrap input { padding-right: 40px; }
-.input-eye {
-    position: absolute;
-    right: 12px; top: 50%;
-    transform: translateY(-50%);
-    background: none; border: none;
-    color: var(--text-muted);
-    cursor: pointer; padding: 2px;
-    font-size: 0.9rem;
-    transition: color 0.2s;
-}
-.input-eye:hover { color: var(--text-sub); }
-.form-group input {
-    width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-.form-group input:focus { border-color: var(--cyan); }
-.login-hint {
-    margin-top: 14px;
-    padding: 10px 14px;
-    background: rgba(34,211,238,0.05);
-    border: 1px solid rgba(34,211,238,0.15);
-    border-radius: 8px;
-    font-family: var(--font-sans);
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    text-align: left;
-    line-height: 1.8;
-}
-.login-hint b { color: var(--cyan); }
-.btn-login {
-    width: 100%;
-    margin-top: 20px;
-    padding: 12px;
-    background: linear-gradient(135deg, var(--violet), #6d28d9);
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,0.35); }
-.btn-login:active { transform: translateY(0); }
-.login-error {
-    margin-top: 12px;
-    font-size: 0.8rem;
-    color: var(--red);
-    min-height: 20px;
-    text-align: center;
-}
-@keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%,60%  { transform: translateX(-6px); }
-    40%,80%  { transform: translateX(6px); }
-}
-.shake { animation: shake 0.4s ease; }
+/* ─── LOGIN ─────────────────────────────────────── */
+#loginSection{max-width:400px;margin:0 auto 70px;padding:0 16px}
+.login-box{background:var(--bg-elevated);border:1px solid var(--border);border-radius:16px;padding:32px 28px;text-align:center;position:relative;overflow:hidden}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--violet),var(--cyan))}
+.login-icon{width:50px;height:50px;background:var(--violet-soft);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.25rem;color:#a78bfa}
+.login-box h2{font-size:1.05rem;font-weight:700;margin-bottom:4px}
+.login-box p{font-size:0.78rem;color:var(--text-soft);margin-bottom:20px}
+.form-group{text-align:left;margin-bottom:12px}
+.form-group label{display:block;font-size:0.7rem;font-weight:600;color:var(--text-soft);margin-bottom:5px;letter-spacing:0.5px;text-transform:uppercase}
+.input-wrap{position:relative}
+.input-wrap input{padding-right:40px}
+.form-group input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font-display);font-size:0.88rem;outline:none;transition:border-color 0.2s}
+.form-group input:focus{border-color:var(--cyan)}
+.input-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);font-size:0.85rem;padding:2px;transition:color 0.2s}
+.input-eye:hover{color:var(--text-soft)}
+.honeypot{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;tabindex:-1}
+.login-hint{margin-top:12px;padding:10px 13px;background:var(--cyan-soft);border:1px solid var(--cyan-mid);border-radius:8px;font-size:0.7rem;color:var(--text-soft);text-align:left;line-height:1.7}
+.login-hint b{color:var(--cyan)}
+#turnstileWrap{margin-top:14px;display:flex;justify-content:center;min-height:64px}
+.btn-login{width:100%;margin-top:16px;padding:11px;background:linear-gradient(135deg,var(--violet),#6d28d9);border:none;border-radius:9px;color:white;font-size:0.88rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,0.35)}
+.btn-login:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.login-error{margin-top:10px;font-size:0.78rem;color:var(--danger);min-height:18px;text-align:center}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.shake{animation:shake 0.4s ease}
 
-/* DEMO PANEL */
-#demoPanel {
-    display: none;
-    max-width: 960px;
-    margin: 0 auto 80px;
-    padding: 0 24px;
-    animation: fadeUp 0.4s ease;
-}
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.demo-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-.demo-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(74,222,128,0.1);
-    border: 1px solid rgba(74,222,128,0.25);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--green);
-    letter-spacing: 0.5px;
-}
-.demo-badge::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-    0%,100% { opacity: 1; }
-    50%      { opacity: 0.3; }
-}
-.demo-logout {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    font-family: var(--font-sans);
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.demo-logout:hover { border-color: var(--red); color: var(--red); }
+.lgpd-note{display:flex;align-items:flex-start;gap:8px;font-size:0.7rem;color:var(--text-dim);text-align:left;margin-top:16px;padding:8px 10px;background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:7px;line-height:1.5}
+.lgpd-note i{color:var(--success);margin-top:1px}
 
-/* TABS */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
-.tab-btn {
-    background: none;
-    border: none;
-    padding: 10px 18px;
-    color: var(--text-muted);
-    font-family: var(--font-sans);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: -1px;
-}
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-.tab-count {
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-    padding: 1px 7px;
-    font-size: 0.68rem;
-    font-weight: 700;
-}
-.tab-btn.active .tab-count { background: var(--cyan-dim); color: var(--cyan); }
+/* ─── APP ─────────────────────────────────────── */
+#appScreen{display:none;min-height:100vh}
+.demo-banner{background:linear-gradient(90deg,var(--violet-soft),var(--cyan-soft));border-bottom:1px solid var(--border);padding:8px 16px;font-size:0.78rem;color:var(--text-soft);text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.demo-banner b{color:var(--cyan)}
+.demo-banner .demo-banner-pill{font-family:var(--font-mono);font-size:0.62rem;padding:1px 6px;border-radius:4px;background:var(--violet-soft);color:#a78bfa;border:1px solid rgba(167,139,250,0.3)}
 
-/* TABLE */
-.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; background: var(--card); }
-thead th {
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-}
-tbody tr {
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.15s;
-    opacity: 0;
-    transform: translateY(6px);
-}
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,0.04); }
-tbody tr.visible { opacity: 1; transform: translateY(0); transition: opacity 0.3s ease, transform 0.3s ease, background 0.15s; }
-tbody td { padding: 13px 16px; font-size: 0.85rem; vertical-align: middle; }
-.td-empresa { font-weight: 700; }
-.td-vaga { color: var(--text-sub); font-size: 0.8rem; }
-.etapa-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-.etapa-enviado   { background: rgba(34,211,238,0.12); color: var(--cyan); }
-.etapa-processo  { background: rgba(250,204,21,0.12);  color: var(--yellow); }
-.etapa-aprovado  { background: rgba(74,222,128,0.12);  color: var(--green); }
-.etapa-reprovado { background: rgba(248,113,113,0.12); color: var(--red); }
-.td-data { color: var(--text-muted); font-size: 0.78rem; font-family: var(--font-mono); }
+.app-header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg-soft);flex-wrap:wrap}
+.app-brand{font-size:1.05rem;font-weight:800;letter-spacing:-0.5px}
+.app-brand span{color:var(--cyan)}
+.app-badge{font-family:var(--font-mono);font-size:0.62rem;padding:2px 7px;border-radius:4px;background:var(--violet-soft);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);font-weight:600}
+.app-refresh-ts{margin-left:auto;font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono)}
+.app-btn-icon{background:none;border:1px solid var(--border);color:var(--text-soft);padding:5px 10px;border-radius:6px;font-size:0.78rem;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
+.app-btn-icon:hover{border-color:var(--cyan);color:var(--cyan)}
+.app-btn-icon.danger:hover{border-color:var(--danger);color:var(--danger)}
 
-/* DRAWER */
-#drawer {
-    position: fixed;
-    top: 0; right: 0;
-    width: 380px;
-    max-width: 100vw;
-    height: 100vh;
-    background: var(--bg2);
-    border-left: 1px solid var(--border);
-    z-index: 200;
-    transform: translateX(100%);
-    transition: transform 0.25s ease;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-#drawer.open { transform: translateX(0); }
-#overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 199;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-}
-#overlay.visible { opacity: 1; pointer-events: all; }
-.drawer-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.drawer-title { font-size: 0.95rem; font-weight: 700; }
-.drawer-close {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 4px;
-    transition: color 0.2s;
-}
-.drawer-close:hover { color: var(--text); }
-.drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
-.drawer-section { margin-bottom: 24px; }
-.drawer-section-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-.drawer-info-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 8px; }
-.drawer-info-icon { color: var(--text-muted); width: 14px; text-align: center; }
+.app-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 18px;overflow-x:auto;background:var(--bg-soft)}
+.tab-btn{background:none;border:none;padding:10px 16px;color:var(--text-dim);font-size:0.82rem;font-weight:600;border-bottom:2px solid transparent;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:all 0.15s}
+.tab-btn:hover{color:var(--text-soft)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
 
-/* STAGES */
-.stages-list { display: flex; flex-direction: column; gap: 0; }
-.stage-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 10px 0;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-.stage-item:hover { opacity: 0.85; }
-.stage-dot-wrap { display: flex; flex-direction: column; align-items: center; min-width: 20px; padding-top: 2px; }
-.stage-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: var(--bg3);
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-.stage-dot.done    { background: var(--green); border-color: var(--green); }
-.stage-dot.current { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(34,211,238,0.2); }
-.stage-dot.failed  { background: var(--red); border-color: var(--red); }
-.stage-line {
-    width: 2px;
-    flex: 1;
-    min-height: 20px;
-    background: var(--border);
-    margin-top: 4px;
-}
-.stage-line.done { background: var(--green); }
-.stage-item:last-child .stage-line { display: none; }
-.stage-label { font-size: 0.83rem; font-weight: 500; padding-top: 0; }
-.stage-date  { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; }
+.app-content{padding:20px 18px 60px;max-width:1200px;margin:0 auto}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
 
-/* ANALYTICS TAB */
-#analyticsTab { display: none; }
-.metrics-row {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    gap: 16px;
-    margin-bottom: 28px;
-}
-@media (max-width: 500px) { .metrics-row { grid-template-columns: 1fr; } }
-.metric-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-}
-.metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; margin-bottom: 8px; }
-.metric-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
-.metric-card:nth-child(1) .metric-value { color: var(--cyan); }
-.metric-card:nth-child(2) .metric-value { color: #a78bfa; }
-.metric-card:nth-child(3) .metric-value { color: var(--green); }
+.panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.panel-title{font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel-title i{color:var(--cyan)}
 
-/* BAR CHART */
-.chart-wrap {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px 16px;
-    margin-bottom: 24px;
-}
-.chart-title { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-bottom: 20px; letter-spacing: 0.3px; }
-.chart-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    height: 80px;
-}
-.chart-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
-.chart-bar {
-    width: 100%;
-    background: linear-gradient(to top, var(--cyan), rgba(34,211,238,0.4));
-    border-radius: 4px 4px 0 0;
-    height: 0;
-    transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1);
-}
-.chart-day { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
+/* Filter bar */
+.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-search{position:relative;flex:1;min-width:200px;display:flex;align-items:center;gap:6px}
+.th-filter-input{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:0.82rem;outline:none}
+.th-filter-input:focus{border-color:var(--cyan)}
+.th-filter-select{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:0.82rem;outline:none}
+.th-filter-count{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);white-space:nowrap}
+.filter-date-group{display:flex;align-items:center;gap:6px}
+.th-filter-label{font-size:0.7rem;color:var(--text-dim)}
 
-/* VISITORS */
-.visitors-list { display: flex; flex-direction: column; gap: 8px; }
-.visitor-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.82rem;
-}
-.visitor-left { display: flex; align-items: center; gap: 10px; }
-.visitor-flag { font-size: 1rem; }
-.visitor-city { font-weight: 600; }
-.visitor-browser { font-size: 0.72rem; color: var(--text-muted); }
-.visitor-ago { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+/* Tabela */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px}
+table{width:100%;border-collapse:collapse;background:var(--bg-elevated)}
+thead th{padding:10px 14px;text-align:left;font-size:0.66rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border-soft);transition:background 0.15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.02)}
+tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
+.row-clickable{cursor:pointer}
 
-/* STACK BADGES */
-.stack-section {
-    max-width: 760px;
-    margin: 0 auto 80px;
-    padding: 0 24px;
-    text-align: center;
-}
-.stack-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px; }
-.stack-badges { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.stack-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--card);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--text-sub);
-    transition: all 0.2s;
-}
-.stack-badge:hover { border-color: var(--cyan); color: var(--text); }
-.stack-badge i { color: var(--cyan); }
+/* Botões */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:7px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);font-size:0.82rem;font-weight:500;transition:all 0.15s;font-family:var(--font-display)}
+.btn:hover{background:var(--bg-elevated);border-color:var(--cyan)}
+.btn-sm{padding:5px 10px;font-size:0.74rem}
+.btn-cyan{background:var(--cyan);color:#0a0a0f;border-color:var(--cyan);font-weight:700}
+.btn-cyan:hover{background:#1bc1da;border-color:#1bc1da}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:white}
+.btn-danger:hover{background:#dc2626;border-color:#dc2626}
+.btn-ghost{background:none;border-color:var(--border-soft);color:var(--text-soft)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text-soft);background:none}
 
-/* FOOTER */
-footer {
-    border-top: 1px solid var(--border);
-    padding: 28px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:14px;font-size:0.7rem;font-weight:600;letter-spacing:0.2px}
+.badge-cyan{background:var(--cyan-soft);color:var(--cyan)}
+.badge-violet{background:var(--violet-soft);color:#a78bfa}
+.badge-green{background:var(--success-soft);color:var(--success)}
+.badge-red{background:var(--danger-soft);color:var(--danger)}
+.badge-yellow{background:var(--warning-soft);color:var(--warning)}
+.badge-gray{background:rgba(255,255,255,0.06);color:var(--text-dim)}
+
+/* Forms */
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.row-2{grid-template-columns:1fr}}
+.form-group-inline{margin-bottom:12px}
+.form-group-inline label{display:block;font-size:0.72rem;font-weight:600;color:var(--text-soft);margin-bottom:5px}
+.form-group-inline input,.form-group-inline select,.form-group-inline textarea{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-display);font-size:0.82rem;outline:none}
+.form-group-inline textarea{resize:vertical;min-height:72px}
+.form-group-inline input:focus,.form-group-inline select:focus,.form-group-inline textarea:focus{border-color:var(--cyan)}
+
+/* KPIs */
+.metrics-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
+.metrics-kpi-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.metrics-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--violet),var(--cyan))}
+.metrics-kpi-label{font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px}
+.metrics-kpi-value{font-size:1.55rem;font-weight:800;letter-spacing:-0.5px;color:var(--text)}
+.metrics-kpi-card.highlight .metrics-kpi-value{color:var(--cyan)}
+.metrics-kpi-sub{font-size:0.65rem;color:var(--text-dim);margin-top:3px}
+
+/* Period bar */
+.metrics-period-bar{display:flex;gap:6px;margin-bottom:18px;align-items:center;flex-wrap:wrap}
+.metrics-period-btn{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text-soft);padding:6px 12px;border-radius:6px;font-size:0.76rem;font-weight:600;transition:all 0.15s}
+.metrics-period-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.metrics-period-btn.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+
+/* Chart card */
+.metrics-chart-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:18px}
+.metrics-chart-card h4{font-size:0.82rem;font-weight:700;margin-bottom:12px}
+
+/* Funil */
+.metrics-funnel-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+.metrics-funnel-card h4{font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px}
+.metrics-funnel-step{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.metrics-funnel-step-label{font-size:0.76rem;color:var(--text-soft);width:130px;flex-shrink:0}
+.metrics-funnel-step-bar{flex:1;height:18px;background:var(--border);border-radius:5px;overflow:hidden}
+.metrics-funnel-step-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--cyan));border-radius:5px;transition:width 0.5s ease}
+.metrics-funnel-step-count{font-size:0.76rem;font-variant-numeric:tabular-nums;width:44px;text-align:right;flex-shrink:0}
+.metrics-funnel-step-pct{font-size:0.7rem;color:var(--text-dim);width:36px;text-align:right;flex-shrink:0}
+
+/* Panels grid */
+.metrics-panels-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:18px}
+.metrics-panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.metrics-panel h4{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.metrics-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:0.78rem}
+.metrics-row-label{color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metrics-row-value{color:var(--text);font-variant-numeric:tabular-nums;flex-shrink:0}
+
+/* Drawer */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;right:0;width:420px;max-width:100vw;height:100vh;background:var(--bg-soft);border-left:1px solid var(--border);z-index:200;transform:translateX(100%);transition:transform 0.25s ease;display:flex;flex-direction:column;overflow:hidden}
+.drawer.open{transform:translateX(0)}
+.drawer-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.drawer-title{font-size:0.95rem;font-weight:700}
+.drawer-close{background:none;border:none;color:var(--text-dim);font-size:1.1rem;padding:4px;transition:color 0.2s}
+.drawer-close:hover{color:var(--text)}
+.drawer-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+
+.dinfo-section{}
+.dinfo-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-dim);margin-bottom:8px;font-weight:600}
+.dinfo-row{display:flex;align-items:center;gap:9px;font-size:0.84rem;margin-bottom:6px}
+.dinfo-icon{color:var(--text-dim);width:14px;text-align:center;font-size:0.85rem;flex-shrink:0}
+.dinfo-link{color:var(--cyan)}
+.dinfo-link:hover{text-decoration:underline}
+.dinfo-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dinfo-chip{display:inline-flex;align-items:center;gap:5px;font-size:0.74rem;padding:3px 9px;border-radius:5px;background:rgba(255,255,255,0.04);border:1px solid var(--border-soft);color:var(--text-soft)}
+.dinfo-chip i{font-size:0.7em}
+.dinfo-obs{background:rgba(255,255,255,0.02);border:1px solid var(--border-soft);border-radius:7px;padding:10px 12px;font-size:0.82rem;color:var(--text-soft);line-height:1.55;white-space:pre-wrap}
+
+/* Timeline de etapas */
+.stage-timeline{display:flex;flex-direction:column;gap:0}
+.stage-row{display:flex;align-items:flex-start;gap:12px;padding:5px 0;cursor:pointer;transition:opacity 0.2s}
+.stage-row:hover{opacity:0.85}
+.stage-icon-col{display:flex;flex-direction:column;align-items:center;min-width:18px;padding-top:2px}
+.stage-circle{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:var(--bg-surface);display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;transition:all 0.2s}
+.stage-circle.done{background:var(--success);border-color:var(--success)}
+.stage-circle.current{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,0.2)}
+.stage-circle.rejected{background:var(--danger);border-color:var(--danger)}
+.stage-line{width:2px;flex:1;min-height:14px;background:var(--border);margin-top:3px}
+.stage-line.done{background:var(--success)}
+.stage-line.current{background:var(--cyan)}
+.stage-row:last-child .stage-line{display:none}
+.stage-label{font-size:0.82rem;color:var(--text-soft)}
+.stage-label.done{color:var(--success)}
+.stage-label.current{color:var(--cyan);font-weight:600}
+.stage-label.rejected{color:var(--danger)}
+.stage-label.pending{color:var(--text-dim)}
+
+.result-segmented{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:rgba(255,255,255,0.03);border:1px solid var(--border-soft);border-radius:8px;padding:3px}
+.result-seg-btn{background:none;border:none;padding:7px;color:var(--text-dim);font-size:0.75rem;border-radius:5px;font-weight:600;transition:all 0.15s}
+.result-seg-btn:hover{color:var(--text-soft)}
+.result-seg-btn.active.in_processo{background:var(--cyan-soft);color:var(--cyan)}
+.result-seg-btn.active.aprovado{background:var(--success-soft);color:var(--success)}
+.result-seg-btn.active.recusado{background:var(--danger-soft);color:var(--danger)}
+
+.drawer-actions{display:flex;align-items:center;gap:6px;padding-top:6px;border-top:1px solid var(--border-soft);flex-wrap:wrap}
+.drawer-actions .btn-danger{margin-left:auto}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-elevated);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:1rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:1.1rem;padding:4px}
+.modal-close:hover{color:var(--text)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid var(--border-soft)}
+
+/* Toast */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:400;display:flex;flex-direction:column;gap:10px;max-width:340px}
+.toast{background:var(--bg-elevated);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:9px;padding:12px 16px;font-size:0.84rem;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:toastIn 0.25s ease;display:flex;align-items:center;gap:10px}
+.toast.error{border-left-color:var(--danger)}
+.toast.success{border-left-color:var(--success)}
+.toast i{font-size:0.95rem}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Storage card */
+.storage-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.storage-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.storage-title{font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:7px}
+.storage-title i{color:var(--cyan)}
+.storage-sub{font-size:0.68rem;color:var(--text-dim);margin-top:2px}
+.storage-bar-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.storage-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:3px;transition:width 0.5s ease}
+.storage-meta{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono)}
+
+/* Tokens */
+.expiry-opts{display:flex;flex-wrap:wrap;gap:5px}
+.expiry-opt{padding:5px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text-soft);border-radius:6px;font-size:0.74rem}
+.expiry-opt.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+
+.token-hash-modal{font-family:var(--font-mono);background:var(--bg);padding:14px 16px;border-radius:8px;font-size:0.9rem;color:var(--cyan);word-break:break-all;border:1px solid var(--cyan-mid);margin-bottom:14px}
+
+/* Vagas filtros */
+.vagas-filters{display:flex;flex-wrap:wrap;gap:5px}
+.vagas-filter-chip{padding:5px 11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text-soft);border-radius:13px;font-size:0.74rem}
+.vagas-filter-chip.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan);font-weight:600}
+.vagas-subtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.vagas-subtab-btn{background:none;border:none;padding:8px 18px;color:var(--text-dim);font-size:0.84rem;font-weight:600;border-bottom:2px solid transparent}
+.vagas-subtab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* Tour */
+.tour-overlay{position:fixed;inset:0;z-index:500;display:none;pointer-events:auto}
+.tour-overlay.open{display:block}
+.tour-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.7);transition:opacity 0.3s}
+.tour-spotlight{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.72),0 0 0 3px var(--cyan);transition:all 0.4s cubic-bezier(0.4,0,0.2,1);pointer-events:none}
+.tour-card{position:absolute;width:320px;max-width:calc(100vw - 40px);background:var(--bg-elevated);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.6);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
+.tour-card h3{font-size:0.95rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.tour-card .tour-emoji{font-size:1.15rem}
+.tour-card p{font-size:0.82rem;color:var(--text-soft);line-height:1.55;margin-bottom:14px}
+.tour-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tour-counter{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim)}
+.tour-btns{display:flex;gap:5px}
+.tour-replay-btn{position:fixed;bottom:18px;right:18px;width:46px;height:46px;border-radius:50%;background:var(--violet);color:white;border:none;box-shadow:0 4px 16px rgba(124,58,237,0.4);z-index:100;font-size:1.05rem;display:none}
+.tour-replay-btn.visible{display:flex;align-items:center;justify-content:center}
+.tour-replay-btn:hover{transform:scale(1.05)}
+
+/* Footer */
+.app-footer{padding:18px;text-align:center;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:0.7rem;color:var(--text-dim)}
+.app-footer span{color:var(--cyan)}
+
+/* Mobile */
+@media(max-width:640px){
+    .app-content{padding:14px 12px 80px}
+    .panel{padding:14px}
+    .drawer{width:100vw}
+    .row-2{grid-template-columns:1fr}
+    .metrics-kpis{grid-template-columns:repeat(2,1fr)}
+    .filter-bar{flex-direction:column;align-items:stretch}
+    .filter-search{min-width:0}
 }
-.footer-links { display: flex; gap: 12px; }
-.footer-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.82rem;
-    font-weight: 500;
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    transition: all 0.2s;
-}
-.footer-link:hover { border-color: var(--cyan); color: var(--cyan); }
-.footer-copy { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-    <a href="/" class="nav-back"><i class="fa-solid fa-arrow-left"></i> Portfólio</a>
-    <div class="nav-breadcrumb">ARTACHO.dev <span>/</span> sistema</div>
-    <div class="nav-right">
-        <a href="https://github.com/brartacho" target="_blank" rel="noreferrer" class="nav-gh">
-            <i class="fa-brands fa-github"></i> GitHub
-        </a>
-    </div>
-</nav>
+<!-- ─── HERO + LOGIN ─── -->
+<div class="hero-screen" id="heroScreen">
+    <nav class="hero-nav">
+        <a href="/" class="hero-back"><i class="fa-solid fa-arrow-left"></i> Portfólio</a>
+        <div class="hero-breadcrumb">ARTACHO.dev <span>/</span> demo do painel admin</div>
+    </nav>
 
-<!-- HERO -->
-<section class="hero">
-    <div class="hero-eyebrow">// SISTEMA FULL-STACK</div>
-    <h1>Um portfólio.<br><span>Duas frentes.</span></h1>
-    <p class="hero-sub">Portfólio público + painel admin privado — desenvolvidos do zero, produção real.</p>
-</section>
+    <section class="hero">
+        <div class="hero-eyebrow">// SISTEMA FULL-STACK</div>
+        <h1>Um portfólio.<br><span>Duas frentes.</span></h1>
+        <p class="hero-sub">Portfólio público + painel admin privado. Explore o painel real abaixo com dados fictícios — sem afetar produção.</p>
+    </section>
 
-<!-- SPLIT CARDS -->
-<div class="split-container">
-    <div class="split-card public">
-        <div class="split-icon"><i class="fa-solid fa-globe"></i></div>
-        <h3>Frente pública</h3>
-        <p>Este portfólio — HTML, CSS e JS vanilla. Sem frameworks. Analytics próprio, rastreio de engajamento, download de CV com token.</p>
-        <div class="split-tags">
-            <span class="split-tag">HTML5</span>
-            <span class="split-tag">CSS3</span>
-            <span class="split-tag">JS Vanilla</span>
-            <span class="split-tag">PWA</span>
+    <div class="split-container">
+        <div class="split-card pub">
+            <div class="split-icon"><i class="fa-solid fa-globe"></i></div>
+            <h3>Frente pública</h3>
+            <p>Este portfólio — HTML, CSS e JS vanilla. Sem frameworks. Analytics próprio, rastreio de engajamento, download de CV com token.</p>
+            <div class="split-tags">
+                <span class="split-tag">HTML5</span>
+                <span class="split-tag">CSS3</span>
+                <span class="split-tag">JS Vanilla</span>
+                <span class="split-tag">PWA</span>
+            </div>
+        </div>
+        <div class="split-card priv">
+            <div class="split-icon"><i class="fa-solid fa-lock"></i></div>
+            <h3>Painel admin</h3>
+            <p>Gestão de candidaturas, versionamento de CVs, analytics em tempo real, envio por e-mail e WhatsApp, tokens de acesso.</p>
+            <div class="split-tags">
+                <span class="split-tag">Node.js</span>
+                <span class="split-tag">Supabase</span>
+                <span class="split-tag">Vercel</span>
+                <span class="split-tag">PostgreSQL</span>
+            </div>
         </div>
     </div>
-    <div class="split-card private">
-        <div class="split-icon"><i class="fa-solid fa-lock"></i></div>
-        <h3>Painel admin</h3>
-        <p>Gestão de candidaturas, versionamento de CVs, analytics em tempo real, envio por e-mail e WhatsApp, tokens de acesso.</p>
-        <div class="split-tags">
-            <span class="split-tag">Node.js</span>
-            <span class="split-tag">Supabase</span>
-            <span class="split-tag">Vercel</span>
-            <span class="split-tag">PostgreSQL</span>
+
+    <div id="loginSection">
+        <div class="login-box" id="loginBox">
+            <div class="login-icon"><i class="fa-solid fa-terminal"></i></div>
+            <h2>Acesso demo</h2>
+            <p>Explore o painel admin com dados fictícios isolados — banco descartável que reseta a cada 24h.</p>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="Digite o email" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <div class="input-wrap">
+                    <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off">
+                    <button type="button" class="input-eye" onclick="togglePass()" aria-label="Mostrar/ocultar senha"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
+                </div>
+            </div>
+
+            <!-- Honeypot anti-bot -->
+            <input type="text" name="website" class="honeypot" id="hpWebsite" tabindex="-1" autocomplete="off">
+
+            <div class="login-hint">
+                <b>Email:</b> demo@artacho.dev<br>
+                <b>Senha:</b> demo2026
+            </div>
+
+            <div id="turnstileWrap"></div>
+
+            <button class="btn-login" id="btnLogin" onclick="doLogin()">
+                <i class="fa-solid fa-right-to-bracket"></i> Entrar no demo
+            </button>
+            <div class="login-error" id="loginError"></div>
+
+            <div class="lgpd-note">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span><b>LGPD:</b> nenhum IP real é armazenado. IPs exibidos são hashes anônimos com salt diário rotativo.</span>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- LOGIN -->
-<div id="loginSection">
-    <div class="login-box">
-        <div class="login-icon"><i class="fa-solid fa-terminal"></i></div>
-        <h2>Acesso demo</h2>
-        <p>Explore o painel admin com dados fictícios — sem afetar produção.</p>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="loginEmail" placeholder="Digite o email" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label>Senha</label>
-            <div class="input-wrap">
-                <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off">
-                <button type="button" class="input-eye" onclick="togglePass()" id="btnEye" aria-label="Mostrar senha">
-                    <i class="fa-solid fa-eye" id="eyeIcon"></i>
-                </button>
+<!-- ─── APP ESPELHADO ─── -->
+<div id="appScreen">
+    <div class="demo-banner">
+        <span class="demo-banner-pill">demo</span>
+        <span>Modo demonstração · dados fictícios <b>(Game of Thrones)</b> isolados na sua sessão · banco descartável reseta em 24h</span>
+    </div>
+
+    <header class="app-header">
+        <span class="app-brand">ARTACHO<span>.</span>dev</span>
+        <span class="app-badge">demo</span>
+        <span class="app-refresh-ts" id="refreshTs"></span>
+        <button class="app-btn-icon" onclick="refreshActive()" title="Atualizar"><i class="fa-solid fa-rotate"></i> <span class="hide-on-mobile">Atualizar</span></button>
+        <button class="app-btn-icon danger" onclick="logout()" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hide-on-mobile">Sair</span></button>
+    </header>
+
+    <nav class="app-tabs">
+        <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
+        <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key"></i> Tokens</button>
+        <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')"><i class="fa-solid fa-chart-bar"></i> Logs</button>
+        <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase"></i> Vagas</button>
+        <button class="tab-btn" data-tab="metricas" onclick="switchTab('metricas')"><i class="fa-solid fa-chart-line"></i> Métricas</button>
+    </nav>
+
+    <div class="app-content">
+
+        <!-- ─── CVS ─── -->
+        <div class="tab-panel active" id="tab-cvs">
+            <div class="storage-card">
+                <div class="storage-head">
+                    <div>
+                        <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
+                        <div class="storage-sub">Dados fictícios — quota simulada</div>
+                    </div>
+                </div>
+                <div class="storage-bar-track"><div class="storage-bar-fill" style="width:24%"></div></div>
+                <div class="storage-meta"><span>24% de 1 GB</span><span id="cvCount2">5 arquivos</span></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
+                        <span class="th-filter-count" id="cvCount"></span>
+                    </div>
+                    <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()">
+                        <option value="">Todos os status</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                    </select>
+                    <button class="btn btn-cyan btn-sm" onclick="openNewCV()"><i class="fa-solid fa-plus"></i> Novo CV</button>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Nome</th><th>Arquivo</th><th>Status</th><th>Adicionado</th><th></th></tr></thead>
+                        <tbody id="cvTable"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="login-hint">
-            <b>Email:</b> demo@artacho.dev<br>
-            <b>Senha:</b> demo2026
+
+        <!-- ─── TOKENS ─── -->
+        <div class="tab-panel" id="tab-tokens">
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-key"></i> Gerar novo token</div>
+                <div class="row-2">
+                    <div class="form-group-inline">
+                        <label>Currículo</label>
+                        <select id="tokenCV"></select>
+                    </div>
+                    <div class="form-group-inline">
+                        <label>Label (identificação)</label>
+                        <input type="text" id="tokenLabel" placeholder="Ex: Targaryen Tech · Missandei · Sr QA">
+                    </div>
+                </div>
+                <div class="form-group-inline">
+                    <label>Validade</label>
+                    <div class="expiry-opts" id="expiryOpts">
+                        <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
+                        <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
+                        <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
+                        <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
+                        <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
+                    </div>
+                </div>
+                <div class="form-group-inline">
+                    <label>Máximo de usos</label>
+                    <select id="tokenMaxUses">
+                        <option value="1">1 uso (one-time)</option>
+                        <option value="3">3 usos</option>
+                        <option value="5" selected>5 usos</option>
+                        <option value="10">10 usos</option>
+                        <option value="">Ilimitado</option>
+                    </select>
+                </div>
+                <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
+                        <span class="th-filter-count" id="tokenCount"></span>
+                    </div>
+                    <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativo</option>
+                        <option value="expirado">Expirado</option>
+                        <option value="revogado">Revogado</option>
+                        <option value="esgotado">Esgotado</option>
+                    </select>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Label</th><th>Currículo</th><th>Status</th><th>Usos</th><th>Expira</th><th></th></tr></thead>
+                        <tbody id="tokenTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <button class="btn-login" id="btnLogin" onclick="doLogin()">
-            <i class="fa-solid fa-right-to-bracket"></i> Entrar no demo
-        </button>
-        <div class="login-error" id="loginError"></div>
+
+        <!-- ─── LOGS ─── -->
+        <div class="tab-panel" id="tab-logs">
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads e envios</div>
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar empresa, vaga, CV…" oninput="renderLogs()">
+                        <span class="th-filter-count" id="logCount"></span>
+                    </div>
+                    <select class="th-filter-select" id="logTipoFilter" onchange="renderLogs()">
+                        <option value="">Todos os eventos</option>
+                        <option value="download">Acesso do recrutador</option>
+                        <option value="email">Envio por email</option>
+                        <option value="whatsapp">Envio WhatsApp</option>
+                    </select>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Currículo</th><th>Origem</th><th>Empresa</th><th>Data/hora</th></tr></thead>
+                        <tbody id="logTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── VAGAS ─── -->
+        <div class="tab-panel" id="tab-vagas">
+            <div class="vagas-subtabs">
+                <button class="vagas-subtab-btn active" id="subtab-lista" onclick="switchVagasSubtab('lista')">Lista</button>
+                <button class="vagas-subtab-btn" id="subtab-analise" onclick="switchVagasSubtab('analise')">Análise</button>
+            </div>
+
+            <div id="vagasListView">
+                <div class="filter-bar" style="margin-bottom:10px;justify-content:space-between">
+                    <div class="vagas-filters" id="vagasFilters">
+                        <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all')">Todas</button>
+                        <button class="vagas-filter-chip" data-filter="em_processo" onclick="setVagasFilter('em_processo')">Em processo</button>
+                        <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado')">Aprovado</button>
+                        <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado')">Recusado</button>
+                        <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas')"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                    </div>
+                    <button class="btn btn-cyan btn-sm" onclick="openNewVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                </div>
+                <div class="filter-bar" style="margin-bottom:10px">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderVagas()">
+                        <span class="th-filter-count" id="vagasCount"></span>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Empresa / Vaga</th><th>Gestor</th><th>Enviado em</th><th>Modalidade</th><th>Etapa atual</th></tr></thead>
+                        <tbody id="vagasTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="vagasAnalysisView" style="display:none">
+                <div class="metrics-kpis">
+                    <div class="metrics-kpi-card highlight">
+                        <div class="metrics-kpi-label">Total</div>
+                        <div class="metrics-kpi-value" id="vkpi-total">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Em processo</div>
+                        <div class="metrics-kpi-value" id="vkpi-processo" style="color:#eab308">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Aprovadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-aprovado" style="color:#22c55e">—</div>
+                    </div>
+                    <div class="metrics-kpi-card">
+                        <div class="metrics-kpi-label">Recusadas</div>
+                        <div class="metrics-kpi-value" id="vkpi-recusado" style="color:#ef4444">—</div>
+                    </div>
+                </div>
+                <div class="metrics-chart-card">
+                    <h4>Candidaturas por dia da semana</h4>
+                    <div style="position:relative;height:200px"><canvas id="vagasChart"></canvas></div>
+                </div>
+                <div class="metrics-panels-grid">
+                    <div class="metrics-panel"><h4>Resultado</h4><div id="distResult"></div></div>
+                    <div class="metrics-panel"><h4>Modalidade</h4><div id="distModalidade"></div></div>
+                    <div class="metrics-panel"><h4>Tipo</h4><div id="distTipo"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── MÉTRICAS ─── -->
+        <div class="tab-panel" id="tab-metricas">
+            <div class="metrics-period-bar">
+                <button class="metrics-period-btn" data-period="1" onclick="setPeriod(1)">Hoje</button>
+                <button class="metrics-period-btn active" data-period="7" onclick="setPeriod(7)">7 dias</button>
+                <button class="metrics-period-btn" data-period="30" onclick="setPeriod(30)">30 dias</button>
+                <button class="metrics-period-btn" data-period="90" onclick="setPeriod(90)">90 dias</button>
+                <button class="metrics-period-btn" data-period="365" onclick="setPeriod(365)">Ano</button>
+            </div>
+
+            <div class="metrics-kpis">
+                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Visitas</div><div class="metrics-kpi-value" id="kpi-pageviews">—</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Visitantes únicos</div><div class="metrics-kpi-value" id="kpi-unique">—</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Engajados</div><div class="metrics-kpi-value" id="kpi-engaged">—</div><div class="metrics-kpi-sub" id="kpi-engaged-rate">—%</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Cliques em CV</div><div class="metrics-kpi-value" id="kpi-cv-clicks">—</div></div>
+                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Downloads</div><div class="metrics-kpi-value" id="kpi-cv-downloads">—</div><div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Recorrentes</div><div class="metrics-kpi-value" id="kpi-recurring">—</div></div>
+            </div>
+
+            <div class="metrics-chart-card">
+                <h4 id="metricsChartTitle">Visitas dos últimos 7 dias</h4>
+                <div style="position:relative;height:200px"><canvas id="analyticsChart"></canvas></div>
+            </div>
+
+            <div class="metrics-funnel-card">
+                <h4>Funil de conversão</h4>
+                <div id="funnelSteps"></div>
+            </div>
+
+            <div class="metrics-panels-grid">
+                <div class="metrics-panel"><h4>Top páginas</h4><div id="topPages"></div></div>
+                <div class="metrics-panel"><h4>Top referrers</h4><div id="topRefs"></div></div>
+                <div class="metrics-panel"><h4>Devices</h4><div id="topDevices"></div></div>
+                <div class="metrics-panel"><h4>Países</h4><div id="topCountries"></div></div>
+            </div>
+        </div>
     </div>
+
+    <footer class="app-footer"><span>//</span> ARTACHO.dev · demo · banco descartável · LGPD compliant</footer>
 </div>
 
-<!-- DEMO PANEL -->
-<div id="demoPanel">
-    <div class="demo-header">
-        <div class="demo-badge">Demo ativo</div>
-        <button class="demo-logout" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair do demo</button>
-    </div>
-
-    <!-- TABS -->
-    <div class="tabs">
-        <button class="tab-btn active" id="tabCandidaturas" onclick="switchTab('candidaturas')">
-            <i class="fa-solid fa-briefcase"></i> Candidaturas <span class="tab-count">5</span>
-        </button>
-        <button class="tab-btn" id="tabAnalytics" onclick="switchTab('analytics')">
-            <i class="fa-solid fa-chart-bar"></i> Analytics <span class="tab-count">3</span>
-        </button>
-    </div>
-
-    <!-- CANDIDATURAS TAB -->
-    <div id="candidaturasTab">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Empresa</th>
-                        <th>Vaga</th>
-                        <th>Etapa</th>
-                        <th>Recrutador</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody id="appsTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ANALYTICS TAB -->
-    <div id="analyticsTab">
-        <div class="metrics-row">
-            <div class="metric-card">
-                <div class="metric-label">Pageviews</div>
-                <div class="metric-value" id="metPageviews">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Visitantes únicos</div>
-                <div class="metric-value" id="metUnique">0</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">Downloads CV</div>
-                <div class="metric-value" id="metCv">0</div>
-            </div>
-        </div>
-        <div class="chart-wrap">
-            <div class="chart-title">Pageviews — últimos 7 dias</div>
-            <div class="chart-bars" id="chartBars"></div>
-        </div>
-        <div class="visitors-list" id="visitorsList"></div>
-    </div>
-</div>
-
-<!-- DRAWER -->
-<div id="overlay" onclick="closeDrawer()"></div>
-<aside id="drawer" aria-label="Detalhes da candidatura">
+<!-- ─── DRAWER ─── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
     <div class="drawer-header">
-        <span class="drawer-title" id="drawerTitle">Candidatura</span>
-        <button class="drawer-close" onclick="closeDrawer()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        <span class="drawer-title" id="drawerTitle">—</span>
+        <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="drawer-body" id="drawerBody"></div>
 </aside>
 
-<!-- STACK BADGES -->
-<div class="stack-section">
-    <div class="stack-label">Stack utilizada</div>
-    <div class="stack-badges">
-        <span class="stack-badge"><i class="fa-brands fa-node-js"></i> Node.js</span>
-        <span class="stack-badge"><i class="fa-solid fa-database"></i> Supabase</span>
-        <span class="stack-badge"><i class="fa-solid fa-triangle" style="font-size:0.7em"></i> Vercel</span>
-        <span class="stack-badge"><i class="fa-solid fa-server"></i> PostgreSQL</span>
-        <span class="stack-badge"><i class="fa-solid fa-flask"></i> Playwright</span>
-        <span class="stack-badge"><i class="fa-solid fa-paper-plane"></i> Postman</span>
-        <span class="stack-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Cursor + MCP</span>
+<!-- ─── MODAL ─── -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">—</span>
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="modalBody"></div>
     </div>
 </div>
 
-<!-- FOOTER -->
-<footer>
-    <div class="footer-links">
-        <a href="/" class="footer-link"><i class="fa-solid fa-arrow-left"></i> Portfólio</a>
-        <a href="https://github.com/brartacho" target="_blank" rel="noreferrer" class="footer-link">
-            <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.65em"></i>
-        </a>
+<!-- ─── TOAST ─── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ─── TOUR ─── -->
+<div class="tour-overlay" id="tourOverlay">
+    <div class="tour-backdrop"></div>
+    <div class="tour-spotlight" id="tourSpotlight"></div>
+    <div class="tour-card" id="tourCard">
+        <h3><span class="tour-emoji" id="tourEmoji">👋</span> <span id="tourTitle">—</span></h3>
+        <p id="tourBody">—</p>
+        <div class="tour-foot">
+            <span class="tour-counter" id="tourCounter">1 / 7</span>
+            <div class="tour-btns">
+                <button class="btn btn-sm btn-ghost" onclick="skipTour()">Pular</button>
+                <button class="btn btn-sm" onclick="prevStep()" id="tourPrev">Anterior</button>
+                <button class="btn btn-sm btn-cyan" onclick="nextStep()" id="tourNext">Próximo</button>
+            </div>
+        </div>
     </div>
-    <div class="footer-copy"><span style="color:var(--cyan)">//</span> ARTACHO.dev · showcase</div>
-</footer>
+</div>
+<button class="tour-replay-btn" id="tourReplay" onclick="startTour()" title="Refazer tour"><i class="fa-solid fa-circle-play"></i></button>
 
 <script>
-// ── FAKE DATA ────────────────────────────────────────────
-const FAKE_APPS = [
-    {
-        id: 1, empresa: 'Nubank', vaga: 'QA Engineer', etapa: 'Enviado',
-        gestor: 'Lucas Ferreira', email: 'l.ferreira@nubank.com.br', data: '14/05/2026',
-        stages: [
-            { label: 'Enviado',        status: 'current', date: '14/05' },
-            { label: 'Entrevista RH',  status: 'pending' },
-            { label: 'Teste Técnico',  status: 'pending' },
-            { label: 'Proposta',       status: 'pending' },
-        ]
-    },
-    {
-        id: 2, empresa: 'iFood', vaga: 'SDET', etapa: 'Em processo',
-        gestor: 'Camila Rocha', email: 'c.rocha@ifood.com.br', data: '10/05/2026',
-        stages: [
-            { label: 'Enviado',        status: 'done',    date: '10/05' },
-            { label: 'Entrevista RH',  status: 'done',    date: '13/05' },
-            { label: 'Teste Técnico',  status: 'current', date: '16/05' },
-            { label: 'Proposta',       status: 'pending' },
-        ]
-    },
-    {
-        id: 3, empresa: 'Conta Azul', vaga: 'Test Analyst', etapa: 'Aprovado',
-        gestor: 'Rafael Dias', email: 'r.dias@contaazul.com', data: '02/05/2026',
-        stages: [
-            { label: 'Enviado',        status: 'done', date: '02/05' },
-            { label: 'Entrevista RH',  status: 'done', date: '06/05' },
-            { label: 'Proposta',       status: 'done', date: '09/05' },
-        ]
-    },
-    {
-        id: 4, empresa: 'CI&T', vaga: 'Automation Engineer', etapa: 'Reprovado',
-        gestor: 'Ana Costa', email: 'a.costa@ciandt.com', data: '28/04/2026',
-        stages: [
-            { label: 'Enviado',       status: 'done',   date: '28/04' },
-            { label: 'Entrevista RH', status: 'failed', date: '05/05' },
-        ]
-    },
-    {
-        id: 5, empresa: 'Totvs', vaga: 'QA Pleno', etapa: 'Enviado',
-        gestor: 'Pedro Lima', email: 'p.lima@totvs.com.br', data: '15/05/2026',
-        stages: [
-            { label: 'Enviado',       status: 'current', date: '15/05' },
-            { label: 'Entrevista RH', status: 'pending' },
-            { label: 'Teste Técnico', status: 'pending' },
-        ]
-    },
-];
+// ════════════════════════════════════════════════════════
+// DEMO API
+// ════════════════════════════════════════════════════════
+const SESSION_KEY = 'demo_session_id';
+const AUTH_KEY    = 'demo_authed';
+const TOUR_KEY    = 'demo_tour_done';
 
-const FAKE_ANALYTICS = {
-    pageviews: 247,
-    unique: 12,
-    cv_clicks: 3,
-    chart: [34, 51, 28, 67, 43, 89, 57],
-    days: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-    visitors: [
-        { city: 'São Paulo, SP', browser: 'Chrome', ago: '5min' },
-        { city: 'Curitiba, PR',  browser: 'Safari', ago: '22min' },
-        { city: 'Maringá, PR',   browser: 'Edge',   ago: '1h' },
-    ]
-};
+let TURNSTILE_SITEKEY = null; // buscado dinamicamente de /api/demo/config
 
-// ── SESSION ───────────────────────────────────────────────
-function isAuthed() { return sessionStorage.getItem('demo_authed') === '1'; }
+function getSessionId() {
+    let s = sessionStorage.getItem(SESSION_KEY);
+    if (!s) { s = crypto.randomUUID(); sessionStorage.setItem(SESSION_KEY, s); }
+    return s;
+}
 
-// ── INIT ──────────────────────────────────────────────────
-if (isAuthed()) revealDemo();
+async function dapi(method, path, body) {
+    const opts = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Demo-Session': getSessionId(),
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(path, opts);
+    if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || `Erro ${r.status}`);
+    }
+    if (r.status === 204) return null;
+    return r.json();
+}
 
-// ── LOGIN ─────────────────────────────────────────────────
-function doLogin() {
+// ════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════
+let turnstileToken = null;
+let turnstileWidgetId = null;
+
+async function loadConfigAndRenderTurnstile() {
+    try {
+        const cfg = await fetch('/api/demo/config').then(r => r.json());
+        TURNSTILE_SITEKEY = cfg.turnstile_sitekey;
+    } catch {}
+    renderTurnstile();
+}
+
+function renderTurnstile() {
+    if (!TURNSTILE_SITEKEY) {
+        document.getElementById('turnstileWrap').innerHTML = '<div style="font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono)">// Turnstile não configurado (dev mode)</div>';
+        return;
+    }
+    if (!window.turnstile) {
+        setTimeout(renderTurnstile, 200);
+        return;
+    }
+    if (turnstileWidgetId !== null) return;
+    turnstileWidgetId = window.turnstile.render('#turnstileWrap', {
+        sitekey: TURNSTILE_SITEKEY,
+        theme: 'dark',
+        callback: t => { turnstileToken = t; },
+        'error-callback': () => { turnstileToken = null; },
+        'expired-callback': () => { turnstileToken = null; },
+    });
+}
+window.addEventListener('load', loadConfigAndRenderTurnstile);
+
+function togglePass() {
+    const inp = document.getElementById('loginPass');
+    const ic  = document.getElementById('eyeIcon');
+    const show = inp.type === 'password';
+    inp.type  = show ? 'text' : 'password';
+    ic.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+}
+
+async function doLogin() {
     const email = document.getElementById('loginEmail').value.trim();
     const pass  = document.getElementById('loginPass').value;
     const errEl = document.getElementById('loginError');
     const btn   = document.getElementById('btnLogin');
+    const honey = document.getElementById('hpWebsite').value;
 
     if (email !== 'demo@artacho.dev' || pass !== 'demo2026') {
         errEl.textContent = 'Credenciais incorretas.';
-        document.querySelector('.login-box').classList.add('shake');
-        setTimeout(() => document.querySelector('.login-box').classList.remove('shake'), 400);
+        document.getElementById('loginBox').classList.add('shake');
+        setTimeout(() => document.getElementById('loginBox').classList.remove('shake'), 400);
         return;
     }
-
     errEl.textContent = '';
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando…';
 
-    // Single real call: track demo access
+    // Track demo_access (1 evento real)
     fetch('/api/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: 'demo_access', path: '/projeto-sistema-admin' })
     }).catch(() => {});
 
+    try {
+        getSessionId();
+        await dapi('POST', '/api/demo/init', { cf_token: turnstileToken, website: honey });
+        sessionStorage.setItem(AUTH_KEY, '1');
+        revealApp();
+    } catch (e) {
+        errEl.textContent = e.message;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no demo';
+        if (turnstileWidgetId !== null && window.turnstile) window.turnstile.reset(turnstileWidgetId);
+        turnstileToken = null;
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(TOUR_KEY);
+    location.reload();
+}
+
+function revealApp() {
+    document.getElementById('heroScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('tourReplay').classList.add('visible');
+    loadCVs();
+    setRefreshTs();
     setTimeout(() => {
-        sessionStorage.setItem('demo_authed', '1');
-        revealDemo();
-    }, 800);
+        if (!sessionStorage.getItem(TOUR_KEY)) startTour();
+    }, 600);
 }
 
-function doLogout() {
-    sessionStorage.removeItem('demo_authed');
-    document.getElementById('demoPanel').style.display = 'none';
-    document.getElementById('loginSection').style.display = 'block';
-    const btn = document.getElementById('btnLogin');
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no demo';
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPass').value  = '';
-}
-
-function revealDemo() {
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('demoPanel').style.display   = 'block';
-    renderTable();
-}
-
-// ── PASSWORD TOGGLE ───────────────────────────────────────
-function togglePass() {
-    const input = document.getElementById('loginPass');
-    const icon  = document.getElementById('eyeIcon');
-    const show  = input.type === 'password';
-    input.type  = show ? 'text' : 'password';
-    icon.className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-}
-
-// ── KEYBOARD ──────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') doLogin();
-    if (e.key === 'Escape') closeDrawer();
+    if (e.key === 'Enter' && document.getElementById('heroScreen').style.display !== 'none') doLogin();
+    if (e.key === 'Escape') { closeDrawer(); closeModal(); skipTour(); }
 });
 
-// ── TABLE ─────────────────────────────────────────────────
-function etapaClass(etapa) {
-    if (etapa === 'Enviado')    return 'etapa-enviado';
-    if (etapa === 'Em processo') return 'etapa-processo';
-    if (etapa === 'Aprovado')   return 'etapa-aprovado';
-    if (etapa === 'Reprovado')  return 'etapa-reprovado';
-    return 'etapa-enviado';
+// ════════════════════════════════════════════════════════
+// STATE + HELPERS
+// ════════════════════════════════════════════════════════
+let _cvs = [], _tokens = [], _logs = [], _applications = [], _analytics = null;
+let _vagasFilter = 'all';
+let _selectedExpiry = 24;
+let _activeTab = 'cvs';
+let _period = 7;
+
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function renderTable() {
-    const tbody = document.getElementById('appsTableBody');
-    tbody.innerHTML = FAKE_APPS.map((a, i) => `
-        <tr style="transition-delay:${i * 50}ms" onclick="openDrawer(${a.id})">
-            <td class="td-empresa">${a.empresa}</td>
-            <td class="td-vaga">${a.vaga}</td>
-            <td><span class="etapa-badge ${etapaClass(a.etapa)}">${a.etapa}</span></td>
-            <td style="font-size:0.82rem;color:var(--text-sub)">${a.gestor}</td>
-            <td class="td-data">${a.data}</td>
+function fmtDate(iso, withTime = false) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    if (!withTime) return `${dd}/${mm}/${yyyy}`;
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mn = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy} ${hh}:${mn}`;
+}
+
+function setRefreshTs() {
+    const el = document.getElementById('refreshTs');
+    const d = new Date();
+    el.textContent = `atualizado ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function showToast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icon = type === 'error' ? 'circle-exclamation' : type === 'success' ? 'circle-check' : 'circle-info';
+    el.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${esc(msg)}`;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+// ════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════
+function switchTab(name) {
+    _activeTab = name;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+    if (name === 'cvs') loadCVs();
+    else if (name === 'tokens') loadTokens();
+    else if (name === 'logs') loadLogs();
+    else if (name === 'vagas') loadVagas();
+    else if (name === 'metricas') loadAnalytics();
+    setRefreshTs();
+}
+
+function refreshActive() {
+    switchTab(_activeTab);
+    showToast('Dados atualizados');
+}
+
+// ════════════════════════════════════════════════════════
+// CVS
+// ════════════════════════════════════════════════════════
+async function loadCVs() {
+    try {
+        _cvs = await dapi('GET', '/api/demo/cv-versions');
+        renderCVs();
+        // Atualiza select de tokens
+        const sel = document.getElementById('tokenCV');
+        if (sel) {
+            sel.innerHTML = '<option value="">Selecione…</option>' + _cvs.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+        }
+        document.getElementById('cvCount2').textContent = `${_cvs.length} arquivo${_cvs.length === 1 ? '' : 's'}`;
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function renderCVs() {
+    const search = document.getElementById('cvSearch').value.toLowerCase();
+    const status = document.getElementById('cvStatusFilter').value;
+    let list = _cvs.filter(c => {
+        if (search && !c.name.toLowerCase().includes(search) && !c.file_name.toLowerCase().includes(search)) return false;
+        if (status === 'ativo' && !c.active) return false;
+        if (status === 'inativo' && c.active) return false;
+        return true;
+    });
+    document.getElementById('cvCount').textContent = `${list.length} ${list.length === 1 ? 'item' : 'itens'}`;
+    const tb = document.getElementById('cvTable');
+    if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum CV encontrado.</td></tr>';
+        return;
+    }
+    tb.innerHTML = list.map(c => `
+        <tr>
+            <td><b>${esc(c.name)}</b><div style="font-size:0.72rem;color:var(--text-dim)">${esc(c.description || '')}</div></td>
+            <td><span style="font-family:var(--font-mono);font-size:0.74rem">${esc(c.file_name)}</span></td>
+            <td><span class="badge badge-${c.active ? 'green' : 'gray'}">${c.active ? 'Ativo' : 'Inativo'}</span></td>
+            <td style="color:var(--text-dim);font-size:0.78rem">${fmtDate(c.created_at)}</td>
+            <td>
+                <button class="btn btn-sm" title="Pré-visualizar" onclick="previewCV('${c.id}','${esc(c.file_name)}')"><i class="fa-solid fa-eye"></i></button>
+                <button class="btn btn-sm" title="${c.active ? 'Desativar' : 'Ativar'}" onclick="toggleCVActive('${c.id}',${!c.active})"><i class="fa-solid fa-${c.active ? 'eye-slash' : 'check'}"></i></button>
+                <button class="btn btn-sm btn-danger" title="Excluir" onclick="deleteCV('${c.id}','${esc(c.name)}')"><i class="fa-solid fa-trash"></i></button>
+            </td>
         </tr>
     `).join('');
-    // Staggered reveal
-    setTimeout(() => {
-        tbody.querySelectorAll('tr').forEach(r => r.classList.add('visible'));
-    }, 30);
 }
 
-// ── DRAWER ────────────────────────────────────────────────
-let activeStages = [];
+function previewCV(_id, fileName) {
+    window.open(`/projeto-sistema-admin-assets/${fileName}`, '_blank', 'noopener');
+}
 
-function openDrawer(id) {
-    const app = FAKE_APPS.find(a => a.id === id);
+async function toggleCVActive(id, active) {
+    try {
+        await dapi('PUT', `/api/demo/cv-versions?id=${id}`, { active });
+        showToast(active ? 'CV ativado' : 'CV desativado');
+        loadCVs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteCV(id, name) {
+    if (!confirm(`Excluir o CV "${name}"?`)) return;
+    try {
+        await dapi('DELETE', `/api/demo/cv-versions?id=${id}`);
+        showToast('CV excluído');
+        loadCVs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openNewCV() {
+    openModal('Novo CV (demo)', `
+        <div class="form-group-inline"><label>Nome</label><input type="text" id="newCvName" placeholder="Ex: Brienne of Tarth · QA Pleno"></div>
+        <div class="form-group-inline"><label>Descrição</label><input type="text" id="newCvDesc" placeholder="Honor and loyalty in test coverage"></div>
+        <div class="form-group-inline"><label>Arquivo (escolha um existente)</label>
+            <select id="newCvFile">
+                <option value="cv-demo-jon-snow.pdf">cv-demo-jon-snow.pdf</option>
+                <option value="cv-demo-daenerys-targaryen.pdf">cv-demo-daenerys-targaryen.pdf</option>
+                <option value="cv-demo-tyrion-lannister.pdf">cv-demo-tyrion-lannister.pdf</option>
+                <option value="cv-demo-arya-stark.pdf">cv-demo-arya-stark.pdf</option>
+                <option value="cv-demo-bran-stark.pdf">cv-demo-bran-stark.pdf</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-cyan btn-sm" onclick="saveNewCV()">Criar</button>
+        </div>
+    `);
+}
+
+async function saveNewCV() {
+    const name = document.getElementById('newCvName').value.trim();
+    const description = document.getElementById('newCvDesc').value.trim();
+    const file_name = document.getElementById('newCvFile').value;
+    if (!name) return showToast('Nome obrigatório', 'error');
+    try {
+        await dapi('POST', '/api/demo/cv-versions', { name, description, file_name });
+        showToast('CV criado');
+        closeModal();
+        loadCVs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+// TOKENS
+// ════════════════════════════════════════════════════════
+function setExpiry(btn) {
+    document.querySelectorAll('.expiry-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _selectedExpiry = parseInt(btn.dataset.hours);
+}
+
+async function loadTokens() {
+    try {
+        _tokens = await dapi('GET', '/api/demo/tokens');
+        renderTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function tokenStatus(t) {
+    if (t.revoked) return 'revogado';
+    if (t.max_uses != null && t.use_count >= t.max_uses) return 'esgotado';
+    if (t.expires_at && new Date(t.expires_at) < new Date()) return 'expirado';
+    return 'ativo';
+}
+function tokenBadge(s) {
+    return { ativo: 'green', expirado: 'gray', revogado: 'red', esgotado: 'yellow' }[s] || 'gray';
+}
+
+function renderTokens() {
+    const search = document.getElementById('tokenSearch').value.toLowerCase();
+    const statusF = document.getElementById('tokenStatusFilter').value;
+    let list = _tokens.filter(t => {
+        const st = tokenStatus(t);
+        if (statusF && statusF !== st) return false;
+        if (search) {
+            const hay = `${t.label || ''} ${t.cv_versions?.name || ''}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+        }
+        return true;
+    });
+    document.getElementById('tokenCount').textContent = `${list.length} ${list.length === 1 ? 'item' : 'itens'}`;
+    const tb = document.getElementById('tokenTable');
+    if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token.</td></tr>';
+        return;
+    }
+    tb.innerHTML = list.map(t => {
+        const s = tokenStatus(t);
+        return `<tr>
+            <td><b style="font-family:var(--font-mono)">${esc(t.label || '—')}</b></td>
+            <td style="font-size:0.78rem">${esc(t.cv_versions?.name || '—')}</td>
+            <td><span class="badge badge-${tokenBadge(s)}">${s}</span></td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem">${t.use_count}${t.max_uses != null ? `/${t.max_uses}` : '/∞'}</td>
+            <td style="font-size:0.78rem;color:var(--text-dim)">${t.expires_at ? fmtDate(t.expires_at, true) : '—'}</td>
+            <td>
+                <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar hash"><i class="fa-solid fa-copy"></i></button>
+                ${s === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
+                <button class="btn btn-sm btn-danger" onclick="deleteToken('${t.id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function copyTokenHash(hash) {
+    navigator.clipboard.writeText(`https://artacho.dev/cv?token=${hash}`);
+    showToast('Link copiado!');
+}
+
+async function createToken() {
+    const cv_version_id = document.getElementById('tokenCV').value;
+    const label = document.getElementById('tokenLabel').value.trim();
+    const max_uses = document.getElementById('tokenMaxUses').value || null;
+    if (!cv_version_id) return showToast('Selecione um CV', 'error');
+    if (!label) return showToast('Informe um label', 'error');
+    try {
+        const tk = await dapi('POST', '/api/demo/tokens', { cv_version_id, label, hours: _selectedExpiry, max_uses });
+        openModal('Token criado', `
+            <p style="margin-bottom:12px;font-size:0.84rem">Hash gerado para <b>${esc(label)}</b>:</p>
+            <div class="token-hash-modal">https://artacho.dev/cv?token=${esc(tk.hash)}</div>
+            <p style="font-size:0.74rem;color:var(--text-dim)">Salve este link agora. Em um sistema real, ele só aparece uma vez.</p>
+            <div class="modal-actions">
+                <button class="btn btn-cyan btn-sm" onclick="copyTokenHash('${esc(tk.hash)}');closeModal()"><i class="fa-solid fa-copy"></i> Copiar link</button>
+            </div>
+        `);
+        document.getElementById('tokenLabel').value = '';
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function revokeToken(id) {
+    if (!confirm('Revogar este token?')) return;
+    try {
+        await dapi('PUT', `/api/demo/tokens?id=${id}`, { revoked: true });
+        showToast('Token revogado');
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function deleteToken(id) {
+    if (!confirm('Excluir token permanentemente?')) return;
+    try {
+        await dapi('DELETE', `/api/demo/tokens?id=${id}`);
+        showToast('Token excluído');
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+// LOGS
+// ════════════════════════════════════════════════════════
+async function loadLogs() {
+    const search = document.getElementById('logSearch').value;
+    const tipo = document.getElementById('logTipoFilter').value;
+    try {
+        const r = await dapi('GET', `/api/demo/logs?search=${encodeURIComponent(search)}&tipo=${tipo}`);
+        _logs = r.data;
+        document.getElementById('logCount').textContent = `${r.total} ${r.total === 1 ? 'item' : 'itens'}`;
+        renderLogs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+function renderLogs() {
+    const tb = document.getElementById('logTable');
+    if (!_logs.length) {
+        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum log.</td></tr>';
+        return;
+    }
+    tb.innerHTML = _logs.map(l => {
+        const isAdmin = l.ip_address?.startsWith('admin-');
+        let origem;
+        if (l.ip_address === 'admin-send-email') origem = '<i class="fa-solid fa-envelope" style="color:#a78bfa"></i> Envio por email';
+        else if (l.ip_address === 'admin-send-whatsapp-link') origem = '<i class="fa-brands fa-whatsapp" style="color:#25d366"></i> WhatsApp (link)';
+        else if (l.ip_address === 'admin-send-whatsapp') origem = '<i class="fa-brands fa-whatsapp" style="color:#25d366"></i> WhatsApp (arquivo)';
+        else origem = `<i class="fa-solid fa-download" style="color:var(--cyan)"></i> Acesso · <span style="font-family:var(--font-mono);font-size:0.72rem">${esc(l.ip_address || '—')}</span>`;
+        return `<tr>
+            <td><b style="font-size:0.82rem">${esc(l.cv_name_snapshot || '—')}</b></td>
+            <td style="font-size:0.8rem">${origem}</td>
+            <td style="font-size:0.8rem">${esc(l.empresa || '—')} <span style="color:var(--text-dim);font-size:0.74rem">${l.vaga ? `· ${esc(l.vaga)}` : ''}</span></td>
+            <td style="font-family:var(--font-mono);font-size:0.74rem;color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</td>
+        </tr>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// VAGAS
+// ════════════════════════════════════════════════════════
+function setVagasFilter(f) {
+    _vagasFilter = f;
+    document.querySelectorAll('.vagas-filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+    renderVagas();
+}
+
+async function loadVagas() {
+    try {
+        _applications = await dapi('GET', '/api/demo/applications');
+        renderVagas();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function vagaCurrentStage(app) {
+    const stages = app.stages || [];
+    const cur = stages.find(s => s.status === 'running');
+    if (cur) return { name: cur.name, type: 'current' };
+    const last = stages.filter(s => s.status === 'done' || s.status === 'rejected').slice(-1)[0];
+    if (last) return { name: last.name, type: last.status };
+    return { name: '—', type: 'pending' };
+}
+
+function renderVagas() {
+    const search = document.getElementById('vagasSearch').value.toLowerCase();
+    let list = _applications.filter(a => {
+        if (_vagasFilter === 'arquivadas' && !a.archived) return false;
+        if (_vagasFilter !== 'arquivadas' && a.archived) return false;
+        if (['em_processo','aprovado','recusado'].includes(_vagasFilter) && a.result !== _vagasFilter) return false;
+        if (search) {
+            const hay = `${a.empresa} ${a.vaga || ''} ${a.gestor_nome || ''}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+        }
+        return true;
+    });
+    document.getElementById('vagasCount').textContent = `${list.length} ${list.length === 1 ? 'vaga' : 'vagas'}`;
+    const tb = document.getElementById('vagasTable');
+    if (!list.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura.</td></tr>';
+        return;
+    }
+    tb.innerHTML = list.map(a => {
+        const cs = vagaCurrentStage(a);
+        const resultBadge = a.result === 'aprovado' ? '<span class="badge badge-green">Aprovado</span>'
+                          : a.result === 'recusado' ? '<span class="badge badge-red">Recusado</span>'
+                          : `<span class="badge badge-${cs.type === 'current' ? 'cyan' : cs.type === 'rejected' ? 'red' : 'gray'}">${esc(cs.name)}</span>`;
+        return `<tr class="row-clickable" onclick="openVagaDrawer('${a.id}')">
+            <td><b>${esc(a.empresa)}</b><div style="font-size:0.74rem;color:var(--text-dim)">${esc(a.vaga || '—')}</div></td>
+            <td style="font-size:0.82rem">${esc(a.gestor_nome || '—')}</td>
+            <td style="font-size:0.78rem;color:var(--text-dim)">${fmtDate(a.data_envio)}</td>
+            <td style="font-size:0.78rem">${esc(a.modalidade || '—')}</td>
+            <td>${resultBadge}</td>
+        </tr>`;
+    }).join('');
+}
+
+function openVagaDrawer(id) {
+    const app = _applications.find(a => a.id === id);
     if (!app) return;
-    activeStages = app.stages.map(s => ({ ...s }));
-    document.getElementById('drawerTitle').textContent = `${app.empresa} — ${app.vaga}`;
+    document.getElementById('drawerTitle').textContent = `${app.empresa} — ${app.vaga || '—'}`;
     renderDrawerBody(app);
     document.getElementById('drawer').classList.add('open');
-    document.getElementById('overlay').classList.add('visible');
-}
-
-function closeDrawer() {
-    document.getElementById('drawer').classList.remove('open');
-    document.getElementById('overlay').classList.remove('visible');
+    document.getElementById('drawerOverlay').classList.add('open');
 }
 
 function renderDrawerBody(app) {
-    const stagesHtml = activeStages.map((s, i) => `
-        <div class="stage-item" onclick="toggleStage(${i})">
-            <div class="stage-dot-wrap">
-                <div class="stage-dot ${s.status}" id="dot-${i}"></div>
-                <div class="stage-line ${s.status === 'done' ? 'done' : ''}"></div>
+    const body = document.getElementById('drawerBody');
+    const cvSec = app.cv_versions ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Currículo enviado</div>
+            <div class="dinfo-row" style="gap:8px">
+                <i class="fa-solid fa-file-pdf dinfo-icon" style="color:#f87171"></i>
+                <span>${esc(app.cv_versions.name)}</span>
+                <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;margin-left:auto" onclick="previewCV('${app.cv_versions.id}','${esc(app.cv_versions.file_name)}')"><i class="fa-solid fa-eye"></i></button>
+            </div>
+        </div>` : '';
+
+    const rRows = [];
+    if (app.gestor_nome)  rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-user dinfo-icon"></i>${esc(app.gestor_nome)}</div>`);
+    if (app.gestor_email) rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
+    if (app.gestor_phone) {
+        const p = app.gestor_phone.replace(/\D/g, '');
+        rRows.push(`<div class="dinfo-row"><i class="fa-brands fa-whatsapp dinfo-icon" style="color:#25d366"></i><a href="https://wa.me/${esc(p)}" target="_blank" rel="noopener" class="dinfo-link">${esc(app.gestor_phone)}</a></div>`);
+    }
+    const chips = [];
+    if (app.linkedin_empresa) chips.push(`<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>`);
+    if (app.link_vaga)        chips.push(`<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>`);
+    if (app.modalidade)       chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-map-pin"></i> ${esc(app.modalidade)}</span>`);
+    if (app.tipo_contratacao) chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-file-contract"></i> ${esc(app.tipo_contratacao)}</span>`);
+    const rSec = (rRows.length || chips.length) ? `
+        <div class="dinfo-section">
+            <div class="dinfo-label">Recrutador</div>
+            ${rRows.join('')}
+            ${chips.length ? `<div class="dinfo-chips">${chips.join('')}</div>` : ''}
+        </div>` : '';
+
+    const obsSec = app.observacoes ? `<div class="dinfo-section"><div class="dinfo-label">Observações</div><div class="dinfo-obs">${esc(app.observacoes)}</div></div>` : '';
+
+    const stagesHtml = (app.stages || []).map((s, i, arr) => {
+        const last = i === arr.length - 1;
+        const cls = s.status || 'pending';
+        const icon = s.status === 'done' ? '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>'
+                   : s.status === 'rejected' ? '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>' : '';
+        return `<div class="stage-row" onclick="advanceStage('${app.id}',${i})">
+            <div class="stage-icon-col">
+                <div class="stage-circle ${cls}">${icon}</div>
+                ${!last ? `<div class="stage-line ${s.status === 'done' ? 'done' : s.status === 'running' ? 'current' : ''}"></div>` : ''}
             </div>
             <div>
-                <div class="stage-label">${s.label}</div>
-                ${s.date ? `<div class="stage-date">${s.date}</div>` : ''}
+                <div class="stage-label ${cls}">${esc(s.name)}</div>
+                ${s.date ? `<div style="font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono)">${esc(s.date)}</div>` : ''}
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
-    document.getElementById('drawerBody').innerHTML = `
-        <div class="drawer-section">
-            <div class="drawer-section-label">Candidatura</div>
-            <div class="drawer-info-row">
-                <i class="fa-solid fa-building drawer-info-icon"></i>
-                <span style="font-weight:600">${app.empresa}</span>
-            </div>
-            <div class="drawer-info-row">
-                <i class="fa-solid fa-briefcase drawer-info-icon"></i>
-                <span style="color:var(--text-sub)">${app.vaga}</span>
-            </div>
-            <div class="drawer-info-row">
-                <i class="fa-solid fa-calendar drawer-info-icon"></i>
-                <span style="color:var(--text-muted);font-size:0.8rem">${app.data}</span>
+    const resCur = app.result || 'em_processo';
+    body.innerHTML = `
+        ${cvSec}
+        ${rSec}
+        ${obsSec}
+        <div>
+            <div class="dinfo-label">Resultado</div>
+            <div class="result-segmented">
+                <button class="result-seg-btn in_processo ${resCur === 'em_processo' ? 'active' : ''}" onclick="setResult('${app.id}','em_processo')">Em processo</button>
+                <button class="result-seg-btn aprovado ${resCur === 'aprovado' ? 'active' : ''}" onclick="setResult('${app.id}','aprovado')">Aprovado</button>
+                <button class="result-seg-btn recusado ${resCur === 'recusado' ? 'active' : ''}" onclick="setResult('${app.id}','recusado')">Recusado</button>
             </div>
         </div>
-        <div class="drawer-section">
-            <div class="drawer-section-label">Recrutador</div>
-            <div class="drawer-info-row">
-                <i class="fa-solid fa-user drawer-info-icon"></i>
-                <span>${app.gestor}</span>
-            </div>
-            <div class="drawer-info-row">
-                <i class="fa-solid fa-envelope drawer-info-icon"></i>
-                <span style="color:var(--text-sub);font-size:0.8rem">${app.email}</span>
-            </div>
+        <div>
+            <div class="dinfo-label">Processo seletivo <span style="font-weight:400;text-transform:none;font-size:0.62rem;letter-spacing:0">(clique para avançar)</span></div>
+            <div class="stage-timeline">${stagesHtml || '<div style="color:var(--text-dim);font-size:0.8rem">Sem etapas registradas.</div>'}</div>
         </div>
-        <div class="drawer-section">
-            <div class="drawer-section-label">Processo seletivo <span style="font-size:0.65rem;color:var(--text-muted);text-transform:none;font-weight:400">(clique para avançar)</span></div>
-            <div class="stages-list">${stagesHtml}</div>
+        <div class="drawer-actions">
+            <button class="btn btn-sm" onclick="editVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar</button>
+            <button class="btn btn-sm" onclick="toggleArchive('${app.id}',${app.archived})"><i class="fa-solid fa-${app.archived ? 'box-open' : 'box-archive'}"></i> ${app.archived ? 'Desarquivar' : 'Arquivar'}</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteVaga('${app.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>
     `;
 }
 
-function toggleStage(idx) {
-    const statuses = ['pending', 'current', 'done', 'failed'];
-    const s = activeStages[idx];
-    const next = { pending: 'current', current: 'done', done: 'failed', failed: 'pending' };
-    s.status = next[s.status] || 'pending';
-    // Re-render stages only
-    const app = FAKE_APPS.find(a => a.stages === FAKE_APPS[0].stages) || FAKE_APPS[0];
-    const drawerTitle = document.getElementById('drawerTitle').textContent;
-    const empresa = drawerTitle.split(' — ')[0];
-    const foundApp = FAKE_APPS.find(a => a.empresa === empresa) || FAKE_APPS[0];
-    renderDrawerBody(foundApp);
+function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
 }
 
-// ── TABS ──────────────────────────────────────────────────
-let analyticsAnimated = false;
-
-function switchTab(tab) {
-    document.getElementById('tabCandidaturas').classList.toggle('active', tab === 'candidaturas');
-    document.getElementById('tabAnalytics').classList.toggle('active', tab === 'analytics');
-    document.getElementById('candidaturasTab').style.display = tab === 'candidaturas' ? 'block' : 'none';
-    document.getElementById('analyticsTab').style.display = tab === 'analytics' ? 'block' : 'none';
-    if (tab === 'analytics' && !analyticsAnimated) {
-        analyticsAnimated = true;
-        renderAnalytics();
-    }
+async function setResult(id, result) {
+    try {
+        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { result });
+        _applications = _applications.map(a => a.id === id ? updated : a);
+        renderVagas();
+        renderDrawerBody(updated);
+        showToast('Resultado atualizado');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
-// ── ANALYTICS ─────────────────────────────────────────────
-function renderAnalytics() {
-    animateCounter('metPageviews', FAKE_ANALYTICS.pageviews);
-    animateCounter('metUnique', FAKE_ANALYTICS.unique);
-    animateCounter('metCv', FAKE_ANALYTICS.cv_clicks);
-    renderChart();
-    renderVisitors();
+async function advanceStage(id, idx) {
+    const app = _applications.find(a => a.id === id);
+    if (!app) return;
+    const stages = JSON.parse(JSON.stringify(app.stages || []));
+    const s = stages[idx];
+    if (!s) return;
+    const next = { pending: 'running', running: 'done', done: 'rejected', rejected: 'pending' };
+    s.status = next[s.status] || 'running';
+    if (s.status === 'done' || s.status === 'running') s.date = new Date().toISOString().slice(0, 10);
+    try {
+        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { stages });
+        _applications = _applications.map(a => a.id === id ? updated : a);
+        renderVagas();
+        renderDrawerBody(updated);
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
-function animateCounter(id, target) {
-    const el = document.getElementById(id);
-    const duration = 900;
-    const start = performance.now();
-    function step(now) {
-        const progress = Math.min((now - start) / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        el.textContent = Math.round(ease * target);
-        if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+async function toggleArchive(id, archived) {
+    try {
+        const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, { archived: !archived });
+        _applications = _applications.map(a => a.id === id ? updated : a);
+        renderVagas();
+        renderDrawerBody(updated);
+        showToast(archived ? 'Desarquivada' : 'Arquivada');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
-function renderChart() {
-    const max = Math.max(...FAKE_ANALYTICS.chart);
-    const wrap = document.getElementById('chartBars');
-    wrap.innerHTML = FAKE_ANALYTICS.chart.map((v, i) => `
-        <div class="chart-bar-wrap">
-            <div class="chart-bar" id="bar-${i}" style="max-height:80px"></div>
-            <div class="chart-day">${FAKE_ANALYTICS.days[i]}</div>
+async function deleteVaga(id) {
+    if (!confirm('Excluir candidatura?')) return;
+    try {
+        await dapi('DELETE', `/api/demo/applications?id=${id}`);
+        _applications = _applications.filter(a => a.id !== id);
+        renderVagas();
+        closeDrawer();
+        showToast('Excluída');
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openNewVaga() {
+    openModal('Nova candidatura (demo)', vagaFormHTML(null));
+    setTimeout(populateCvSelect, 50);
+}
+
+function editVaga(id) {
+    const app = _applications.find(a => a.id === id);
+    closeDrawer();
+    openModal('Editar candidatura', vagaFormHTML(app));
+    setTimeout(() => populateCvSelect(app), 50);
+}
+
+function vagaFormHTML(app) {
+    return `
+        <div class="row-2">
+            <div class="form-group-inline"><label>Empresa</label><input id="vfEmpresa" value="${esc(app?.empresa || '')}" placeholder="Targaryen Tech"></div>
+            <div class="form-group-inline"><label>Vaga</label><input id="vfVaga" value="${esc(app?.vaga || '')}" placeholder="QA Engineer"></div>
         </div>
-    `).join('');
-    // Animate bars
-    setTimeout(() => {
-        FAKE_ANALYTICS.chart.forEach((v, i) => {
-            const el = document.getElementById(`bar-${i}`);
-            if (el) el.style.height = `${(v / max) * 72}px`;
-        });
-    }, 50);
-}
-
-function renderVisitors() {
-    document.getElementById('visitorsList').innerHTML = FAKE_ANALYTICS.visitors.map(v => `
-        <div class="visitor-row">
-            <div class="visitor-left">
-                <span class="visitor-flag">🇧🇷</span>
-                <div>
-                    <div class="visitor-city">${v.city}</div>
-                    <div class="visitor-browser">${v.browser}</div>
-                </div>
+        <div class="row-2">
+            <div class="form-group-inline"><label>Gestor</label><input id="vfGestor" value="${esc(app?.gestor_nome || '')}" placeholder="Missandei"></div>
+            <div class="form-group-inline"><label>Email</label><input id="vfEmail" value="${esc(app?.gestor_email || '')}" placeholder="missandei@targaryentech.demo"></div>
+        </div>
+        <div class="row-2">
+            <div class="form-group-inline"><label>WhatsApp</label><input id="vfPhone" value="${esc(app?.gestor_phone || '')}" placeholder="99 99999-9999"></div>
+            <div class="form-group-inline"><label>CV</label><select id="vfCv"></select></div>
+        </div>
+        <div class="row-2">
+            <div class="form-group-inline"><label>Modalidade</label>
+                <select id="vfMod">
+                    <option value="">—</option>
+                    ${['Remota','Híbrida','Presencial'].map(m => `<option value="${m}" ${app?.modalidade === m ? 'selected' : ''}>${m}</option>`).join('')}
+                </select>
             </div>
-            <div class="visitor-ago">${v.ago} atrás</div>
+            <div class="form-group-inline"><label>Contratação</label>
+                <select id="vfTipo">
+                    <option value="">—</option>
+                    ${['CLT','PJ','Freelancer'].map(t => `<option value="${t}" ${app?.tipo_contratacao === t ? 'selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
         </div>
-    `).join('');
+        <div class="form-group-inline"><label>Observações</label><textarea id="vfObs" rows="3">${esc(app?.observacoes || '')}</textarea></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-cyan btn-sm" onclick="saveVaga('${app?.id || ''}')"><i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar'}</button>
+        </div>
+    `;
+}
+
+function populateCvSelect(app) {
+    const sel = document.getElementById('vfCv');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— sem CV —</option>' + _cvs.map(c => `<option value="${c.id}" ${app?.cv_version_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+}
+
+async function saveVaga(id) {
+    const body = {
+        empresa: document.getElementById('vfEmpresa').value.trim() || 'N/A',
+        vaga: document.getElementById('vfVaga').value.trim(),
+        gestor_nome: document.getElementById('vfGestor').value.trim(),
+        gestor_email: document.getElementById('vfEmail').value.trim(),
+        gestor_phone: document.getElementById('vfPhone').value.trim(),
+        cv_version_id: document.getElementById('vfCv').value || null,
+        modalidade: document.getElementById('vfMod').value || null,
+        tipo_contratacao: document.getElementById('vfTipo').value || null,
+        observacoes: document.getElementById('vfObs').value.trim(),
+    };
+    try {
+        if (id) {
+            const updated = await dapi('PUT', `/api/demo/applications?id=${id}`, body);
+            _applications = _applications.map(a => a.id === id ? updated : a);
+            showToast('Candidatura atualizada');
+        } else {
+            body.stages = [{ name: 'Enviado', status: 'running', date: new Date().toISOString().slice(0, 10) }];
+            const created = await dapi('POST', '/api/demo/applications', body);
+            _applications.unshift(created);
+            showToast('Candidatura criada');
+        }
+        closeModal();
+        renderVagas();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function switchVagasSubtab(name) {
+    document.getElementById('subtab-lista').classList.toggle('active', name === 'lista');
+    document.getElementById('subtab-analise').classList.toggle('active', name === 'analise');
+    document.getElementById('vagasListView').style.display = name === 'lista' ? 'block' : 'none';
+    document.getElementById('vagasAnalysisView').style.display = name === 'analise' ? 'block' : 'none';
+    if (name === 'analise') renderVagasAnalysis();
+}
+
+let _vagasChart = null;
+function renderVagasAnalysis() {
+    const active = _applications.filter(a => !a.archived);
+    document.getElementById('vkpi-total').textContent = active.length;
+    document.getElementById('vkpi-processo').textContent = active.filter(a => (a.result || 'em_processo') === 'em_processo').length;
+    document.getElementById('vkpi-aprovado').textContent = active.filter(a => a.result === 'aprovado').length;
+    document.getElementById('vkpi-recusado').textContent = active.filter(a => a.result === 'recusado').length;
+
+    // Chart por dia da semana
+    const dows = [0,0,0,0,0,0,0];
+    active.forEach(a => { if (a.data_envio) dows[new Date(a.data_envio).getDay()]++; });
+    const ctx = document.getElementById('vagasChart');
+    if (_vagasChart) _vagasChart.destroy();
+    _vagasChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'], datasets: [{ label: 'Candidaturas', data: dows, backgroundColor: '#22d3ee', borderRadius: 5 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#5c5c80' }, grid: { color: '#1e1e2e' }, beginAtZero: true }, x: { ticks: { color: '#5c5c80' }, grid: { display: false } } } }
+    });
+
+    // Distribuições
+    function dist(key, root) {
+        const cnt = {};
+        active.forEach(a => { const v = a[key] || '—'; cnt[v] = (cnt[v] || 0) + 1; });
+        const total = active.length || 1;
+        const sorted = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
+        document.getElementById(root).innerHTML = sorted.map(([k, v]) =>
+            `<div class="metrics-row"><span class="metrics-row-label">${esc(k)}</span><span class="metrics-row-value">${v} (${Math.round(v/total*100)}%)</span></div>`
+        ).join('') || '<div style="color:var(--text-dim);font-size:0.78rem">Sem dados.</div>';
+    }
+    dist('result', 'distResult');
+    dist('modalidade', 'distModalidade');
+    dist('tipo_contratacao', 'distTipo');
+}
+
+// ════════════════════════════════════════════════════════
+// MÉTRICAS / ANALYTICS
+// ════════════════════════════════════════════════════════
+function setPeriod(p) {
+    _period = p;
+    document.querySelectorAll('.metrics-period-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.period) === p));
+    loadAnalytics();
+}
+
+let _analyticsChart = null;
+async function loadAnalytics() {
+    try {
+        _analytics = await dapi('GET', `/api/demo/analytics?period=${_period}`);
+        const k = _analytics.kpis;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+        set('kpi-pageviews', k.pageviews);
+        set('kpi-unique', k.unique_visitors);
+        set('kpi-engaged', k.engaged_rate + '%');
+        set('kpi-engaged-rate', k.engaged_rate + '% das visitas');
+        set('kpi-cv-clicks', k.cv_download_clicks);
+        set('kpi-cv-downloads', k.cv_downloads);
+        set('kpi-conversion', k.conversion_rate + '% conversão');
+        set('kpi-recurring', k.recurring_visitors);
+        document.getElementById('metricsChartTitle').textContent = `Visitas dos últimos ${_period} dia${_period === 1 ? '' : 's'}`;
+
+        // Chart
+        const ctx = document.getElementById('analyticsChart');
+        if (_analyticsChart) _analyticsChart.destroy();
+        _analyticsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: _analytics.series.map(s => s.bucket.slice(5)),
+                datasets: [{
+                    label: 'Visitas', data: _analytics.series.map(s => s.pageviews),
+                    borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', tension: 0.3, fill: true, pointRadius: 3,
+                }, {
+                    label: 'Únicos', data: _analytics.series.map(s => s.unique_visitors),
+                    borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.05)', tension: 0.3, fill: false, pointRadius: 3,
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a8a8c0' } } }, scales: { y: { ticks: { color: '#5c5c80' }, grid: { color: '#1e1e2e' } }, x: { ticks: { color: '#5c5c80' }, grid: { display: false } } } }
+        });
+
+        // Funil
+        const f = _analytics.funnel;
+        const fMax = f.pageview || 1;
+        const fSteps = [['Visitas', f.pageview], ['Engajados', f.engaged], ['Cliques em CV', f.cv_click], ['Downloads', f.cv_download]];
+        document.getElementById('funnelSteps').innerHTML = fSteps.map(([l, v]) => {
+            const pct = Math.round((v / fMax) * 100);
+            return `<div class="metrics-funnel-step">
+                <span class="metrics-funnel-step-label">${l}</span>
+                <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" style="width:${pct}%"></div></div>
+                <span class="metrics-funnel-step-count">${v}</span>
+                <span class="metrics-funnel-step-pct">${pct}%</span>
+            </div>`;
+        }).join('');
+
+        // Panels
+        function panel(id, items, keyName, keyCount, fmt) {
+            const total = items.reduce((s, x) => s + (x[keyCount] || 0), 0) || 1;
+            document.getElementById(id).innerHTML = items.map(x => {
+                const v = x[keyCount];
+                return `<div class="metrics-row"><span class="metrics-row-label">${fmt ? fmt(x[keyName]) : esc(x[keyName])}</span><span class="metrics-row-value">${v} (${Math.round(v/total*100)}%)</span></div>`;
+            }).join('');
+        }
+        panel('topPages', _analytics.top_pages, 'path', 'count');
+        panel('topRefs', _analytics.top_referrers, 'host', 'count');
+        panel('topDevices', _analytics.devices, 'name', 'count');
+        panel('topCountries', _analytics.countries, 'name', 'count');
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════
+function openModal(title, html) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+
+// ════════════════════════════════════════════════════════
+// TOUR
+// ════════════════════════════════════════════════════════
+const TOUR = [
+    { target: '.app-header',         emoji: '👋', title: 'Bem-vindo ao painel admin',  body: 'Este é o painel real que uso para gerenciar minhas candidaturas. Tudo aqui é fictício (personagens de Game of Thrones) — feche a aba para resetar tudo.', tab: 'cvs' },
+    { target: '[data-tab="cvs"]',    emoji: '📄', title: 'Currículos versionados',     body: 'Cada CV adaptado fica salvo aqui. Posso ativar/desativar versões e enviar a certa para cada vaga. Os PDFs da demo são currículos fictícios de Jon Snow, Daenerys, Tyrion, Arya e Bran.', tab: 'cvs' },
+    { target: '[data-tab="tokens"]', emoji: '🔑', title: 'Tokens de acesso',           body: 'Gero links únicos com validade e limite de usos. O recrutador acessa o CV sem precisar de conta — e eu rastreio quem abriu.', tab: 'tokens' },
+    { target: '[data-tab="logs"]',   emoji: '📊', title: 'Logs de acesso',             body: 'Cada acesso, download ou envio por email/WhatsApp fica registrado aqui. IPs sempre mascarados como hash (LGPD).', tab: 'logs' },
+    { target: '[data-tab="vagas"]',  emoji: '💼', title: 'Gestão de candidaturas',     body: 'Toda candidatura registrada com etapas, observações e link com o recrutador. Clique em uma linha para abrir o detalhe.', tab: 'vagas' },
+    { target: '[data-tab="metricas"]', emoji: '📈', title: 'Métricas em tempo real',   body: 'KPIs do site público, série temporal de visitas e funil completo de conversão. Tudo construído com Chart.js + Supabase RPCs.', tab: 'metricas' },
+    { target: '#tourReplay',         emoji: '🎬', title: 'Pronto para explorar',       body: 'Pode interagir com qualquer aba. Tudo funciona de verdade contra o banco demo descartável. Clique no 🎬 a qualquer momento para refazer o tour.', tab: null },
+];
+let _tourStep = 0;
+
+function startTour() {
+    _tourStep = 0;
+    document.getElementById('tourOverlay').classList.add('open');
+    showStep();
+}
+function skipTour() {
+    document.getElementById('tourOverlay').classList.remove('open');
+    sessionStorage.setItem(TOUR_KEY, '1');
+}
+function prevStep() { if (_tourStep > 0) { _tourStep--; showStep(); } }
+function nextStep() {
+    if (_tourStep < TOUR.length - 1) { _tourStep++; showStep(); }
+    else skipTour();
+}
+function showStep() {
+    const s = TOUR[_tourStep];
+    if (s.tab && _activeTab !== s.tab) switchTab(s.tab);
+    document.getElementById('tourEmoji').textContent = s.emoji;
+    document.getElementById('tourTitle').textContent = s.title;
+    document.getElementById('tourBody').textContent = s.body;
+    document.getElementById('tourCounter').textContent = `${_tourStep + 1} / ${TOUR.length}`;
+    document.getElementById('tourPrev').style.visibility = _tourStep === 0 ? 'hidden' : 'visible';
+    document.getElementById('tourNext').textContent = _tourStep === TOUR.length - 1 ? 'Concluir' : 'Próximo';
+    setTimeout(() => positionTour(s.target), 100);
+}
+function positionTour(targetSel) {
+    const t = document.querySelector(targetSel);
+    if (!t) return;
+    const r = t.getBoundingClientRect();
+    const card = document.getElementById('tourCard');
+    const spot = document.getElementById('tourSpotlight');
+    const PAD = 8;
+    spot.style.cssText = `top:${r.top - PAD}px;left:${r.left - PAD}px;width:${r.width + 2 * PAD}px;height:${r.height + 2 * PAD}px;`;
+
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let top, left;
+    if (r.bottom + ch + 16 < vh) {
+        top = r.bottom + 14;
+        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width/2 - cw/2));
+    } else if (r.top - ch - 16 > 0) {
+        top = r.top - ch - 14;
+        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width/2 - cw/2));
+    } else {
+        top = Math.max(16, vh / 2 - ch / 2);
+        left = Math.max(16, vw / 2 - cw / 2);
+    }
+    card.style.cssText = `top:${top}px;left:${left}px;`;
+}
+window.addEventListener('resize', () => {
+    if (document.getElementById('tourOverlay').classList.contains('open')) positionTour(TOUR[_tourStep].target);
+});
+
+// ════════════════════════════════════════════════════════
+// AUTO-INIT
+// ════════════════════════════════════════════════════════
+if (sessionStorage.getItem(AUTH_KEY) === '1') {
+    revealApp();
 }
 </script>
+
 </body>
 </html>

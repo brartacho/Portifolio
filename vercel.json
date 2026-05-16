@@ -3,14 +3,28 @@
     {
       "path": "/api/track",
       "schedule": "0 8 */4 * *"
+    },
+    {
+      "path": "/api/demo/cleanup",
+      "schedule": "0 6 * * *"
     }
   ],
   "rewrites": [
     { "source": "/api/admin/analytics",       "destination": "/api/admin/applications?__h=analytics" },
     { "source": "/api/admin/login-attempts",   "destination": "/api/admin/applications?__h=login-attempts" },
     { "source": "/api/admin/mark-my-visits",   "destination": "/api/admin/applications?__h=mark-my-visits" },
+    { "source": "/api/admin/storage-stats",    "destination": "/api/admin/applications?__h=storage-stats" },
     { "source": "/api/admin/visitor-journey",  "destination": "/api/admin/applications?__h=visitor-journey" },
     { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
+    { "source": "/api/demo/config",        "destination": "/api/demo?resource=config" },
+    { "source": "/api/demo/init",          "destination": "/api/demo?resource=init" },
+    { "source": "/api/demo/cleanup",       "destination": "/api/demo?resource=cleanup" },
+    { "source": "/api/demo/health",        "destination": "/api/demo?resource=health" },
+    { "source": "/api/demo/analytics",     "destination": "/api/demo?resource=analytics" },
+    { "source": "/api/demo/applications",  "destination": "/api/demo?resource=applications" },
+    { "source": "/api/demo/cv-versions",   "destination": "/api/demo?resource=cv-versions" },
+    { "source": "/api/demo/tokens",        "destination": "/api/demo?resource=tokens" },
+    { "source": "/api/demo/logs",          "destination": "/api/demo?resource=logs" },
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },
     { "source": "/admin/reset", "destination": "/admin/reset.html" },
