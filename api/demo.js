@@ -319,6 +319,9 @@ async function handleLogs(req, res, session_id) {
         else if (tipo === 'whatsapp-attach') query = query.eq('ip_address', 'admin-send-whatsapp');
         else if (tipo === 'whatsapp')     query = query.like('ip_address', 'admin-send-whatsapp%');
 
+        if (req.query.from) query = query.gte('downloaded_at', `${req.query.from}T00:00:00`);
+        if (req.query.to)   query = query.lte('downloaded_at', `${req.query.to}T23:59:59.999`);
+
         if (search) {
             const s = search.replace(/[%_\\]/g, c => `\\${c}`);
             query = query.or(`cv_name_snapshot.ilike.%${s}%,empresa.ilike.%${s}%,vaga.ilike.%${s}%,user_agent.ilike.%${s}%`);
