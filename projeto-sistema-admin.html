@@ -95,6 +95,9 @@ button{font-family:inherit;cursor:pointer}
 .login-error{margin-top:10px;font-size:0.78rem;color:var(--danger);min-height:18px;text-align:center}
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
 .shake{animation:shake 0.4s ease}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px var(--bg-elevated) inset !important;-webkit-text-fill-color:var(--text) !important;transition:background-color 5000s ease-in-out 0s}
 
 .lgpd-note{display:flex;align-items:flex-start;gap:8px;font-size:0.7rem;color:var(--text-dim);text-align:left;margin-top:16px;padding:8px 10px;background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:7px;line-height:1.5}
 .lgpd-note i{color:var(--success);margin-top:1px}
@@ -310,9 +313,9 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
 /* Tour */
 .tour-overlay{position:fixed;inset:0;z-index:500;display:none;pointer-events:auto}
 .tour-overlay.open{display:block}
-.tour-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.7);transition:opacity 0.3s}
+.tour-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.7);transition:opacity 0.3s;pointer-events:none}
 .tour-spotlight{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.72),0 0 0 3px var(--cyan);transition:all 0.4s cubic-bezier(0.4,0,0.2,1);pointer-events:none}
-.tour-card{position:absolute;width:320px;max-width:calc(100vw - 40px);background:var(--bg-elevated);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.6);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
+.tour-card{position:absolute;z-index:2;width:320px;max-width:calc(100vw - 40px);background:var(--bg-elevated);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.6);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
 .tour-card h3{font-size:0.95rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .tour-card .tour-emoji{font-size:1.15rem}
 .tour-card p{font-size:0.82rem;color:var(--text-soft);line-height:1.55;margin-bottom:14px}
@@ -514,11 +517,6 @@ th.sort-active .sort-arrow{color:var(--cyan)}
 
             <!-- Honeypot anti-bot -->
             <input type="text" name="website" class="honeypot" id="hpWebsite" tabindex="-1" autocomplete="off">
-
-            <div class="login-hint">
-                <b>Email:</b> demo@artacho.dev<br>
-                <b>Senha:</b> demo2026
-            </div>
 
             <div id="turnstileWrap"></div>
 
@@ -1002,7 +1000,7 @@ async function doLogin() {
     const btn   = document.getElementById('btnLogin');
     const honey = document.getElementById('hpWebsite').value;
 
-    if (email !== 'demo@artacho.dev' || pass !== 'demo2026') {
+    if (email !== 'demo@artacho.dev' || pass !== 'Artacho2026!') {
         errEl.textContent = 'Credenciais incorretas.';
         document.getElementById('loginBox').classList.add('shake');
         setTimeout(() => document.getElementById('loginBox').classList.remove('shake'), 400);
@@ -1982,6 +1980,9 @@ let _tourStep = 0;
 
 function startTour() {
     _tourStep = 0;
+    const card = document.getElementById('tourCard');
+    const vw = window.innerWidth, vh = window.innerHeight;
+    card.style.cssText = `top:${Math.max(16, vh / 2 - 120)}px;left:${Math.max(16, vw / 2 - 160)}px;`;
     document.getElementById('tourOverlay').classList.add('open');
     showStep();
 }
@@ -2006,23 +2007,29 @@ function showStep() {
     setTimeout(() => positionTour(s.target), 100);
 }
 function positionTour(targetSel) {
-    const t = document.querySelector(targetSel);
-    if (!t) return;
-    const r = t.getBoundingClientRect();
     const card = document.getElementById('tourCard');
     const spot = document.getElementById('tourSpotlight');
+    const cw = card.offsetWidth || 320, ch = card.offsetHeight || 160;
+    const vw = window.innerWidth, vh = window.innerHeight;
+
+    const t = document.querySelector(targetSel);
+    if (!t) {
+        spot.style.cssText = `top:-9999px;left:-9999px;width:0;height:0;`;
+        card.style.cssText = `top:${Math.max(16, vh / 2 - ch / 2)}px;left:${Math.max(16, vw / 2 - cw / 2)}px;`;
+        return;
+    }
+
+    const r = t.getBoundingClientRect();
     const PAD = 8;
     spot.style.cssText = `top:${r.top - PAD}px;left:${r.left - PAD}px;width:${r.width + 2 * PAD}px;height:${r.height + 2 * PAD}px;`;
 
-    const cw = card.offsetWidth, ch = card.offsetHeight;
-    const vw = window.innerWidth, vh = window.innerHeight;
     let top, left;
     if (r.bottom + ch + 16 < vh) {
         top = r.bottom + 14;
-        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width/2 - cw/2));
+        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
     } else if (r.top - ch - 16 > 0) {
         top = r.top - ch - 14;
-        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width/2 - cw/2));
+        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
     } else {
         top = Math.max(16, vh / 2 - ch / 2);
         left = Math.max(16, vw / 2 - cw / 2);
