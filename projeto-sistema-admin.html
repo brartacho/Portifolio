@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -554,9 +553,7 @@ th.sort-active .sort-arrow{color:var(--cyan)}
     <nav class="app-tabs">
         <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
         <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key"></i> Tokens</button>
-        <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')"><i class="fa-solid fa-chart-bar"></i> Logs</button>
         <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase"></i> Vagas</button>
-        <button class="tab-btn" data-tab="metricas" onclick="switchTab('metricas')"><i class="fa-solid fa-chart-line"></i> Métricas</button>
     </nav>
 
     <div class="app-content">
@@ -723,57 +720,6 @@ th.sort-active .sort-arrow{color:var(--cyan)}
             </div>
         </div>
 
-        <!-- ─── LOGS ─── -->
-        <div class="tab-panel" id="tab-logs">
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-chart-bar"></i> Downloads realizados</div>
-                <div class="filter-bar">
-                    <div class="filter-search">
-                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar label, destinatário, currículo, IP…" oninput="_debouncedLogLoad()">
-                        <span class="th-filter-count" id="logCount"></span>
-                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <select class="th-filter-select" id="logTipoFilter" onchange="_resetAndLoadLogs()" style="width:210px;flex-shrink:0">
-                        <option value="">Todos os eventos</option>
-                        <option value="download">Acesso do recrutador</option>
-                        <option value="email">Envio por email</option>
-                        <option value="whatsapp">Envio WhatsApp (tudo)</option>
-                        <option value="whatsapp-link">Envio WhatsApp · link</option>
-                        <option value="whatsapp-attach">Envio WhatsApp · arquivo</option>
-                    </select>
-                    <div class="filter-date-group">
-                        <span class="th-filter-label">De</span>
-                        <input class="th-filter-input" type="date" id="logFrom" title="Data inicial" onchange="_resetAndLoadLogs()" style="width:135px">
-                        <span class="th-filter-label">Até</span>
-                        <input class="th-filter-input" type="date" id="logTo" title="Data final" onchange="_resetAndLoadLogs()" style="width:135px">
-                    </div>
-                </div>
-                <div class="tbl-wrap" id="logTblWrap">
-                    <div class="tbl-overlay" id="logOverlay">
-                        <span class="tbl-overlay-spinner">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando…
-                        </span>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="download_tokens.label" onclick="toggleSort('logs','download_tokens.label')">Token / Label<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="cv" onclick="toggleSort('logs','cv')">Currículo<span class="sort-arrow">↕</span></th>
-                                <th class="sortable" data-sort="ip_address" onclick="toggleSort('logs','ip_address')">IP<span class="sort-arrow">↕</span></th>
-                                <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="logTable"></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="logPagination" style="display:none">
-                    <button class="btn btn-sm" id="logPrevBtn" onclick="setLogPage(_logPage - 1)">‹ Anterior</button>
-                    <span id="logPageInfo"></span>
-                    <button class="btn btn-sm" id="logNextBtn" onclick="setLogPage(_logPage + 1)">Próxima ›</button>
-                </div>
-            </div>
-        </div>
-
         <!-- ─── VAGAS ─── -->
         <div class="tab-panel" id="tab-vagas">
             <div class="vagas-subtabs">
@@ -910,42 +856,6 @@ th.sort-active .sort-arrow{color:var(--cyan)}
             </div>
         </div>
 
-        <!-- ─── MÉTRICAS ─── -->
-        <div class="tab-panel" id="tab-metricas">
-            <div class="metrics-period-bar">
-                <button class="metrics-period-btn" data-period="1" onclick="setPeriod(1)">Hoje</button>
-                <button class="metrics-period-btn active" data-period="7" onclick="setPeriod(7)">7 dias</button>
-                <button class="metrics-period-btn" data-period="30" onclick="setPeriod(30)">30 dias</button>
-                <button class="metrics-period-btn" data-period="90" onclick="setPeriod(90)">90 dias</button>
-                <button class="metrics-period-btn" data-period="365" onclick="setPeriod(365)">Ano</button>
-            </div>
-
-            <div class="metrics-kpis">
-                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Visitas</div><div class="metrics-kpi-value" id="kpi-pageviews">—</div></div>
-                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Visitantes únicos</div><div class="metrics-kpi-value" id="kpi-unique">—</div></div>
-                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Engajados</div><div class="metrics-kpi-value" id="kpi-engaged">—</div><div class="metrics-kpi-sub" id="kpi-engaged-rate">—%</div></div>
-                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Cliques em CV</div><div class="metrics-kpi-value" id="kpi-cv-clicks">—</div></div>
-                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Downloads</div><div class="metrics-kpi-value" id="kpi-cv-downloads">—</div><div class="metrics-kpi-sub" id="kpi-conversion">—% conversão</div></div>
-                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Recorrentes</div><div class="metrics-kpi-value" id="kpi-recurring">—</div></div>
-            </div>
-
-            <div class="metrics-chart-card">
-                <h4 id="metricsChartTitle">Visitas dos últimos 7 dias</h4>
-                <div style="position:relative;height:200px"><canvas id="analyticsChart"></canvas></div>
-            </div>
-
-            <div class="metrics-funnel-card">
-                <h4>Funil de conversão</h4>
-                <div id="funnelSteps"></div>
-            </div>
-
-            <div class="metrics-panels-grid">
-                <div class="metrics-panel"><h4>Top páginas</h4><div id="topPages"></div></div>
-                <div class="metrics-panel"><h4>Top referrers</h4><div id="topRefs"></div></div>
-                <div class="metrics-panel"><h4>Devices</h4><div id="topDevices"></div></div>
-                <div class="metrics-panel"><h4>Países</h4><div id="topCountries"></div></div>
-            </div>
-        </div>
     </div>
 
     <footer class="app-footer"><span>//</span> ARTACHO.dev · demo · banco descartável · LGPD compliant</footer>
@@ -961,17 +871,6 @@ th.sort-active .sort-arrow{color:var(--cyan)}
     <div class="drawer-body" id="drawerBody"></div>
 </aside>
 
-
-
-<!-- ─── LOG DETAIL DRAWER ─── -->
-<div class="log-drawer-overlay" id="logDrawerOverlay" onclick="closeLogDetail()"></div>
-<div class="log-drawer" id="logDrawer">
-    <div class="log-drawer-header">
-        <span id="ldTitle">Detalhes do evento</span>
-        <button class="drawer-close" onclick="closeLogDetail()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="log-drawer-body" id="ldBody"></div>
-</div>
 
 <!-- ─── SHARE MODAL (criação de token) ─── -->
 <div class="modal-overlay" id="shareModal">
@@ -1159,7 +1058,7 @@ document.addEventListener('keydown', e => {
 // ════════════════════════════════════════════════════════
 // STATE + HELPERS
 // ════════════════════════════════════════════════════════
-let _cvs = [], _tokens = [], _logs = [], _applications = [], _analytics = null;
+let _cvs = [], _tokens = [], _applications = [];
 let _vagasFilter = 'all';
 let _vagasModalidadeFilter = 'all';
 let _vagasTipoFilter = 'all';
@@ -1167,17 +1066,11 @@ let _vagasSort = { col: 'data_envio', dir: 'desc' };
 let _selectedExpiry = 24;
 let _expiryDateValue = null;
 let _activeTab = 'cvs';
-let _period = 7;
 let _openAppId = null;
 
 // Sort state por tabela
-let _cvSort     = { col: 'created_at',  dir: 'desc' };
-let _tokenSort  = { col: 'expires_at',  dir: 'asc'  };
-let _logSort    = { col: 'downloaded_at', dir: 'desc' };
-
-// Logs paginação client-side
-let _logPage = 1, _logTotal = 0, _logPages = 1, _logSearchTimer = null;
-const LOG_PAGE_SIZE = 50;
+let _cvSort    = { col: 'created_at', dir: 'desc' };
+let _tokenSort = { col: 'expires_at', dir: 'asc'  };
 
 // Vagas analysis
 let _vagasAnalysisPeriod = 'month';
@@ -1204,16 +1097,15 @@ function _sortData(arr, col, dir) {
     });
 }
 function toggleSort(table, col) {
-    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : table === 'logs' ? _logSort : null;
+    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : null;
     if (!state) return;
     if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
     else { state.col = col; state.dir = 'asc'; }
     if (table === 'cvs')    renderCVs();
     if (table === 'tokens') renderTokens();
-    if (table === 'logs')   { _logPage = 1; renderLogs(); }
 }
 function updateSortHeaders(table) {
-    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : _logSort;
+    const state = table === 'cvs' ? _cvSort : _tokenSort;
     const tab = document.getElementById(`tab-${table}`);
     if (!tab) return;
     tab.querySelectorAll('th.sortable').forEach(th => {
@@ -1292,9 +1184,7 @@ function switchTab(name) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
     if (name === 'cvs') loadCVs();
     else if (name === 'tokens') loadTokens();
-    else if (name === 'logs') loadLogs();
     else if (name === 'vagas') loadVagas();
-    else if (name === 'metricas') loadAnalytics();
     setRefreshTs();
 }
 
@@ -1573,180 +1463,6 @@ async function deleteToken(id, label) {
         showToast('Token excluído');
         loadTokens();
     } catch (e) { showToast(e.message, 'error'); }
-}
-
-// ════════════════════════════════════════════════════════
-// LOGS
-// ════════════════════════════════════════════════════════
-function smartLogLabel(l) {
-    if (l.download_tokens?.label) return esc(l.download_tokens.label);
-    if (l.label_snapshot) return esc(l.label_snapshot);
-    const ip = l.ip_address || '';
-    const ua = l.user_agent || '';
-    if (ip.startsWith('admin-send-')) {
-        const channel = ip.replace('admin-send-', '');
-        const m = ua.match(/^Send to ([^<\(]+?)(?:\s*<|\s+via|\s*$)/);
-        const recipient = m ? m[1].trim() : '?';
-        const channelLabel = channel === 'whatsapp-link' ? 'WhatsApp · link'
-                           : channel === 'whatsapp'      ? 'WhatsApp · arquivo'
-                           : channel === 'email'         ? 'Email'
-                           : channel;
-        return `<span title="${esc(ua)}">${esc(channelLabel)} · <strong>${esc(recipient)}</strong></span>`;
-    }
-    if (ua && !ua.startsWith('Send to')) {
-        return '<span style="color:var(--text-dim)" title="Download direto via token">(download direto)</span>';
-    }
-    return '<span style="color:var(--text-dim)">(sem label)</span>';
-}
-
-function smartCvName(l) {
-    const live = l.demo_cv_versions?.name || l.cv_versions?.name;
-    const snap = l.cv_name_snapshot;
-    if (live) return esc(live);
-    if (snap) {
-        return `${esc(snap)} <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--danger);background:var(--danger-soft);border:1px solid rgba(239,68,68,0.2);padding:1px 6px;border-radius:4px;margin-left:4px">excluído</span>`;
-    }
-    return '<span style="color:var(--text-dim)">—</span>';
-}
-
-function _showLogOverlay()  { document.getElementById('logOverlay')?.classList.add('visible'); }
-function _hideLogOverlay()  { document.getElementById('logOverlay')?.classList.remove('visible'); }
-
-function _renderLogSkeletons(n = 10) {
-    const widths = [['58%','65%','72%','40%'],['45%','75%','55%','50%'],['70%','45%','68%','55%'],['52%','60%','78%','45%'],['65%','52%','50%','60%']];
-    document.getElementById('logTable').innerHTML = Array.from({ length: n }, (_, i) => {
-        const w = widths[i % widths.length];
-        return `<tr class="skel-row"><td><span class="skel-cell" style="width:${w[0]}"></span></td><td><span class="skel-cell" style="width:${w[1]}"></span></td><td><span class="skel-cell" style="width:${w[2]}"></span></td><td><span class="skel-cell" style="width:${w[3]}"></span></td></tr>`;
-    }).join('');
-}
-
-async function loadLogs() {
-    const search = document.getElementById('logSearch')?.value || '';
-    const tipo   = document.getElementById('logTipoFilter')?.value || '';
-    const from   = document.getElementById('logFrom')?.value || '';
-    const to     = document.getElementById('logTo')?.value || '';
-
-    if (!document.getElementById('logTable').children.length) _renderLogSkeletons();
-    _showLogOverlay();
-
-    try {
-        const params = new URLSearchParams({ limit: '200', page: '1' });
-        if (search) params.set('search', search);
-        if (tipo)   params.set('tipo', tipo);
-        if (from)   params.set('from', from);
-        if (to)     params.set('to', to);
-        const r = await dapi('GET', `/api/demo/logs?${params}`);
-        const all = _normalizeCv(r.data || r);
-        _logTotal = all.length;
-        // Sort client-side
-        const sorted = _sortData(all, _logSort.col, _logSort.dir);
-        _logPages = Math.max(1, Math.ceil(_logTotal / LOG_PAGE_SIZE));
-        if (_logPage > _logPages) _logPage = _logPages;
-        const start = (_logPage - 1) * LOG_PAGE_SIZE;
-        _logs = sorted.slice(start, start + LOG_PAGE_SIZE);
-        renderLogs();
-        _updateLogPagination();
-    } catch (e) {
-        showToast(e.message, 'error');
-    } finally {
-        _hideLogOverlay();
-    }
-}
-
-function _debouncedLogLoad() {
-    _logPage = 1;
-    _showLogOverlay();
-    clearTimeout(_logSearchTimer);
-    _logSearchTimer = setTimeout(loadLogs, 300);
-}
-function _resetAndLoadLogs() { _logPage = 1; loadLogs(); }
-function setLogPage(p) {
-    const np = Math.max(1, Math.min(_logPages || 1, p));
-    if (np === _logPage) return;
-    _logPage = np;
-    loadLogs();
-}
-function _updateLogPagination() {
-    const el = document.getElementById('logPagination');
-    if (!el) return;
-    if (_logPages <= 1) { el.style.display = 'none'; return; }
-    el.style.display = 'flex';
-    document.getElementById('logPrevBtn').disabled = _logPage <= 1;
-    document.getElementById('logNextBtn').disabled = _logPage >= _logPages;
-    document.getElementById('logPageInfo').textContent = `Página ${_logPage} de ${_logPages}`;
-}
-
-function renderLogs() {
-    updateSortHeaders('logs');
-    const countEl = document.getElementById('logCount');
-    if (countEl) countEl.textContent = _logTotal ? `${_logTotal} registros` : '';
-
-    const tb = document.getElementById('logTable');
-    if (!_logs.length) {
-        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum resultado</td></tr>';
-        return;
-    }
-    tb.innerHTML = _logs.map((l, i) => `
-        <tr class="row-clickable" onclick="openLogDetail(${i})">
-            <td>${smartLogLabel(l)}</td>
-            <td>${smartCvName(l)}</td>
-            <td style="font-family:var(--font-mono);font-size:0.78rem">${esc(l.ip_address || '—')}</td>
-            <td style="font-size:0.78rem;color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</td>
-        </tr>
-    `).join('');
-}
-
-function clearLogFilters() {
-    ['logSearch', 'logFrom', 'logTo', 'logTipoFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    _logSort = { col: 'downloaded_at', dir: 'desc' };
-    _logPage = 1;
-    loadLogs();
-}
-
-// ─── Log detail drawer ────────────────────────────────────
-function openLogDetail(idx) {
-    const l = _logs[idx];
-    if (!l) return;
-    renderLogDetail(l);
-    document.getElementById('logDrawer').classList.add('open');
-    document.getElementById('logDrawerOverlay').classList.add('open');
-}
-function closeLogDetail() {
-    document.getElementById('logDrawer').classList.remove('open');
-    document.getElementById('logDrawerOverlay').classList.remove('open');
-}
-function renderLogDetail(l) {
-    const channel = (l.ip_address || '').startsWith('admin-send-') ? l.ip_address.replace('admin-send-', '') : null;
-    const channelLabel = channel === 'whatsapp-link' ? 'WhatsApp (link rastreado)'
-                       : channel === 'whatsapp-attach' ? 'WhatsApp (arquivo)'
-                       : channel === 'whatsapp' ? 'WhatsApp'
-                       : channel === 'email' ? 'Email'
-                       : channel ? channel
-                       : 'Download direto';
-    const cvName = (l.demo_cv_versions?.name || l.cv_versions?.name || l.cv_name_snapshot || '—');
-    const tokenLabel = (l.demo_download_tokens?.label || l.download_tokens?.label || '—');
-
-    document.getElementById('ldTitle').textContent = channelLabel;
-    document.getElementById('ldBody').innerHTML = `
-        <div class="ld-section">
-            <div class="ld-section-title">Identificação</div>
-            <div class="ld-row"><strong>Canal</strong><span>${esc(channelLabel)}</span></div>
-            <div class="ld-row"><strong>Token / Label</strong><span>${esc(tokenLabel)}</span></div>
-            <div class="ld-row"><strong>Currículo</strong><span>${esc(cvName)}</span></div>
-        </div>
-        ${l.empresa || l.vaga ? `
-        <div class="ld-section">
-            <div class="ld-section-title">Contexto</div>
-            ${l.empresa ? `<div class="ld-row"><strong>Empresa</strong><span>${esc(l.empresa)}</span></div>` : ''}
-            ${l.vaga ? `<div class="ld-row"><strong>Vaga</strong><span>${esc(l.vaga)}</span></div>` : ''}
-        </div>` : ''}
-        <div class="ld-section">
-            <div class="ld-section-title">Rastreio</div>
-            <div class="ld-row"><strong>IP</strong><span class="ld-mono">${esc(l.ip_address || '—')}</span></div>
-            <div class="ld-row"><strong>User-Agent</strong><span class="ld-mono" style="font-size:0.72rem">${esc(l.user_agent || '—')}</span></div>
-            <div class="ld-row"><strong>Data/hora</strong><span>${fmtDate(l.downloaded_at, true)}</span></div>
-        </div>
-    `;
 }
 
 // ════════════════════════════════════════════════════════
@@ -2242,78 +1958,6 @@ function renderVagasAnalysis() {
 }
 
 // ════════════════════════════════════════════════════════
-// MÉTRICAS / ANALYTICS
-// ════════════════════════════════════════════════════════
-function setPeriod(p) {
-    _period = p;
-    document.querySelectorAll('.metrics-period-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.period) === p));
-    loadAnalytics();
-}
-
-let _analyticsChart = null;
-async function loadAnalytics() {
-    try {
-        _analytics = await dapi('GET', `/api/demo/analytics?period=${_period}`);
-        const k = _analytics.kpis;
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
-        set('kpi-pageviews', k.pageviews);
-        set('kpi-unique', k.unique_visitors);
-        set('kpi-engaged', k.engaged_rate + '%');
-        set('kpi-engaged-rate', k.engaged_rate + '% das visitas');
-        set('kpi-cv-clicks', k.cv_download_clicks);
-        set('kpi-cv-downloads', k.cv_downloads);
-        set('kpi-conversion', k.conversion_rate + '% conversão');
-        set('kpi-recurring', k.recurring_visitors);
-        document.getElementById('metricsChartTitle').textContent = `Visitas dos últimos ${_period} dia${_period === 1 ? '' : 's'}`;
-
-        // Chart
-        const ctx = document.getElementById('analyticsChart');
-        if (_analyticsChart) _analyticsChart.destroy();
-        _analyticsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: _analytics.series.map(s => s.bucket.slice(5)),
-                datasets: [{
-                    label: 'Visitas', data: _analytics.series.map(s => s.pageviews),
-                    borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', tension: 0.3, fill: true, pointRadius: 3,
-                }, {
-                    label: 'Únicos', data: _analytics.series.map(s => s.unique_visitors),
-                    borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.05)', tension: 0.3, fill: false, pointRadius: 3,
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a8a8c0' } } }, scales: { y: { ticks: { color: '#5c5c80' }, grid: { color: '#1e1e2e' } }, x: { ticks: { color: '#5c5c80' }, grid: { display: false } } } }
-        });
-
-        // Funil
-        const f = _analytics.funnel;
-        const fMax = f.pageview || 1;
-        const fSteps = [['Visitas', f.pageview], ['Engajados', f.engaged], ['Cliques em CV', f.cv_click], ['Downloads', f.cv_download]];
-        document.getElementById('funnelSteps').innerHTML = fSteps.map(([l, v]) => {
-            const pct = Math.round((v / fMax) * 100);
-            return `<div class="metrics-funnel-step">
-                <span class="metrics-funnel-step-label">${l}</span>
-                <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" style="width:${pct}%"></div></div>
-                <span class="metrics-funnel-step-count">${v}</span>
-                <span class="metrics-funnel-step-pct">${pct}%</span>
-            </div>`;
-        }).join('');
-
-        // Panels
-        function panel(id, items, keyName, keyCount, fmt) {
-            const total = items.reduce((s, x) => s + (x[keyCount] || 0), 0) || 1;
-            document.getElementById(id).innerHTML = items.map(x => {
-                const v = x[keyCount];
-                return `<div class="metrics-row"><span class="metrics-row-label">${fmt ? fmt(x[keyName]) : esc(x[keyName])}</span><span class="metrics-row-value">${v} (${Math.round(v/total*100)}%)</span></div>`;
-            }).join('');
-        }
-        panel('topPages', _analytics.top_pages, 'path', 'count');
-        panel('topRefs', _analytics.top_referrers, 'host', 'count');
-        panel('topDevices', _analytics.devices, 'name', 'count');
-        panel('topCountries', _analytics.countries, 'name', 'count');
-    } catch (e) { showToast(e.message, 'error'); }
-}
-
-// ════════════════════════════════════════════════════════
 // MODAL
 // ════════════════════════════════════════════════════════
 function openModal(title, html) {
@@ -2331,9 +1975,7 @@ const TOUR = [
     { target: '.app-header',         emoji: '👋', title: 'Bem-vindo ao painel admin',  body: 'Este é o painel real que uso para gerenciar minhas candidaturas. Os dados são fictícios e isolados na sua sessão — feche a aba para resetar tudo.', tab: 'cvs' },
     { target: '[data-tab="cvs"]',    emoji: '📄', title: 'Currículos versionados',     body: 'Cada versão do CV (geral, automation, SDET, bilíngue, etc.) fica salva aqui. Posso ativar/desativar versões e enviar a certa para cada tipo de vaga.', tab: 'cvs' },
     { target: '[data-tab="tokens"]', emoji: '🔑', title: 'Tokens de acesso',           body: 'Gero links únicos com validade e limite de usos. O recrutador acessa o CV sem precisar de conta — e eu rastreio quem abriu.', tab: 'tokens' },
-    { target: '[data-tab="logs"]',   emoji: '📊', title: 'Logs de acesso',             body: 'Cada acesso, download ou envio por email/WhatsApp fica registrado aqui. IPs sempre mascarados como hash anônimo (LGPD).', tab: 'logs' },
     { target: '[data-tab="vagas"]',  emoji: '💼', title: 'Gestão de candidaturas',     body: 'Toda candidatura registrada com etapas, observações e link com o recrutador. Clique em uma linha para abrir o detalhe.', tab: 'vagas' },
-    { target: '[data-tab="metricas"]', emoji: '📈', title: 'Métricas em tempo real',   body: 'KPIs do site público, série temporal de visitas e funil completo de conversão. Tudo construído com Chart.js + Supabase RPCs.', tab: 'metricas' },
     { target: '#tourReplay',         emoji: '🎬', title: 'Pronto para explorar',       body: 'Pode interagir com qualquer aba. Tudo funciona de verdade contra o banco demo descartável. Clique no 🎬 a qualquer momento para refazer o tour.', tab: null },
 ];
 let _tourStep = 0;

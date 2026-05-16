@@ -328,7 +328,80 @@ test.describe('Bot detection no login — Fase 1', () => {
     });
 });
 
-// ─── 7. Rate limiting — força bruta (opt-in) ─────────────────────────────────
+// ─── 8. Anti-regressão: assets self-hosted do admin ──────────────────────────
+// Garante que /admin carrega sem violações de CSP e que os 4 grupos de assets
+// (fontes, Font Awesome, Sortable, Chart.js) estão em paths locais. Se alguém
+// reintroduzir CDN externo, o CSP estrito da Fase 1 bloqueia e estes testes
+// falham rápido — pegando a regressão antes do deploy.
+
+test.describe('Admin assets self-hosted — anti-regressão CSP', () => {
+    test('GET /admin/assets/fonts/fonts.css → 200', async ({ request }) => {
+        const r = await request.get(`${BASE}/admin/assets/fonts/fonts.css`);
+        expect(r.status()).toBe(200);
+        expect(r.headers()['content-type']).toMatch(/css/);
+    });
+
+    test('GET /admin/assets/fontawesome/css/all.min.css → 200', async ({ request }) => {
+        const r = await request.get(`${BASE}/admin/assets/fontawesome/css/all.min.css`);
+        expect(r.status()).toBe(200);
+    });
+
+    test('GET /admin/assets/js/sortable.min.js → 200 (javascript)', async ({ request }) => {
+        const r = await request.get(`${BASE}/admin/assets/js/sortable.min.js`);
+        expect(r.status()).toBe(200);
+        expect(r.headers()['content-type']).toMatch(/javascript/);
+    });
+
+    test('GET /admin/assets/js/chart.umd.min.js → 200', async ({ request }) => {
+        const r = await request.get(`${BASE}/admin/assets/js/chart.umd.min.js`);
+        expect(r.status()).toBe(200);
+    });
+
+    test('/admin carrega sem violações de CSP no console', async ({ page }) => {
+        // Ignora script injetado pelo Vercel apenas em deploys de preview
+        // (vercel.live/_next-live/feedback/feedback.js) — não existe em produção.
+        const VERCEL_LIVE_PREVIEW = /vercel\.live\/_next-live\/feedback/;
+        const cspViolations = [];
+        page.on('console', msg => {
+            const txt = msg.text();
+            if (msg.type() === 'error' && /content security policy|refused to load/i.test(txt) && !VERCEL_LIVE_PREVIEW.test(txt)) {
+                cspViolations.push(txt);
+            }
+        });
+        await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+        expect(cspViolations).toEqual([]);
+    });
+
+    test('/admin aplica tipografia Plus Jakarta Sans no body', async ({ page }) => {
+        await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+        const family = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+        expect(family).toMatch(/Plus Jakarta Sans/i);
+    });
+
+    test('/admin expõe globais Sortable e Chart', async ({ page }) => {
+        await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+        const flags = await page.evaluate(() => ({
+            sortable: typeof window.Sortable,
+            chart: typeof window.Chart,
+        }));
+        expect(flags.sortable).toBe('function');
+        expect(flags.chart).toBe('function');
+    });
+
+    test('/admin renderiza ícone Font Awesome com largura > 0', async ({ page }) => {
+        await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+        // pwToggleIcon (eye da senha) é uma das primeiras instâncias visíveis.
+        // Quando FA falha em carregar, o ícone fica com width 0.
+        const w = await page.evaluate(() => {
+            const el = document.getElementById('pwToggleIcon');
+            return el ? el.getBoundingClientRect().width : 0;
+        });
+        expect(w).toBeGreaterThan(8);
+    });
+});
+
+
+// ─── 9. Rate limiting — força bruta (opt-in) ─────────────────────────────────
 
 test.describe('Rate limiting — força bruta no login', () => {
     test.skip(!RUN_BRUTE_FORCE,
