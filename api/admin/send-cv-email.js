@@ -64,7 +64,7 @@ const EMAIL_SIGNATURE_HTML = `
 export default async function handler(req, res) {
     cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
-    if (!requireAdmin(req, res)) return;
+    if (!await requireAdmin(req, res)) return;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     // Rate limit: max 20 envios/h por IP (admin é só 1 pessoa, isso é folga grande)

@@ -69,6 +69,14 @@ export async function notifySecurityEvent({ kind, ip, ua, country, details }) {
                 title = '🤖 *Bot detectado na tela de login*';
                 body = `UA/honeypot/timing acusou automação.`;
                 break;
+            case 'session_country_change':
+                title = '🌍 *Sessão encerrada — mudança de país*';
+                body = `Sessão revogada automaticamente. Se foi você viajando, faça login novamente.`;
+                break;
+            case 'session_revoked':
+                title = '🔒 *Sessão revogada manualmente*';
+                body = details || 'Revogação solicitada pelo painel admin.';
+                break;
             default:
                 title = '🔔 *Evento de segurança*';
                 body = details || '(sem detalhes)';

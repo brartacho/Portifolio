@@ -17,7 +17,7 @@ const MAX_LIMIT = 100;
 export default async function handler(req, res) {
     cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
-    if (!requireAdmin(req, res)) return;
+    if (!await requireAdmin(req, res)) return;
     // Log-share — roteado de /api/admin/log-share via rewrite
     if (req.query.__h === 'share') {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
