@@ -9,6 +9,7 @@
     { "source": "/api/admin/analytics",       "destination": "/api/admin/applications?__h=analytics" },
     { "source": "/api/admin/login-attempts",   "destination": "/api/admin/applications?__h=login-attempts" },
     { "source": "/api/admin/mark-my-visits",   "destination": "/api/admin/applications?__h=mark-my-visits" },
+    { "source": "/api/admin/visitor-journey",  "destination": "/api/admin/applications?__h=visitor-journey" },
     { "source": "/api/admin/log-share", "destination": "/api/admin/logs?__h=share" },
     { "source": "/cv",          "destination": "/cv.html" },
     { "source": "/admin",       "destination": "/admin/index.html" },

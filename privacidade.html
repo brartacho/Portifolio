@@ -31,6 +31,7 @@
         .highlight { color: var(--text); }
         hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
     </style>
+    <script src="/analytics.js" defer></script>
 </head>
 <body>
     <div class="wrap">
@@ -49,6 +50,9 @@
             <li>Nenhum perfil de usuário é construído ao longo do tempo</li>
             <li>Nenhum dado é compartilhado com terceiros</li>
         </ul>
+
+        <h2>Identificador de sessão</h2>
+        <p>É armazenado no <em>localStorage</em> do seu navegador um identificador aleatório de sessão que expira após 30 minutos de inatividade. Ele agrupa cliques e navegação da mesma visita para medir métricas como taxa de retorno e páginas por sessão. Esse identificador não está vinculado a você e pode ser apagado a qualquer momento limpando os dados do site no seu navegador.</p>
 
         <h2>Como funciona a anonimização</h2>
         <p>Cada visita gera um identificador temporário calculado a partir do seu IP, do seu navegador e de uma chave secreta que muda diariamente. O resultado é um código criptográfico que não permite reconstruir os dados originais. No dia seguinte, o mesmo navegador produz um código diferente.</p>
