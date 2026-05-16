@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createHash, randomUUID } from 'node:crypto';
 import { cors } from '../_lib/auth.js';
+import { serializeSessionCookie } from '../_lib/cookies.js';
 import { getSupabase } from '../_lib/supabase.js';
 import { checkLoginRateLimit, recordLoginFailure, clientIp } from '../_lib/rate-limit.js';
 import { notifySecurityEvent } from '../_lib/notify.js';
@@ -11,6 +13,12 @@ import {
     checkHoneypot,
     checkFillTime,
 } from '../_lib/bot-detection.js';
+
+function computeDfp(req) {
+    const ua = req.headers['user-agent'] || '';
+    const lang = req.headers['accept-language'] || '';
+    return createHash('sha256').update(`${ua}|${lang}`).digest('hex');
+}
 
 // Quantos dias olhar pra trás ao decidir se um IP é "novo"
 const NEW_IP_LOOKBACK_DAYS = 30;
@@ -168,6 +176,24 @@ export default async function handler(req, res) {
         }
     }).catch(() => { /* swallow */ });
 
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' });
-    return res.status(200).json({ token });
+    const jti = randomUUID();
+    const dfp = computeDfp(req);
+    const token = jwt.sign(
+        { role: 'admin', jti, dfp },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    try {
+        await supabase.from('admin_sessions').insert({
+            jti,
+            device_fingerprint: dfp,
+            ip_address: ip,
+            user_agent: (req.headers['user-agent'] || '').slice(0, 500),
+            country_code: req.headers['cf-ipcountry'] || null,
+        });
+    } catch { /* Supabase indisponível — degradação aceitável no login */ }
+
+    res.setHeader('Set-Cookie', serializeSessionCookie(token));
+    return res.status(200).json({ ok: true });
 }
