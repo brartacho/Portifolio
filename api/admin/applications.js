@@ -91,7 +91,7 @@ export default async function handler(req, res) {
                emailRes, downloadsRes, seriesRes, topPagesRes, referrersRes,
                utmRes, devicesRes, countriesRes, recurringRes,
                latestVisitsRes, latestClicksRes, topRecurringRes,
-               projectClicksRes, contactClicksRes, adminLockRes] = await Promise.all([
+               projectClicksRes, contactClicksRes, adminLockRes, demoRes] = await Promise.all([
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'pageview').gte('occurred_at', f).lte('occurred_at', t)),
             supabase.rpc('analytics_unique_visitors', { from_ts: f, to_ts: t, exclude_admin: excAdm }),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'engaged').gte('occurred_at', f).lte('occurred_at', t)),
@@ -113,6 +113,7 @@ export default async function handler(req, res) {
             adminFilter(supabase.from('site_events').select('meta').eq('event', 'project_click').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('meta').eq('event', 'contact_click').gte('occurred_at', f).lte('occurred_at', t)),
             adminFilter(supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'admin_lock_click').gte('occurred_at', f).lte('occurred_at', t)),
+            supabase.from('site_events').select('id', { count: 'exact', head: true }).eq('event', 'demo_access').gte('occurred_at', f).lte('occurred_at', t),
         ]);
 
         const aggBy = (rows, key) => Object.entries((rows || []).reduce((acc, r) => {
@@ -159,6 +160,7 @@ export default async function handler(req, res) {
                 'target'
             ),
             admin_lock_clicks: adminLockRes.count ?? 0,
+            demo_accesses: demoRes.count ?? 0,
             funnel: {
                 pageview:    pageviews,
                 engaged,

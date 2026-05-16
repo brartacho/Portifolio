@@ -3,7 +3,7 @@ import { getSupabase } from './_lib/supabase.js';
 
 const ALLOWED_EVENTS = new Set([
     'pageview', 'cv_download_click', 'email_request',
-    'contact_click', 'case_open', 'engaged',
+    'contact_click', 'case_open', 'engaged', 'demo_access',
 ]);
 
 const BOT_RE = /bot|crawl|spider|preview|slack|telegram|whatsapp|facebook|twitter|linkedinbot|google-structured|bytespider|headless|puppet|playwright|cypress/i;
