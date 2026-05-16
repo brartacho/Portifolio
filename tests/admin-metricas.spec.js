@@ -47,6 +47,16 @@ test.describe('Métricas — estrutura DOM (sem login)', () => {
         // Painel conversão por origem
         await expect(page.locator('#metricsRefConversion')).toHaveCount(1);
     });
+
+    test('cards secundários têm onclick para abrir drill-down', async ({ page }) => {
+        await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+        const ids = ['kpi-sessions','kpi-bounce','kpi-pages-per-session',
+                     'kpi-avg-duration','kpi-retention-7d','kpi-retention-30d','kpi-demo-accesses'];
+        for (const id of ids) {
+            const card = page.locator(`#${id}`).locator('xpath=ancestor::*[contains(@class,"metrics-kpi-card")][1]');
+            await expect(card).toHaveAttribute('onclick', /openKpiDetail\(/);
+        }
+    });
 });
 
 test.describe('Métricas — fluxo autenticado', () => {
@@ -77,6 +87,17 @@ test.describe('Métricas — fluxo autenticado', () => {
         const seriesSum = (data.series || []).reduce((acc, s) => acc + Number(s.pageviews || 0), 0);
         // Soma pode ser ligeiramente diferente devido a eventos no boundary, mas deve ser zero juntos ou positivos juntos
         if (total > 0) expect(seriesSum).toBeGreaterThan(0);
+    });
+
+    test('drill-down de "Sessões" abre modal com seção Resumo', async ({ page }) => {
+        await loginAdmin(page);
+        await page.locator('[data-tab="metricas"]').first().click();
+        await page.waitForResponse(r => r.url().includes('/api/admin/analytics'));
+        await page.waitForTimeout(300);
+        await page.locator('#kpi-sessions').click();
+        await expect(page.locator('#kpiDetailModal.open')).toBeVisible();
+        await expect(page.locator('#kpiDetailTitle')).toContainText('Sessões');
+        await expect(page.locator('#kpiDetailBody')).toContainText('Resumo');
     });
 
     test('toggle "Excluir meus acessos" dispara reload', async ({ page }) => {
