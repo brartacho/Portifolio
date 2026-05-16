@@ -62,7 +62,7 @@ const EMAIL_SIGNATURE_HTML = `
 </table>`;
 
 export default async function handler(req, res) {
-    cors(res);
+    cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
     if (!requireAdmin(req, res)) return;
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

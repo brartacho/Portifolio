@@ -2,7 +2,33 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { cors } from '../_lib/auth.js';
 import { getSupabase } from '../_lib/supabase.js';
-import { checkRateLimit } from '../_lib/rate-limit.js';
+import { checkLoginRateLimit, recordLoginFailure, clientIp } from '../_lib/rate-limit.js';
+import { notifySecurityEvent } from '../_lib/notify.js';
+import {
+    checkContentType,
+    checkPayloadSize,
+    checkUserAgent,
+    checkHoneypot,
+    checkFillTime,
+} from '../_lib/bot-detection.js';
+
+// Quantos dias olhar pra trás ao decidir se um IP é "novo"
+const NEW_IP_LOOKBACK_DAYS = 30;
+
+async function isIpNew(supabase, ip) {
+    if (!ip) return false;
+    try {
+        const since = new Date(Date.now() - NEW_IP_LOOKBACK_DAYS * 86400_000).toISOString();
+        const { data } = await supabase
+            .from('admin_login_attempts')
+            .select('id')
+            .eq('ip_address', ip)
+            .eq('success', true)
+            .gte('created_at', since)
+            .limit(1);
+        return !data || data.length === 0;
+    } catch { return false; }
+}
 
 const GENERIC_AUTH_ERROR = 'Usuário ou senha incorretos.';
 
@@ -41,14 +67,55 @@ async function logAttempt(req, supabase, success, usernameHint) {
 }
 
 export default async function handler(req, res) {
-    cors(res);
+    cors(req, res);
     if (req.method === 'OPTIONS') return res.status(204).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const rl = await checkRateLimit({ req, scope: 'login', max: 5, windowMs: 15 * 60 * 1000 });
+    // Guards anti-bot (header-only, sem custo de DB). Falha = 401 genérico
+    // (NÃO 403, pra não dar feedback útil sobre qual heurística pegou).
+    const ctGuard = checkContentType(req);
+    if (!ctGuard.ok) return res.status(401).json({ error: GENERIC_AUTH_ERROR });
+    const sizeGuard = checkPayloadSize(req);
+    if (!sizeGuard.ok) return res.status(413).json({ error: 'Payload muito grande.' });
+    const uaGuard = checkUserAgent(req);
+    if (!uaGuard.ok) return res.status(401).json({ error: GENERIC_AUTH_ERROR });
+
+    // Rate limit em 2 janelas (burst 15min + diária 24h). Peek-only — só conta
+    // falhas reais lá embaixo, então login bem-sucedido não consome slot.
+    const rl = await checkLoginRateLimit(req);
     if (!rl.allowed) {
+        // Alerta na PRIMEIRA bloqueada do burst (15min), não na diária (24h, baixo sinal)
+        if (rl.scope === 'login') {
+            notifySecurityEvent({
+                kind: 'rate_limit_blocked',
+                ip: clientIp(req),
+                ua: req.headers['user-agent'],
+                country: req.headers['cf-ipcountry'],
+            }); // fire-and-forget
+        }
         res.setHeader('Retry-After', rl.retryAfterSec);
         return res.status(429).json({ error: `Muitas tentativas. Aguarde ${Math.ceil(rl.retryAfterSec / 60)} minuto(s).` });
+    }
+
+    // Guards de corpo (honeypot + fillTime). Body só é parseado aqui.
+    const hpGuard = checkHoneypot(req.body);
+    const ftGuard = checkFillTime(req.body);
+    if (!hpGuard.ok || !ftGuard.ok) {
+        // Loga como tentativa falha pra ver padrões. Não revela qual guard pegou.
+        // Conta como falha no rate limit (bots devem ser bloqueados igual).
+        await recordLoginFailure(req);
+        notifySecurityEvent({
+            kind: 'bot_detected',
+            ip: clientIp(req),
+            ua: req.headers['user-agent'],
+            country: req.headers['cf-ipcountry'],
+            details: hpGuard.reason || ftGuard.reason,
+        });
+        try {
+            const supabase = getSupabase();
+            await logAttempt(req, supabase, false, (req.body && req.body.username) || 'bot');
+        } catch { /* ignora */ }
+        return res.status(401).json({ error: GENERIC_AUTH_ERROR });
     }
 
     const { username, password } = req.body || {};
@@ -80,11 +147,27 @@ export default async function handler(req, res) {
     const passOk = await bcrypt.compare(password, hash);
 
     if (!userOk || !passOk) {
+        await recordLoginFailure(req);
         await logAttempt(req, supabase, false, username);
         return res.status(401).json({ error: GENERIC_AUTH_ERROR });
     }
 
     await logAttempt(req, supabase, true, username);
+
+    // Alerta se for um IP nunca-visto antes (consulta últimos 30d de sucessos).
+    // Fire-and-forget: não atrasa o login.
+    const ip = clientIp(req);
+    isIpNew(supabase, ip).then(isNew => {
+        if (isNew) {
+            notifySecurityEvent({
+                kind: 'login_new_ip',
+                ip,
+                ua: req.headers['user-agent'],
+                country: req.headers['cf-ipcountry'],
+            });
+        }
+    }).catch(() => { /* swallow */ });
+
     const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' });
     return res.status(200).json({ token });
 }

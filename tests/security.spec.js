@@ -224,7 +224,111 @@ test.describe('Restrição de métodos HTTP', () => {
     });
 });
 
-// ─── 6. Rate limiting — força bruta (opt-in) ─────────────────────────────────
+// ─── 6. Hardening Fase 1 — headers globais, CORS, bot guards ─────────────────
+// Estes testes validam as mudanças de hardening introduzidas em
+// feature/security-hardening-fase1. Rodam apenas após deploy.
+
+test.describe('Headers globais — Fase 1', () => {
+    test('HSTS presente em /', async ({ request }) => {
+        const res = await request.get(`${BASE}/`);
+        const hsts = res.headers()['strict-transport-security'] || '';
+        expect(hsts).toMatch(/max-age=\d+/);
+        expect(hsts).toMatch(/includeSubDomains/);
+    });
+
+    test('Referrer-Policy presente em /', async ({ request }) => {
+        const res = await request.get(`${BASE}/`);
+        expect(res.headers()['referrer-policy']).toMatch(/strict-origin/);
+    });
+
+    test('Permissions-Policy nega camera/microfone/geo', async ({ request }) => {
+        const res = await request.get(`${BASE}/`);
+        const pp = res.headers()['permissions-policy'] || '';
+        expect(pp).toMatch(/camera=\(\)/);
+        expect(pp).toMatch(/microphone=\(\)/);
+        expect(pp).toMatch(/geolocation=\(\)/);
+    });
+
+    test('Cross-Origin-Opener-Policy = same-origin em /', async ({ request }) => {
+        const res = await request.get(`${BASE}/`);
+        expect(res.headers()['cross-origin-opener-policy']).toBe('same-origin');
+    });
+
+    test('/admin tem Content-Security-Policy estrito', async ({ request }) => {
+        const res = await request.get(`${BASE}/admin`);
+        const csp = res.headers()['content-security-policy'] || '';
+        expect(csp).toMatch(/default-src 'self'/);
+        expect(csp).toMatch(/frame-ancestors 'none'/);
+        expect(csp).toMatch(/object-src 'none'/);
+    });
+});
+
+test.describe('CORS estrito — Fase 1', () => {
+    test('origem não autorizada NÃO recebe Access-Control-Allow-Origin', async ({ request }) => {
+        const res = await request.fetch(`${BASE}/api/admin/cv-versions`, {
+            method: 'OPTIONS',
+            headers: { Origin: 'https://evil.example.com' },
+        });
+        const acao = res.headers()['access-control-allow-origin'];
+        // Ou ausente, ou diferente da origem maliciosa
+        if (acao) expect(acao).not.toBe('https://evil.example.com');
+    });
+
+    test('origem artacho.dev recebe ACAO refletido', async ({ request }) => {
+        const res = await request.fetch(`${BASE}/api/admin/cv-versions`, {
+            method: 'OPTIONS',
+            headers: { Origin: 'https://artacho.dev' },
+        });
+        expect(res.headers()['access-control-allow-origin']).toBe('https://artacho.dev');
+        expect(res.headers()['vary']).toMatch(/Origin/i);
+    });
+});
+
+test.describe('Bot detection no login — Fase 1', () => {
+    test('User-Agent com "python-requests" → 401', async ({ request }) => {
+        const res = await request.post(`${BASE}/api/admin/login`, {
+            headers: { 'User-Agent': 'python-requests/2.31' },
+            data: { username: 'x@y.com', password: 'x', fillMs: 2000 },
+        });
+        // Bot detection deve barrar antes de validar credencial
+        expect([401, 429]).toContain(res.status());
+    });
+
+    test('User-Agent com "curl/" → 401', async ({ request }) => {
+        const res = await request.post(`${BASE}/api/admin/login`, {
+            headers: { 'User-Agent': 'curl/8.0.1' },
+            data: { username: 'x@y.com', password: 'x', fillMs: 2000 },
+        });
+        expect([401, 429]).toContain(res.status());
+    });
+
+    test('Honeypot preenchido → 401', async ({ request }) => {
+        const res = await request.post(`${BASE}/api/admin/login`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Test)' },
+            data: { username: 'x@y.com', password: 'x', website: 'spam.com', fillMs: 2000 },
+        });
+        expect([401, 429]).toContain(res.status());
+    });
+
+    test('fillMs muito curto (< 800ms) → 401', async ({ request }) => {
+        const res = await request.post(`${BASE}/api/admin/login`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Test)' },
+            data: { username: 'x@y.com', password: 'x', fillMs: 50 },
+        });
+        expect([401, 429]).toContain(res.status());
+    });
+
+    test('Content-Type ausente → 401', async ({ request }) => {
+        const res = await request.fetch(`${BASE}/api/admin/login`, {
+            method: 'POST',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Test)' },
+            data: 'username=x&password=y',  // text/plain ou form-encoded
+        });
+        expect([401, 415, 400, 429]).toContain(res.status());
+    });
+});
+
+// ─── 7. Rate limiting — força bruta (opt-in) ─────────────────────────────────
 
 test.describe('Rate limiting — força bruta no login', () => {
     test.skip(!RUN_BRUTE_FORCE,
