@@ -7,10 +7,6 @@
     {
       "path": "/api/demo/cleanup",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/demo/health",
-      "schedule": "*/10 * * * *"
     }
   ],
   "rewrites": [
