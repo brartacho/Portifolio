@@ -370,6 +370,24 @@
         .token-form-toggle { display: none; }
         .token-form-collapsible { display: block; }
 
+        /* ─── Token form: grid responsivo (desktop ≥1025px) ─── */
+        .token-form-grid {
+            display: grid;
+            grid-template-areas:
+                "cv    label uses"
+                "valid valid submit";
+            grid-template-columns: 1fr 1fr 160px;
+            column-gap: 14px;
+            row-gap: 14px;
+        }
+        .token-form-grid .form-group { margin-bottom: 0; }
+        .tfg-cv     { grid-area: cv; }
+        .tfg-label  { grid-area: label; }
+        .tfg-uses   { grid-area: uses; }
+        .tfg-valid  { grid-area: valid; }
+        .tfg-submit { grid-area: submit; display: flex; align-items: flex-end; }
+        .tfg-submit .btn { width: 100%; }
+
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
@@ -1368,6 +1386,11 @@
             .panel { padding: 14px 12px; }
             .row-2, .row-3 { grid-template-columns: 1fr; }
             .share-actions { grid-template-columns: 1fr; }
+
+            /* Token form: coluna única em mobile */
+            .token-form-grid { display: flex; flex-direction: column; gap: 0; }
+            .token-form-grid .form-group { margin-bottom: 14px; }
+            .tfg-submit { margin-bottom: 4px; }
             .app-tabs { padding: 10px 12px 0; gap: 0; overflow-x: auto; flex-wrap: nowrap; }
             .tab-btn { padding: 8px 10px; font-size: 0.78rem; flex-shrink: 0; white-space: nowrap; }
             .app-header { padding: 0 12px; }
@@ -1871,6 +1894,15 @@
             /* row-2 e row-3: 2 colunas em tablet */
             .row-2 { grid-template-columns: 1fr 1fr; }
             .row-3 { grid-template-columns: 1fr 1fr; }
+
+            /* Token form: 3 linhas em tablet */
+            .token-form-grid {
+                grid-template-areas:
+                    "cv    label"
+                    "valid valid"
+                    "uses  submit";
+                grid-template-columns: 1fr 1fr;
+            }
 
             /* Vagas: tabela normal */
             .vagas-table { display: table; }
@@ -2643,44 +2675,43 @@
                     <div class="panel">
                         <div class="panel-title token-form-panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
 
-                        <div class="row-2">
-                            <div class="form-group">
+                        <div class="token-form-grid">
+                            <div class="form-group tfg-cv">
                                 <label>Currículo</label>
                                 <select id="tokenCV"><option value="">Selecione…</option></select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group tfg-label">
                                 <label>Label (identificação)</label>
                                 <input type="text" id="tokenLabel" name="cv-token-label" placeholder="Nubank · Ana · Sr QA" autocomplete="off" data-form-type="other">
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Validade</label>
-                            <div class="expiry-opts" id="expiryOpts">
-                                <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
-                                <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
-                                <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
-                                <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
-                                <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
-                                <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
+                            <div class="form-group tfg-uses">
+                                <label>Máximo de usos</label>
+                                <select id="tokenMaxUses">
+                                    <option value="1">1 uso (one-time)</option>
+                                    <option value="3">3 usos</option>
+                                    <option value="5" selected>5 usos</option>
+                                    <option value="10">10 usos</option>
+                                    <option value="">Ilimitado</option>
+                                </select>
                             </div>
-                            <input type="datetime-local" id="expiryDate" style="display:none" />
+                            <div class="form-group tfg-valid">
+                                <label>Validade</label>
+                                <div class="expiry-opts" id="expiryOpts">
+                                    <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
+                                    <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
+                                    <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
+                                    <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
+                                    <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
+                                    <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
+                                </div>
+                                <input type="datetime-local" id="expiryDate" style="display:none" />
+                            </div>
+                            <div class="tfg-submit">
+                                <button class="btn btn-cyan" onclick="createToken()">
+                                    <i class="fa-solid fa-plus"></i> Gerar token
+                                </button>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label>Máximo de usos</label>
-                            <select id="tokenMaxUses">
-                                <option value="1">1 uso (one-time)</option>
-                                <option value="3">3 usos</option>
-                                <option value="5" selected>5 usos</option>
-                                <option value="10">10 usos</option>
-                                <option value="">Ilimitado</option>
-                            </select>
-                        </div>
-
-                        <button class="btn btn-cyan" onclick="createToken()">
-                            <i class="fa-solid fa-plus"></i> Gerar token
-                        </button>
                     </div>
                 </div><!-- /token-form-collapsible -->
             </div><!-- /token-form-section -->
