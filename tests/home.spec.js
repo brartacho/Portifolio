@@ -199,9 +199,9 @@ test.describe('HOME — projetos', () => {
     await expect(page.locator('.project-secondary')).toContainText('APIs');
   });
 
-  test('card portfólio aponta para artacho.dev', async ({ page }) => {
+  test('card portfólio aponta para showcase do admin', async ({ page }) => {
     const link = page.locator('.project-code .project-overlay-link');
-    await expect(link).toHaveAttribute('href', 'https://artacho.dev');
+    await expect(link).toHaveAttribute('href', /projeto-sistema-admin\.html/);
   });
 
   test('card Padaria do Bairro tem link do GitHub', async ({ page }) => {
@@ -233,9 +233,9 @@ test.describe('HOME — contato', () => {
     await expect(emailLink).toContainText('bruno@artacho.dev');
   });
 
-  test('WhatsApp aponta para número correto', async ({ page }) => {
-    const wa = page.locator('a[href*="wa.me"]');
-    await expect(wa).toHaveAttribute('href', /wa\.me\/5544984366533/);
+  test('contato tem 3 secondary links (email, GitHub, CV)', async ({ page }) => {
+    const links = page.locator('.contact-secondary .contact-link');
+    await expect(links).toHaveCount(3);
   });
 
   test('GitHub link no contato', async ({ page }) => {

@@ -105,7 +105,8 @@ test.describe('Login — validação de entrada', () => {
         const res = await request.post(`${BASE}/api/admin/login`, {
             data: { username: "' OR '1'='1'; --", password: "' OR '1'='1" },
         });
-        expect([400, 401]).toContain(res.status());
+        // 400/401 = validação; 429 = rate limit ativo após tentativas anteriores
+        expect([400, 401, 429]).toContain(res.status());
     });
 
     test('payload com objetos aninhados não causa crash → não é 500', async ({ request }) => {
@@ -437,7 +438,8 @@ test.describe('Cookie httpOnly — login nao expoe token no body', () => {
         const res = await request.post(`${BASE}/api/admin/login`, {
             data: { username: 'nope@test.com', password: 'wrongpass', fillMs: 2000 },
         });
-        expect(res.status()).toBe(401);
+        // 401 = creds inválidas; 429 = rate limit (a invariante "sem token no body" vale nos dois)
+        expect([401, 429]).toContain(res.status());
         const body = await res.json().catch(() => ({}));
         expect(body).not.toHaveProperty('token');
     });
