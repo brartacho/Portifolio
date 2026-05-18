@@ -486,6 +486,52 @@ th.sort-active .sort-arrow{color:var(--cyan)}
 @keyframes demoShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .upload-percent{font-size:0.75rem;color:var(--text-dim);text-align:right;margin-top:4px;font-family:var(--font-mono)}
 .cv-filename-preview{color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px;font-family:var(--font-mono);min-height:1em}
+
+/* ─── TOKEN KPIs ─── */
+.tab-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.tab-kpi-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:transform 0.12s ease,border-color 0.15s;display:flex;flex-direction:column;gap:4px;user-select:none}
+.tab-kpi-card:hover{transform:translateY(-2px);border-color:rgba(34,211,238,0.3)}
+.tab-kpi-card.kpi-selected{border-color:var(--cyan);background:var(--cyan-soft)}
+.tab-kpi-num{font-size:1.6rem;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--text)}
+.tab-kpi-label{font-size:0.68rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.4px;margin-top:4px}
+.tab-kpi-card.kpi-green  .tab-kpi-num{color:var(--success)}
+.tab-kpi-card.kpi-yellow .tab-kpi-num{color:var(--warning)}
+.tab-kpi-card.kpi-red    .tab-kpi-num{color:var(--danger)}
+.tab-kpi-card.kpi-dim    .tab-kpi-num{color:var(--text-dim)}
+.tab-kpi-card.kpi-cyan   .tab-kpi-num{color:var(--cyan)}
+
+/* ─── PRESET CHIPS ─── */
+.preset-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;margin-top:-4px}
+.preset-chip{padding:4px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text-soft);font-size:0.73rem;font-family:var(--font-display);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.preset-chip:hover{border-color:var(--cyan);color:var(--text)}
+.preset-chip.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+
+/* ─── TOKEN SELECTED ROW ─── */
+tr.token-row-selected td{background:rgba(34,211,238,0.04) !important}
+tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
+
+/* ─── TOKEN BULK BAR ─── */
+#token-bulk-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;background:var(--bg-elevated);border-top:1px solid rgba(255,255,255,0.1);padding:10px 20px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));gap:10px;align-items:center;flex-wrap:wrap}
+.bulk-count{font-size:0.85rem;font-weight:600;color:var(--text-soft);flex:1}
+
+/* ─── TOKEN FORM GRID ─── */
+.token-form-grid{display:grid;grid-template-areas:"cv label uses" "valid valid submit";grid-template-columns:1fr 1fr 160px;column-gap:14px;row-gap:14px}
+.token-form-grid .form-group,.token-form-grid .form-group-inline{margin-bottom:0}
+.tfg-cv{grid-area:cv}
+.tfg-label{grid-area:label}
+.tfg-uses{grid-area:uses}
+.tfg-valid{grid-area:valid}
+.tfg-submit{grid-area:submit;display:flex;align-items:flex-end}
+.tfg-submit .btn{width:100%}
+@media (max-width: 740px){
+    .token-form-grid{display:flex;flex-direction:column;gap:14px}
+    .tab-kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+    .tab-kpi-num{font-size:1.4rem}
+    .tab-kpi-card{padding:12px}
+    .preset-chips{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+    .preset-chip{flex-shrink:0}
+    #token-bulk-bar{bottom:0}
+}
 </style>
 </head>
 <body>
@@ -691,6 +737,39 @@ th.sort-active .sort-arrow{color:var(--cyan)}
         <!-- ─── TOKENS ─── -->
         <div class="tab-panel" id="tab-tokens">
 
+            <!-- KPIs -->
+            <div class="tab-kpis" id="tokenKpis">
+                <div class="tab-kpi-card kpi-green" onclick="filterTokenKpi('ativo')" role="button" tabindex="0">
+                    <span class="tab-kpi-num" id="kpiTokenAtivo">—</span>
+                    <span class="tab-kpi-label">Ativos</span>
+                </div>
+                <div class="tab-kpi-card kpi-yellow" onclick="filterTokenKpi('expirando')" role="button" tabindex="0">
+                    <span class="tab-kpi-num" id="kpiTokenExpirando">—</span>
+                    <span class="tab-kpi-label">Expirando 24h</span>
+                </div>
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('expirado')" role="button" tabindex="0">
+                    <span class="tab-kpi-num" id="kpiTokenExpirado">—</span>
+                    <span class="tab-kpi-label">Expirados</span>
+                </div>
+                <div class="tab-kpi-card kpi-red" onclick="filterTokenKpi('revogado')" role="button" tabindex="0">
+                    <span class="tab-kpi-num" id="kpiTokenRevogado">—</span>
+                    <span class="tab-kpi-label">Revogados</span>
+                </div>
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('esgotado')" role="button" tabindex="0">
+                    <span class="tab-kpi-num" id="kpiTokenEsgotado">—</span>
+                    <span class="tab-kpi-label">Esgotados</span>
+                </div>
+            </div>
+
+            <!-- Bulk bar -->
+            <div id="token-bulk-bar" role="toolbar" aria-label="Ações em lote">
+                <span class="bulk-count" id="tokenBulkCount">0 selecionados</span>
+                <button class="btn btn-sm" onclick="extendTokensBulk()"><i class="fa-solid fa-clock-rotate-left"></i> Estender +24h</button>
+                <button class="btn btn-sm" onclick="revokeTokensBulk()"><i class="fa-solid fa-ban"></i> Revogar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTokensBulk()"><i class="fa-solid fa-trash"></i> Excluir</button>
+                <button class="btn btn-sm" style="margin-left:auto" onclick="clearTokenSelection()">Cancelar</button>
+            </div>
+
             <div class="token-form-section">
                 <button class="token-form-toggle" onclick="toggleTokenForm()" id="tokenFormToggleBtn" aria-expanded="false">
                     <span><i class="fa-solid fa-key"></i> Gerar novo token</span>
@@ -699,46 +778,60 @@ th.sort-active .sort-arrow{color:var(--cyan)}
                 <div class="token-form-collapsible" id="tokenFormCollapsible">
                     <div class="panel">
                         <div class="panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
-                        <div class="row-2">
-                            <div class="form-group-inline">
+                        <div class="token-form-grid">
+                            <div class="form-group-inline tfg-cv">
                                 <label>Currículo</label>
                                 <select id="tokenCV"><option value="">Selecione…</option></select>
                             </div>
-                            <div class="form-group-inline">
+                            <div class="form-group-inline tfg-label">
                                 <label>Label (identificação)</label>
-                                <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA">
+                                <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA" autocomplete="off">
+                            </div>
+                            <div class="form-group-inline tfg-uses">
+                                <label>Máximo de usos</label>
+                                <select id="tokenMaxUses">
+                                    <option value="1">1 uso (one-time)</option>
+                                    <option value="3">3 usos</option>
+                                    <option value="5" selected>5 usos</option>
+                                    <option value="10">10 usos</option>
+                                    <option value="">Ilimitado</option>
+                                </select>
+                            </div>
+                            <div class="form-group-inline tfg-valid">
+                                <label>Validade</label>
+                                <div class="expiry-opts" id="expiryOpts">
+                                    <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
+                                    <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
+                                    <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
+                                    <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
+                                    <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
+                                    <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
+                                </div>
+                                <input type="datetime-local" id="expiryDate" style="display:none;margin-top:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-display);font-size:0.82rem;outline:none">
+                            </div>
+                            <div class="tfg-submit">
+                                <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
                             </div>
                         </div>
-                        <div class="form-group-inline">
-                            <label>Validade</label>
-                            <div class="expiry-opts" id="expiryOpts">
-                                <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
-                                <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
-                                <button class="expiry-opt" data-hours="72" onclick="setExpiry(this)">72h</button>
-                                <button class="expiry-opt" data-hours="168" onclick="setExpiry(this)">7 dias</button>
-                                <button class="expiry-opt" data-hours="720" onclick="setExpiry(this)">30 dias</button>
-                                <button class="expiry-opt" data-hours="custom" onclick="setExpiry(this)">Data específica</button>
-                            </div>
-                            <input type="datetime-local" id="expiryDate" style="display:none;margin-top:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-display);font-size:0.82rem;outline:none">
-                        </div>
-                        <div class="form-group-inline">
-                            <label>Máximo de usos</label>
-                            <select id="tokenMaxUses">
-                                <option value="1">1 uso (one-time)</option>
-                                <option value="3">3 usos</option>
-                                <option value="5" selected>5 usos</option>
-                                <option value="10">10 usos</option>
-                                <option value="">Ilimitado</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
                     </div>
                 </div>
             </div>
 
             <div class="token-list-section">
                 <div class="panel">
-                    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Tokens ativos e histórico</div>
+                    <div class="panel-title">
+                        <i class="fa-solid fa-list-check"></i> Tokens ativos e histórico
+                        <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir tokens expirados">
+                            <i class="fa-solid fa-broom"></i> Limpar expirados
+                        </button>
+                    </div>
+                    <div class="preset-chips" id="tokenPresetChips">
+                        <button class="preset-chip active" data-preset="" onclick="applyTokenPreset('',this)">Todos</button>
+                        <button class="preset-chip" data-preset="ativo" onclick="applyTokenPreset('ativo',this)">Ativos</button>
+                        <button class="preset-chip" data-preset="expirando" onclick="applyTokenPreset('expirando',this)">Expirando hoje</button>
+                        <button class="preset-chip" data-preset="expirado" onclick="applyTokenPreset('expirado',this)">Expirados</button>
+                        <button class="preset-chip" data-preset="revogado" onclick="applyTokenPreset('revogado',this)">Revogados</button>
+                    </div>
                     <div class="filter-bar">
                         <div class="filter-search">
                             <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
@@ -757,6 +850,7 @@ th.sort-active .sort-arrow{color:var(--cyan)}
                         <table>
                             <thead>
                                 <tr>
+                                    <th style="width:36px;padding-right:4px"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" style="accent-color:var(--cyan);cursor:pointer"></th>
                                     <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
                                     <th>Currículo</th>
                                     <th>Status</th>
@@ -765,7 +859,7 @@ th.sort-active .sort-arrow{color:var(--cyan)}
                                     <th class="col-actions"></th>
                                 </tr>
                             </thead>
-                            <tbody id="tokenTable"><tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                            <tbody id="tokenTable"><tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -1551,10 +1645,15 @@ function setExpiry(btn) {
     }
 }
 
+let _tokenKpiFilter = null;     // 'ativo' | 'expirando' | 'expirado' | 'revogado' | 'esgotado' | null
+let _tokenPreset = '';          // '' | 'ativo' | 'expirando' | 'expirado' | 'revogado'
+let _selectedTokenIds = new Set();
+
 async function loadTokens() {
     try {
         const raw = await dapi('GET', '/api/demo/tokens');
         _tokens = _normalizeCv(raw).map(t => ({ ...t, status: tokenStatus(t) }));
+        computeTokenKpis();
         renderTokens();
     } catch (e) { showToast(e.message, 'error'); }
 }
@@ -1564,6 +1663,42 @@ function tokenStatus(t) {
     if (t.max_uses != null && t.use_count >= t.max_uses) return 'esgotado';
     if (t.expires_at && new Date(t.expires_at) < new Date()) return 'expirado';
     return 'ativo';
+}
+
+function _isExpiringSoon(t) {
+    if (t.status !== 'ativo' || !t.expires_at) return false;
+    const ms = new Date(t.expires_at).getTime() - Date.now();
+    return ms > 0 && ms < 24 * 3600 * 1000;
+}
+
+function computeTokenKpis() {
+    const counts = { ativo: 0, expirando: 0, expirado: 0, revogado: 0, esgotado: 0 };
+    _tokens.forEach(t => {
+        if (counts[t.status] != null) counts[t.status]++;
+        if (_isExpiringSoon(t)) counts.expirando++;
+    });
+    const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+    set('kpiTokenAtivo', counts.ativo);
+    set('kpiTokenExpirando', counts.expirando);
+    set('kpiTokenExpirado', counts.expirado);
+    set('kpiTokenRevogado', counts.revogado);
+    set('kpiTokenEsgotado', counts.esgotado);
+}
+
+function filterTokenKpi(status) {
+    _tokenKpiFilter = _tokenKpiFilter === status ? null : status;
+    document.querySelectorAll('#tokenKpis .tab-kpi-card').forEach((c, i) => {
+        const map = ['ativo','expirando','expirado','revogado','esgotado'];
+        c.classList.toggle('kpi-selected', map[i] === _tokenKpiFilter);
+    });
+    renderTokens();
+}
+
+function applyTokenPreset(preset, btn) {
+    _tokenPreset = preset;
+    document.querySelectorAll('#tokenPresetChips .preset-chip').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderTokens();
 }
 
 function renderTokens() {
@@ -1576,6 +1711,10 @@ function renderTokens() {
         (t.cv_versions?.name || '').toLowerCase().includes(search)
     );
     if (statusF) data = data.filter(t => t.status === statusF);
+    if (_tokenKpiFilter === 'expirando') data = data.filter(_isExpiringSoon);
+    else if (_tokenKpiFilter) data = data.filter(t => t.status === _tokenKpiFilter);
+    if (_tokenPreset === 'expirando') data = data.filter(_isExpiringSoon);
+    else if (_tokenPreset) data = data.filter(t => t.status === _tokenPreset);
     data = _sortData(data, _tokenSort.col, _tokenSort.dir);
 
     const countEl = document.getElementById('tokenCount');
@@ -1585,13 +1724,17 @@ function renderTokens() {
 
     const tb = document.getElementById('tokenTable');
     if (!data.length) {
-        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>';
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>';
+        _updateBulkBar();
         return;
     }
     tb.innerHTML = data.map(t => {
         const badgeCls = t.status === 'ativo' ? 'badge-active' : t.status === 'expirado' ? 'badge-expired' : t.status === 'revogado' ? 'badge-revoked' : 'badge-esgotado';
         const uses = t.max_uses != null ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
-        return `<tr>
+        const checked = _selectedTokenIds.has(t.id) ? 'checked' : '';
+        const rowCls = _selectedTokenIds.has(t.id) ? 'token-row-selected' : '';
+        return `<tr class="${rowCls}">
+            <td style="padding-right:4px"><input type="checkbox" ${checked} onchange="toggleTokenRow('${t.id}',this)" style="accent-color:var(--cyan);cursor:pointer"></td>
             <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
             <td style="font-size:0.82rem">${esc(t.cv_versions?.name || '—')}</td>
             <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
@@ -1606,12 +1749,92 @@ function renderTokens() {
             </td>
         </tr>`;
     }).join('');
+    _updateBulkBar();
 }
 
 function clearTokenFilters() {
     ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    _tokenKpiFilter = null;
+    _tokenPreset = '';
+    document.querySelectorAll('#tokenKpis .tab-kpi-card').forEach(c => c.classList.remove('kpi-selected'));
+    document.querySelectorAll('#tokenPresetChips .preset-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
     _tokenSort = { col: 'expires_at', dir: 'asc' };
     renderTokens();
+}
+
+// ─── Bulk select ───
+function toggleTokenRow(id, cb) {
+    if (cb.checked) _selectedTokenIds.add(id); else _selectedTokenIds.delete(id);
+    const tr = cb.closest('tr');
+    if (tr) tr.classList.toggle('token-row-selected', cb.checked);
+    _updateBulkBar();
+}
+function toggleSelectAllTokens(cb) {
+    const visibleIds = Array.from(document.querySelectorAll('#tokenTable input[type="checkbox"]'))
+        .map(c => c.onchange && c.getAttribute('onchange')?.match(/'([^']+)'/)?.[1])
+        .filter(Boolean);
+    visibleIds.forEach(id => cb.checked ? _selectedTokenIds.add(id) : _selectedTokenIds.delete(id));
+    renderTokens();
+}
+function _updateBulkBar() {
+    const bar = document.getElementById('token-bulk-bar');
+    const count = _selectedTokenIds.size;
+    bar.style.display = count > 0 ? 'flex' : 'none';
+    document.getElementById('tokenBulkCount').textContent = `${count} selecionado${count === 1 ? '' : 's'}`;
+}
+function clearTokenSelection() {
+    _selectedTokenIds.clear();
+    const all = document.getElementById('tokenSelectAll'); if (all) all.checked = false;
+    renderTokens();
+}
+async function extendTokensBulk() {
+    const ids = Array.from(_selectedTokenIds);
+    if (!ids.length) return;
+    if (!confirm(`Estender +24h em ${ids.length} token(s)?`)) return;
+    try {
+        for (const id of ids) {
+            const tk = _tokens.find(t => t.id === id);
+            if (!tk) continue;
+            const base = tk.expires_at ? new Date(tk.expires_at) : new Date();
+            const next = new Date(Math.max(base.getTime(), Date.now()) + 24 * 3600 * 1000);
+            await dapi('PUT', `/api/demo/tokens?id=${id}`, { expires_at: next.toISOString() });
+        }
+        showToast(`${ids.length} token(s) estendido(s)`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+async function revokeTokensBulk() {
+    const ids = Array.from(_selectedTokenIds);
+    if (!ids.length) return;
+    if (!confirm(`Revogar ${ids.length} token(s)?`)) return;
+    try {
+        for (const id of ids) await dapi('PUT', `/api/demo/tokens?id=${id}`, { revoked: true });
+        showToast(`${ids.length} token(s) revogado(s)`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+async function deleteTokensBulk() {
+    const ids = Array.from(_selectedTokenIds);
+    if (!ids.length) return;
+    if (!confirm(`EXCLUIR ${ids.length} token(s) permanentemente?`)) return;
+    try {
+        for (const id of ids) await dapi('DELETE', `/api/demo/tokens?id=${id}`);
+        showToast(`${ids.length} token(s) excluído(s)`);
+        clearTokenSelection();
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+async function clearExpiredTokens() {
+    const expired = _tokens.filter(t => t.status === 'expirado');
+    if (!expired.length) return showToast('Nenhum token expirado.');
+    if (!confirm(`Excluir ${expired.length} token(s) expirado(s)?`)) return;
+    try {
+        for (const t of expired) await dapi('DELETE', `/api/demo/tokens?id=${t.id}`);
+        showToast(`${expired.length} expirado(s) removido(s)`);
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
 }
 
 function copyTokenHash(hash) {
