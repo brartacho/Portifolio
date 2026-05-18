@@ -217,6 +217,37 @@ async function handleApplications(req, res, session_id) {
     return res.status(405).end();
 }
 
+async function handleStorageStats(req, res, session_id) {
+    if (req.method !== 'GET') return res.status(405).end();
+    const supabase = getSupabaseDemo();
+    const { data, error } = await supabase.from('demo_cv_versions')
+        .select('file_name').eq('session_id', session_id);
+    if (error) return res.status(500).json({ error: error.message });
+    const rows = data || [];
+
+    // Tamanho determinístico por nome (entre 180KB e 1.4MB) — demo não armazena o PDF real
+    const hashSize = (name) => {
+        let h = 0;
+        for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+        return 180_000 + (Math.abs(h) % 1_220_000);
+    };
+    const used_bytes  = rows.reduce((s, r) => s + hashSize(r.file_name || 'demo.pdf'), 0);
+    const limit_bytes = 1_073_741_824; // 1 GB
+    const used_percent = limit_bytes > 0 ? Number(((used_bytes / limit_bytes) * 100).toFixed(2)) : 0;
+    const alert_threshold = 80;
+
+    return res.json({
+        bucket: 'demo-cvs',
+        files_count: rows.length,
+        used_bytes,
+        limit_bytes,
+        used_percent,
+        alert_threshold_percent: alert_threshold,
+        should_alert: used_percent >= alert_threshold,
+        dashboard_url: null,
+    });
+}
+
 async function handleCvVersions(req, res, session_id) {
     if (!await mutRateLimit(req, res)) return;
     const supabase = getSupabaseDemo();
@@ -374,11 +405,12 @@ export default async function handler(req, res) {
     const rlSes = await checkRateLimit({ req, scope: `demo-sess-${session_id}`, max: 200, windowMs: 3_600_000 });
     if (!rlSes.allowed) { res.setHeader('Retry-After', rlSes.retryAfterSec); return res.status(429).json({ error: 'Limite da sessão atingido. Aguarde ou recarregue.' }); }
 
-    if (resource === 'analytics')    return handleAnalytics(req, res);
-    if (resource === 'applications') return handleApplications(req, res, session_id);
-    if (resource === 'cv-versions')  return handleCvVersions(req, res, session_id);
-    if (resource === 'tokens')       return handleTokens(req, res, session_id);
-    if (resource === 'logs')         return handleLogs(req, res, session_id);
+    if (resource === 'analytics')      return handleAnalytics(req, res);
+    if (resource === 'applications')   return handleApplications(req, res, session_id);
+    if (resource === 'cv-versions')    return handleCvVersions(req, res, session_id);
+    if (resource === 'tokens')         return handleTokens(req, res, session_id);
+    if (resource === 'logs')           return handleLogs(req, res, session_id);
+    if (resource === 'storage-stats')  return handleStorageStats(req, res, session_id);
 
     return res.status(404).json({ error: 'Resource not found' });
 }

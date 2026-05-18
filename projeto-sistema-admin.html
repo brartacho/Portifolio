@@ -456,6 +456,36 @@ th.sort-active .sort-arrow{color:var(--cyan)}
     .filter-search{min-width:0}
     .vagas-period-dates{margin-left:0}
 }
+
+/* ─── STORAGE CARD ─── */
+.storage-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.storage-card[hidden]{display:none}
+.storage-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.storage-title{font-size:0.92rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.storage-title i{color:var(--cyan)}
+.storage-sub{font-size:0.78rem;color:var(--text-dim);font-family:var(--font-mono);margin-top:2px}
+.storage-bar-track{background:rgba(255,255,255,0.04);border-radius:999px;height:10px;overflow:hidden;margin-bottom:8px}
+.storage-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),#4ade80);border-radius:999px;transition:width 0.5s ease,background 0.3s}
+.storage-bar-fill.warn{background:linear-gradient(90deg,var(--warning),#f59e0b)}
+.storage-bar-fill.danger{background:linear-gradient(90deg,var(--danger),#b91c1c)}
+.storage-meta{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-soft);font-family:var(--font-mono)}
+.storage-alert{margin-top:12px;padding:10px 12px;background:var(--warning-soft);border:1px solid rgba(245,158,11,0.25);border-radius:8px;color:var(--warning);font-size:0.82rem;display:flex;align-items:center;gap:10px;line-height:1.5}
+.storage-alert[hidden]{display:none}
+
+/* ─── UPLOAD ZONE ─── */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;margin-top:6px}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--cyan-mid);background:var(--cyan-soft)}
+.upload-zone>div>i{font-size:2rem;color:var(--text-dim);margin-bottom:10px}
+.upload-zone p{color:var(--text-soft);font-size:0.88rem;margin:0}
+.upload-zone strong{color:var(--cyan)}
+.upload-progress{margin-top:14px;display:none}
+.upload-phase{font-size:0.82rem;font-family:var(--font-mono);color:var(--cyan);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.upload-bar-track{height:8px;background:var(--bg-elevated);border-radius:4px;overflow:hidden;position:relative}
+.upload-bar{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));width:0%;border-radius:4px;transition:width 0.25s ease}
+.upload-bar.indeterminate{width:100% !important;background:linear-gradient(90deg,rgba(34,211,238,0.15) 25%,rgba(34,211,238,0.6) 50%,rgba(34,211,238,0.15) 75%);background-size:200% 100%;animation:demoShimmer 1.4s linear infinite}
+@keyframes demoShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.upload-percent{font-size:0.75rem;color:var(--text-dim);text-align:right;margin-top:4px;font-family:var(--font-mono)}
+.cv-filename-preview{color:var(--text-dim);font-size:0.78rem;display:block;margin-top:6px;font-family:var(--font-mono);min-height:1em}
 </style>
 </head>
 <body>
@@ -561,23 +591,32 @@ th.sort-active .sort-arrow{color:var(--cyan)}
 
             <div class="cvs-upload-section">
                 <button class="cvs-upload-toggle" onclick="toggleCvsUpload()" id="cvsUploadToggleBtn" aria-expanded="false">
-                    <span><i class="fa-solid fa-plus"></i> Adicionar versão de currículo</span>
+                    <span><i class="fa-solid fa-upload"></i> Fazer upload de currículo</span>
                     <i class="fa-solid fa-chevron-down cvs-upload-chevron"></i>
                 </button>
                 <div class="cvs-upload-collapsible" id="cvsUploadCollapsible">
-                    <div class="storage-card">
+
+                    <div class="storage-card" id="storageCard" hidden>
                         <div class="storage-head">
                             <div>
                                 <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
-                                <div class="storage-sub">Demo — quota simulada</div>
+                                <div class="storage-sub" id="storageSub">—</div>
                             </div>
                         </div>
-                        <div class="storage-bar-track"><div class="storage-bar-fill" id="storageBarFill" style="width:24%"></div></div>
-                        <div class="storage-meta"><span id="storagePct">24% de 1 GB</span><span id="storageFiles">5 arquivos</span></div>
+                        <div class="storage-bar-track"><div class="storage-bar-fill" id="storageBarFill" style="width:0%"></div></div>
+                        <div class="storage-meta">
+                            <span id="storagePct">0%</span>
+                            <span id="storageFiles">0 arquivos</span>
+                        </div>
+                        <div class="storage-alert" id="storageAlert" hidden>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>Storage acima de 80%. Faça limpeza ou faça upgrade do plano antes que pare de aceitar uploads.</span>
+                        </div>
                     </div>
 
                     <div class="panel">
-                        <div class="panel-title"><i class="fa-solid fa-file-arrow-up"></i> Nova versão de currículo</div>
+                        <div class="panel-title"><i class="fa-solid fa-upload"></i> Fazer upload de currículo</div>
+
                         <div class="form-group-inline">
                             <label>Nome da versão</label>
                             <input type="text" id="cvName" placeholder="Ex: QA Sênior — Padrão" autocomplete="off">
@@ -587,16 +626,31 @@ th.sort-active .sort-arrow{color:var(--cyan)}
                             <input type="text" id="cvDesc" placeholder="Adaptado para vagas sênior" autocomplete="off">
                         </div>
                         <div class="form-group-inline">
-                            <label>Arquivo (escolha um dos PDFs de exemplo)</label>
-                            <select id="cvFile">
-                                <option value="cv-jon-snow-qa-senior.pdf">Jon Snow — QA Sênior</option>
-                                <option value="cv-jon-snow-qa-auto.pdf">Jon Snow — QA Automation</option>
-                                <option value="cv-jon-snow-sdet.pdf">Jon Snow — SDET</option>
-                                <option value="cv-jon-snow-test-analyst.pdf">Jon Snow — Test Analyst</option>
-                                <option value="cv-jon-snow-bilingue.pdf">Jon Snow — Bilíngue EN</option>
-                            </select>
+                            <label>Nome do arquivo para download</label>
+                            <input type="text" id="cvFileName" placeholder="Curriculo-Jon-Snow-QA-2026.pdf" autocomplete="off">
+                            <small id="cvFileNamePreview" class="cv-filename-preview"></small>
                         </div>
-                        <button class="btn btn-cyan" onclick="createCV()"><i class="fa-solid fa-plus"></i> Adicionar currículo</button>
+
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                            <div><i class="fa-solid fa-file-arrow-up"></i></div>
+                            <p><strong>Clique ou arraste</strong> o PDF aqui</p>
+                            <p id="uploadFileName" style="color:var(--cyan);margin-top:8px;font-size:0.82rem"></p>
+                            <div class="upload-progress" id="uploadProgress">
+                                <div class="upload-phase" id="uploadPhase">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                    <span id="uploadPhaseText">Preparando…</span>
+                                </div>
+                                <div class="upload-bar-track">
+                                    <div class="upload-bar" id="uploadBar"></div>
+                                </div>
+                                <div class="upload-percent" id="uploadPercent"></div>
+                            </div>
+                        </div>
+                        <input type="file" id="fileInput" accept="application/pdf" style="display:none" onchange="onFileSelect(this)">
+
+                        <button class="btn btn-cyan" style="margin-top:16px" onclick="uploadCV()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Enviar currículo
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1041,6 +1095,7 @@ function revealApp() {
     document.getElementById('heroScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('tourReplay').classList.add('visible');
+    _bindCvUploadHandlers();
     loadCVs();
     setRefreshTs();
     setTimeout(() => {
@@ -1198,13 +1253,43 @@ async function loadCVs() {
     try {
         _cvs = await dapi('GET', '/api/demo/cv-versions');
         renderCVs();
-        // Atualiza select de tokens
         const sel = document.getElementById('tokenCV');
         if (sel) sel.innerHTML = '<option value="">Selecione…</option>' + _cvs.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-        // Storage card stats fake (com nº real de arquivos)
-        const filesEl = document.getElementById('storageFiles');
-        if (filesEl) filesEl.textContent = `${_cvs.length} arquivo${_cvs.length === 1 ? '' : 's'}`;
+        loadStorageStats();
     } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ─── STORAGE STATS ───
+let _storageAlertShown = false;
+function fmtBytes(b) {
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+    if (b < 1024 * 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
+    return `${(b / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+async function loadStorageStats() {
+    try {
+        const s = await dapi('GET', '/api/demo/storage-stats');
+        const card = document.getElementById('storageCard');
+        const fill = document.getElementById('storageBarFill');
+        if (!card || !fill) return;
+        const pct = Math.min(100, s.used_percent);
+        card.hidden = false;
+        document.getElementById('storageSub').textContent = `bucket "${s.bucket}" · ${fmtBytes(s.used_bytes)} de ${fmtBytes(s.limit_bytes)}`;
+        fill.style.width = pct + '%';
+        fill.classList.remove('warn', 'danger');
+        if (pct >= 80) fill.classList.add('danger');
+        else if (pct >= 60) fill.classList.add('warn');
+        document.getElementById('storagePct').textContent = pct.toFixed(1) + '% usado';
+        document.getElementById('storageFiles').textContent = `${s.files_count} arquivo${s.files_count === 1 ? '' : 's'}`;
+        document.getElementById('storageAlert').hidden = !s.should_alert;
+        if (s.should_alert && !_storageAlertShown) {
+            showToast(`⚠ Storage em ${pct.toFixed(1)}% — quase no limite.`, 'error');
+            _storageAlertShown = true;
+        }
+    } catch (e) {
+        console.warn('Storage stats indisponível:', e.message);
+    }
 }
 
 function renderCVs() {
@@ -1255,8 +1340,18 @@ function clearCvFilters() {
     renderCVs();
 }
 
+// Mapeia nome de arquivo customizado para um dos PDFs de exemplo (heurística)
+function _previewPdfPath(fileName) {
+    const n = (fileName || '').toLowerCase();
+    if (/(automation|automa[cç][aã]o|auto)/.test(n)) return 'cv-jon-snow-qa-auto.pdf';
+    if (/sdet/.test(n))                              return 'cv-jon-snow-sdet.pdf';
+    if (/(analyst|analista)/.test(n))                return 'cv-jon-snow-test-analyst.pdf';
+    if (/(bilingue|biling|english|\ben\b)/.test(n))  return 'cv-jon-snow-bilingue.pdf';
+    if (/^cv-jon-snow-/.test(n))                     return n;
+    return 'cv-jon-snow-qa-senior.pdf';
+}
 function previewCV(_id, fileName) {
-    window.open(`/projeto-sistema-admin-assets/${fileName}`, '_blank', 'noopener');
+    window.open(`/projeto-sistema-admin-assets/${_previewPdfPath(fileName)}`, '_blank', 'noopener');
 }
 
 async function toggleCVActive(id, active) {
@@ -1276,19 +1371,140 @@ async function deleteCV(id, name) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-// Criação via accordion (não modal)
-async function createCV() {
+// ─── UPLOAD ZONE (espelha prod, mas em demo o conteúdo binário não é armazenado) ───
+let _selectedFile = null;
+
+function normalizeFileNameClient(rawName) {
+    if (!rawName) return '';
+    let clean = rawName.trim().replace(/\s+/g, '_');
+    const dotIdx = clean.lastIndexOf('.');
+    let base = dotIdx > 0 ? clean.slice(0, dotIdx) : clean;
+    let ext = (dotIdx > 0 ? clean.slice(dotIdx) : '').toLowerCase().replace(/[^a-z0-9.]/g, '');
+    if (ext !== '.pdf') ext = '.pdf';
+    base = base.replace(/[^a-zA-Z0-9.]+/g, '_').replace(/\.+/g, '.').replace(/^[._]+|[._]+$/g, '');
+    if (!base) base = 'arquivo';
+    if (base.length > 200) base = base.slice(0, 200).replace(/[._]+$/, '');
+    return base + ext;
+}
+
+function updateFileNamePreview() {
+    const input = document.getElementById('cvFileName');
+    const preview = document.getElementById('cvFileNamePreview');
+    if (!input || !preview) return;
+    if (!input.value.trim()) { preview.textContent = ''; return; }
+    const normalized = normalizeFileNameClient(input.value);
+    if (normalized !== input.value.trim()) {
+        preview.textContent = `Será salvo como: ${normalized}`;
+        preview.style.color = 'var(--cyan)';
+    } else {
+        preview.textContent = '✓ Nome já está padronizado';
+        preview.style.color = 'var(--success, #22c55e)';
+    }
+}
+
+function onFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    _selectedFile = file;
+    document.getElementById('uploadFileName').textContent = file.name;
+    const nameInput = document.getElementById('cvFileName');
+    if (!nameInput.value) nameInput.value = file.name;
+    updateFileNamePreview();
+}
+
+function _setUploadPhase(text, mode, percent) {
+    document.getElementById('uploadPhaseText').textContent = text;
+    const bar = document.getElementById('uploadBar');
+    const pctEl = document.getElementById('uploadPercent');
+    if (mode === 'indeterminate') {
+        bar.classList.add('indeterminate');
+        pctEl.textContent = '';
+    } else {
+        bar.classList.remove('indeterminate');
+        const p = Math.round((percent || 0) * 100);
+        bar.style.width = p + '%';
+        pctEl.textContent = p + '%';
+    }
+}
+
+function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Upload simulado: em demo, o PDF do usuário não é armazenado — só metadados.
+// O preview/download usa um dos PDFs de exemplo mapeado por heurística.
+async function uploadCV() {
     const name = document.getElementById('cvName').value.trim();
-    const description = document.getElementById('cvDesc').value.trim();
-    const file_name = document.getElementById('cvFile').value;
-    if (!name) return showToast('Nome obrigatório', 'error');
+    const desc = document.getElementById('cvDesc').value.trim();
+    const fileName = document.getElementById('cvFileName').value.trim();
+
+    if (!name) return showToast('Nome da versão obrigatório', 'error');
+    if (!fileName && !_selectedFile) return showToast('Selecione um arquivo PDF ou informe o nome', 'error');
+
+    const progress = document.getElementById('uploadProgress');
+    progress.style.display = 'block';
+
     try {
-        await dapi('POST', '/api/demo/cv-versions', { name, description, file_name });
-        showToast('CV adicionado');
+        _setUploadPhase('Preparando upload…', 'indeterminate');
+        await _sleep(420);
+
+        _setUploadPhase('Enviando arquivo…', 'progress', 0);
+        for (let p = 0.05; p <= 1; p += 0.07) {
+            await _sleep(80);
+            _setUploadPhase('Enviando arquivo…', 'progress', Math.min(1, p));
+        }
+
+        _setUploadPhase('Registrando no banco…', 'indeterminate');
+        const file_name = normalizeFileNameClient(fileName || (_selectedFile && _selectedFile.name) || 'cv-demo.pdf');
+        await dapi('POST', '/api/demo/cv-versions', { name, description: desc, file_name });
+
+        _setUploadPhase('Concluído ✓', 'progress', 1);
+        setTimeout(() => {
+            progress.style.display = 'none';
+            _setUploadPhase('Preparando…', 'progress', 0);
+        }, 900);
+
+        _selectedFile = null;
         document.getElementById('cvName').value = '';
         document.getElementById('cvDesc').value = '';
+        document.getElementById('cvFileName').value = '';
+        document.getElementById('cvFileNamePreview').textContent = '';
+        document.getElementById('uploadFileName').textContent = '';
+        document.getElementById('fileInput').value = '';
+
+        showToast('Currículo enviado com sucesso!');
         loadCVs();
-    } catch (e) { showToast(e.message, 'error'); }
+    } catch (e) {
+        progress.style.display = 'none';
+        showToast(e.message, 'error');
+    }
+}
+
+// Bindings (executam após DOM ready do appScreen, já que a aba CVs está sempre presente)
+function _bindCvUploadHandlers() {
+    const fnInput = document.getElementById('cvFileName');
+    if (fnInput && !fnInput._bound) {
+        fnInput.addEventListener('input', updateFileNamePreview);
+        fnInput._bound = true;
+    }
+    const zone = document.getElementById('uploadZone');
+    if (zone && !zone._bound) {
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file?.type === 'application/pdf') {
+                _selectedFile = file;
+                document.getElementById('uploadFileName').textContent = file.name;
+                const ni = document.getElementById('cvFileName');
+                if (!ni.value) ni.value = file.name;
+                updateFileNamePreview();
+            } else {
+                showToast('Apenas arquivos PDF são aceitos', 'error');
+            }
+        });
+        zone._bound = true;
+    }
 }
 
 // Editar metadados do CV (nome, descrição, ativo)
