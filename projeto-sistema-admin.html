@@ -315,7 +315,7 @@ tbody td{padding:11px 14px;font-size:0.84rem;vertical-align:middle}
 .tour-overlay.open{display:block}
 .tour-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.7);transition:opacity 0.3s;pointer-events:none}
 .tour-spotlight{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.72),0 0 0 3px var(--cyan);transition:all 0.4s cubic-bezier(0.4,0,0.2,1);pointer-events:none}
-.tour-card{position:absolute;z-index:2;width:320px;max-width:calc(100vw - 40px);background:var(--bg-elevated);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.6);transition:all 0.4s cubic-bezier(0.4,0,0.2,1)}
+.tour-card{position:absolute;z-index:2;width:320px;max-width:calc(100vw - 40px);max-height:calc(100vh - 32px);overflow-y:auto;background:var(--bg-elevated);border:1px solid var(--cyan);border-radius:12px;padding:18px 20px;box-shadow:0 12px 32px rgba(0,0,0,0.6);transition:top 0.4s cubic-bezier(0.4,0,0.2,1),left 0.4s cubic-bezier(0.4,0,0.2,1)}
 .tour-card h3{font-size:0.95rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .tour-card .tour-emoji{font-size:1.15rem}
 .tour-card p{font-size:0.82rem;color:var(--text-soft);line-height:1.55;margin-bottom:14px}
@@ -2009,32 +2009,38 @@ function showStep() {
 function positionTour(targetSel) {
     const card = document.getElementById('tourCard');
     const spot = document.getElementById('tourSpotlight');
-    const cw = card.offsetWidth || 320, ch = card.offsetHeight || 160;
     const vw = window.innerWidth, vh = window.innerHeight;
+    const cw = Math.min(card.offsetWidth || 320, vw - 32);
+    const ch = Math.min(card.offsetHeight || 200, vh - 32);
+    const M = 16;
+    const clampTop  = v => Math.max(M, Math.min(vh - ch - M, v));
+    const clampLeft = v => Math.max(M, Math.min(vw - cw - M, v));
 
-    const t = document.querySelector(targetSel);
-    if (!t) {
+    const t = targetSel ? document.querySelector(targetSel) : null;
+    const r = (t && t.offsetParent !== null) ? t.getBoundingClientRect() : null;
+    const targetVisible = r && r.bottom > 0 && r.top < vh && r.width > 0;
+
+    if (!targetVisible) {
         spot.style.cssText = `top:-9999px;left:-9999px;width:0;height:0;`;
-        card.style.cssText = `top:${Math.max(16, vh / 2 - ch / 2)}px;left:${Math.max(16, vw / 2 - cw / 2)}px;`;
+        card.style.cssText = `top:${clampTop(vh / 2 - ch / 2)}px;left:${clampLeft(vw / 2 - cw / 2)}px;`;
         return;
     }
 
-    const r = t.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > vh) {
+        t.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
     const PAD = 8;
     spot.style.cssText = `top:${r.top - PAD}px;left:${r.left - PAD}px;width:${r.width + 2 * PAD}px;height:${r.height + 2 * PAD}px;`;
 
-    let top, left;
-    if (r.bottom + ch + 16 < vh) {
-        top = r.bottom + 14;
-        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
-    } else if (r.top - ch - 16 > 0) {
-        top = r.top - ch - 14;
-        left = Math.max(16, Math.min(vw - cw - 16, r.left + r.width / 2 - cw / 2));
-    } else {
-        top = Math.max(16, vh / 2 - ch / 2);
-        left = Math.max(16, vw / 2 - cw / 2);
-    }
-    card.style.cssText = `top:${top}px;left:${left}px;`;
+    const fitBelow = r.bottom + ch + M * 2 < vh;
+    const fitAbove = r.top - ch - M * 2 > 0;
+    let top;
+    if (fitBelow)      top = r.bottom + 14;
+    else if (fitAbove) top = r.top - ch - 14;
+    else               top = vh / 2 - ch / 2;
+    const left = r.left + r.width / 2 - cw / 2;
+    card.style.cssText = `top:${clampTop(top)}px;left:${clampLeft(left)}px;`;
 }
 window.addEventListener('resize', () => {
     if (document.getElementById('tourOverlay').classList.contains('open')) positionTour(TOUR[_tourStep].target);
