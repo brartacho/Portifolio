@@ -314,8 +314,12 @@ async function handleTokens(req, res, session_id) {
         if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
         const body = req.body || {};
         const patch = {};
-        if ('revoked' in body) patch.revoked = !!body.revoked;
-        if ('label'   in body) patch.label   = clean(body.label, 100);
+        if ('revoked' in body)    patch.revoked    = !!body.revoked;
+        if ('label'   in body)    patch.label      = clean(body.label, 100);
+        if ('expires_at' in body && body.expires_at) {
+            const d = new Date(body.expires_at);
+            if (!isNaN(d.getTime())) patch.expires_at = d.toISOString();
+        }
         const { data, error } = await supabase.from('demo_download_tokens')
             .update(patch).eq('id', req.query.id).eq('session_id', session_id)
             .select('*, cv_versions:demo_cv_versions(id, name)').single();
