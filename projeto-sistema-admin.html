@@ -510,9 +510,18 @@ th.sort-active .sort-arrow{color:var(--cyan)}
 tr.token-row-selected td{background:rgba(34,211,238,0.04) !important}
 tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
-/* ─── TOKEN BULK BAR ─── */
-#token-bulk-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;background:var(--bg-elevated);border-top:1px solid rgba(255,255,255,0.1);padding:10px 20px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));gap:10px;align-items:center;flex-wrap:wrap}
+/* ─── TOKEN/VAGAS BULK BAR ─── */
+#token-bulk-bar,#vagas-bulk-bar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;background:var(--bg-elevated);border-top:1px solid rgba(255,255,255,0.1);padding:10px 20px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));gap:10px;align-items:center;flex-wrap:wrap}
 .bulk-count{font-size:0.85rem;font-weight:600;color:var(--text-soft);flex:1}
+
+/* ─── VAGAS FILTROS TOGGLE / SORT CHIP ─── */
+.vagas-filters-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--cyan);color:#000;font-size:0.65rem;font-weight:700;border-radius:10px;padding:0 6px;min-width:18px;height:16px;margin-left:6px}
+.vagas-sort-chip{background:transparent;border:1px solid var(--border);color:var(--text-soft);font-size:0.72rem;font-family:var(--font-display);padding:4px 10px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s}
+.vagas-sort-chip:hover{border-color:var(--cyan);color:var(--text)}
+.vagas-sort-chip.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan)}
+#vagasFiltersPanel.collapsed{display:none}
+.vaga-row-selected td{background:rgba(34,211,238,0.06) !important}
+.vaga-row-selected{outline:1px solid rgba(34,211,238,0.25)}
 
 /* ─── TOKEN FORM GRID ─── */
 .token-form-grid{display:grid;grid-template-areas:"cv label uses" "valid valid submit";grid-template-columns:1fr 1fr 160px;column-gap:14px;row-gap:14px}
@@ -898,9 +907,29 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                             </div>
                         </div>
                     </div>
-                    <div style="display:flex;gap:8px">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn btn-sm" id="vagasFiltersToggleBtn" onclick="toggleVagasFilters()" title="Mostrar/ocultar filtros">
+                            <i class="fa-solid fa-sliders"></i> Filtros
+                            <span id="vagasFiltersBadge" class="vagas-filters-badge" style="display:none"></span>
+                            <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;margin-left:4px;transition:transform 0.2s"></i>
+                        </button>
+                        <button class="btn btn-sm" id="vagasSelectBtn" onclick="toggleVagasSelectMode()" title="Selecionar para ações em lote"><i class="fa-solid fa-check-square"></i> Selecionar</button>
+                        <button class="btn btn-sm" onclick="exportVagasCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
                         <button class="btn btn-sm btn-cyan" onclick="openNewVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
                     </div>
+                </div>
+
+                <!-- Sort chip bar -->
+                <div class="vagas-sort-bar" style="display:flex;gap:6px;margin-bottom:8px">
+                    <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)" title="Ordenar por última modificação"><i class="fa-solid fa-clock" style="font-size:0.65rem"></i> Última mod.</button>
+                </div>
+
+                <!-- Bulk bar (compartilha estilo de #token-bulk-bar) -->
+                <div id="vagas-bulk-bar" role="toolbar" aria-label="Ações em lote vagas">
+                    <span class="bulk-count" id="vagasBulkCount">0 selecionadas</span>
+                    <button class="btn btn-sm" onclick="archiveVagasBulk()"><i class="fa-solid fa-box-archive"></i> Arquivar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteVagasBulk()"><i class="fa-solid fa-trash"></i> Excluir</button>
+                    <button class="btn btn-sm" style="margin-left:auto" onclick="clearVagasSelection()">Cancelar</button>
                 </div>
 
                 <div class="filter-bar" style="margin-bottom:12px">
@@ -1945,8 +1974,135 @@ function clearVagasDate() {
 }
 function sortVagas(col) {
     if (_vagasSort.col === col) _vagasSort.dir = _vagasSort.dir === 'asc' ? 'desc' : 'asc';
-    else { _vagasSort.col = col; _vagasSort.dir = 'asc'; }
+    else { _vagasSort.col = col; _vagasSort.dir = 'desc'; }
+    document.querySelectorAll('.vagas-sort-chip').forEach(c => c.classList.remove('active'));
     renderApplicationsTable();
+}
+
+function sortVagasChip(col, btn) {
+    const isActive = btn.classList.contains('active');
+    if (!isActive) {
+        document.querySelectorAll('.vagas-sort-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        _vagasSort = { col, dir: 'desc' };
+    } else {
+        _vagasSort.dir = _vagasSort.dir === 'asc' ? 'desc' : 'asc';
+    }
+    renderApplicationsTable();
+}
+
+// ─── Filtros toggle ───
+function toggleVagasFilters() {
+    const panel = document.getElementById('vagasFiltersPanel');
+    const chev  = document.getElementById('vagasFiltersChevron');
+    const collapsed = panel.classList.toggle('collapsed');
+    if (chev) chev.style.transform = collapsed ? 'rotate(180deg)' : '';
+}
+
+// ─── Bulk select ───
+let _vagasSelecting = false;
+let _selectedVagaIds = new Set();
+function toggleVagasSelectMode() {
+    _vagasSelecting = !_vagasSelecting;
+    const btn = document.getElementById('vagasSelectBtn');
+    if (btn) btn.classList.toggle('btn-cyan', _vagasSelecting);
+    if (!_vagasSelecting) _selectedVagaIds.clear();
+    renderApplicationsTable();
+    _updateVagasBulkBar();
+}
+function _updateVagasBulkBar() {
+    const bar = document.getElementById('vagas-bulk-bar');
+    const count = _selectedVagaIds.size;
+    bar.style.display = (_vagasSelecting && count > 0) ? 'flex' : 'none';
+    document.getElementById('vagasBulkCount').textContent = `${count} selecionada${count === 1 ? '' : 's'}`;
+}
+function toggleVagaRow(id, cb, event) {
+    if (event) event.stopPropagation();
+    if (cb.checked) _selectedVagaIds.add(id); else _selectedVagaIds.delete(id);
+    const tr = cb.closest('tr');
+    if (tr) tr.classList.toggle('vaga-row-selected', cb.checked);
+    _updateVagasBulkBar();
+}
+function clearVagasSelection() {
+    _selectedVagaIds.clear();
+    _vagasSelecting = false;
+    const btn = document.getElementById('vagasSelectBtn');
+    if (btn) btn.classList.remove('btn-cyan');
+    renderApplicationsTable();
+    _updateVagasBulkBar();
+}
+async function archiveVagasBulk() {
+    const ids = Array.from(_selectedVagaIds);
+    if (!ids.length) return;
+    if (!confirm(`Arquivar ${ids.length} candidatura(s)?`)) return;
+    try {
+        for (const id of ids) await dapi('PUT', `/api/demo/applications?id=${id}`, { archived: true });
+        showToast(`${ids.length} arquivada(s)`);
+        clearVagasSelection();
+        loadVagas();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+async function deleteVagasBulk() {
+    const ids = Array.from(_selectedVagaIds);
+    if (!ids.length) return;
+    if (!confirm(`EXCLUIR ${ids.length} candidatura(s) permanentemente?`)) return;
+    try {
+        for (const id of ids) await dapi('DELETE', `/api/demo/applications?id=${id}`);
+        showToast(`${ids.length} excluída(s)`);
+        clearVagasSelection();
+        loadVagas();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ─── Exportar CSV ───
+function exportVagasCSV() {
+    const headers = ['Empresa', 'Vaga', 'Gestor', 'Email', 'WhatsApp', 'Modalidade', 'Tipo', 'Resultado', 'Etapa', 'Data envio', 'Cadastrado', 'Observações'];
+    const filtered = _getVagasFiltered();
+    if (!filtered.length) return showToast('Nada para exportar com os filtros atuais.', 'error');
+    const escCsv = v => {
+        const s = String(v ?? '');
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map(a => [
+        a.empresa, a.vaga, a.gestor_nome, a.gestor_email, a.gestor_phone,
+        a.modalidade, a.tipo_contratacao, a.result || getAppStatus(a),
+        getAppCurrentStageName(a),
+        a.data_envio ? fmtDate(a.data_envio) : '',
+        a.created_at ? fmtDate(a.created_at) : '',
+        a.observacoes,
+    ].map(escCsv).join(','));
+    const csv = '﻿' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vagas-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`${filtered.length} candidatura(s) exportada(s)`);
+}
+
+// Reproduz a lógica de filtro de renderApplicationsTable mas retorna o array
+function _getVagasFiltered() {
+    const search = (document.getElementById('vagasSearch')?.value || '').toLowerCase();
+    let filtered = _applications;
+    if (_vagasFilter === 'arquivadas') filtered = filtered.filter(a => a.archived);
+    else {
+        filtered = filtered.filter(a => !a.archived);
+        if (_vagasFilter !== 'all') filtered = filtered.filter(a => getAppStatus(a) === _vagasFilter);
+    }
+    if (_vagasModalidadeFilter !== 'all') filtered = filtered.filter(a => a.modalidade === _vagasModalidadeFilter);
+    if (_vagasTipoFilter !== 'all')       filtered = filtered.filter(a => a.tipo_contratacao === _vagasTipoFilter);
+    const dateFrom = document.getElementById('vagasDateFrom')?.value;
+    const dateTo   = document.getElementById('vagasDateTo')?.value;
+    if (dateFrom) filtered = filtered.filter(a => a.data_envio && a.data_envio.slice(0,10) >= dateFrom);
+    if (dateTo)   filtered = filtered.filter(a => a.data_envio && a.data_envio.slice(0,10) <= dateTo);
+    if (search) filtered = filtered.filter(a =>
+        (a.empresa || '').toLowerCase().includes(search) ||
+        (a.vaga || '').toLowerCase().includes(search) ||
+        (a.gestor_nome || '').toLowerCase().includes(search)
+    );
+    return filtered;
 }
 
 async function loadVagas() {
@@ -1991,6 +2147,7 @@ function renderApplicationsTable() {
             case 'gestor':     return mult * (a.gestor_nome || '').localeCompare(b.gestor_nome || '', 'pt-BR');
             case 'data_envio': return mult * (a.data_envio || '').localeCompare(b.data_envio || '');
             case 'created_at': return mult * (a.created_at || '').localeCompare(b.created_at || '');
+            case 'updated_at': return mult * ((a.updated_at || a.created_at || '').localeCompare(b.updated_at || b.created_at || ''));
             case 'stage':      return mult * getAppCurrentStageName(a).localeCompare(getAppCurrentStageName(b), 'pt-BR');
             default:           return 0;
         }
@@ -2022,7 +2179,15 @@ function renderApplicationsTable() {
         const tagBadges  = [app.modalidade, app.tipo_contratacao].filter(Boolean)
             .map(t => `<span style="display:inline-block;font-size:0.62rem;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);margin-right:3px">${esc(t)}</span>`).join('');
         const metaMobile = [gestor !== '—' ? gestor : '', dt !== '—' ? dt : ''].filter(Boolean).join(' · ');
-        return `<tr class="row-clickable" onclick="openVagaDrawer('${app.id}')">
+        const cbCell = _vagasSelecting
+            ? `<td style="width:32px;padding-right:4px"><input type="checkbox" ${_selectedVagaIds.has(app.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleVagaRow('${app.id}',this,event)" style="accent-color:var(--cyan);cursor:pointer"></td>`
+            : '';
+        const rowCls = _selectedVagaIds.has(app.id) ? 'vaga-row-selected' : '';
+        const clickHandler = _vagasSelecting
+            ? `onclick="const c=this.querySelector('input[type=checkbox]'); if(c){ c.checked=!c.checked; toggleVagaRow('${app.id}',c); }"`
+            : `onclick="openVagaDrawer('${app.id}')"`;
+        return `<tr class="row-clickable ${rowCls}" ${clickHandler}>
+            ${cbCell}
             <td>
                 <div style="font-size:0.84rem;font-weight:500">${empresa}</div>
                 ${vaga ? `<div style="font-size:0.72rem;color:var(--text-soft)">${vaga}</div>` : ''}
