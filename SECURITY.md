@@ -45,7 +45,12 @@ e endpoints autenticados em `/api/admin/*`. O modelo de ameaças considera:
   - FillTime: tempo entre focar form e submeter < 800ms → bloqueio
 - **Autenticação** ([api/admin/login.js](api/admin/login.js)):
   - bcrypt cost 12 + senha sempre comparada (defesa contra timing attack)
-  - JWT HS256, expiração 8h (TODO Fase 2: reduzir para 1h + sliding refresh)
+  - JWT HS256, expiração 1h, em cookie `httpOnly + Secure + SameSite=Strict`
+  - Sliding refresh ([api/admin/sessions.js](api/admin/sessions.js)): se TTL restante <15min,
+    emite novo token; hard limit absoluto de 24h a partir do login original
+  - Cliente chama `PATCH /api/admin/sessions` a cada 10min para acionar o refresh
+  - Sessão revogável por JTI (tabela `admin_sessions`); device fingerprint (UA+lang)
+    e detecção de mudança de país (`cf-ipcountry`) — qualquer divergência revoga e desloga
   - Mensagem de erro genérica (`Usuário ou senha incorretos`) para mitigar enumeração
 - **Audit log** (tabela `admin_login_attempts`): IP, UA, sucesso/falha, hint do username
 - **Alertas Telegram** ([api/_lib/notify.js](api/_lib/notify.js)):
@@ -53,12 +58,9 @@ e endpoints autenticados em `/api/admin/*`. O modelo de ameaças considera:
   - Login bem-sucedido de IP novo (não visto em 30d)
   - Bot detection → alerta
 
-### Roadmap (Fase 2+)
-- JWT em cookie httpOnly + Secure + SameSite=Strict (substituir localStorage)
-- TTL JWT 1h + sliding refresh
-- Sessão revogável por JTI (tabela `admin_sessions`)
+### Roadmap (futuras fases)
 - Passkey/WebAuthn como 2º fator + "remember device 30d"
-- Cloudflare Turnstile token no login
+- Cloudflare Turnstile token no login (atualmente: invisível, planejado)
 - Middleware de validação de Cf-Access-Jwt-Assertion no backend
 - Rotação programada de `JWT_SECRET` (script `scripts/rotate-jwt-secret.mjs`)
 
