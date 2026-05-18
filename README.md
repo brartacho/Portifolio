@@ -1,107 +1,154 @@
 # Portfólio ARTACHO.dev
 
-Portfólio profissional de Bruno Artacho com foco em apresentação de atuação em QA, estudos de caso e projetos complementares.
+Portfólio profissional de Bruno Artacho — QA Engineer e automation specialist. Reúne apresentação pública, estudos de caso, currículo interativo e um painel administrativo completo para gestão de candidaturas, tokens e métricas.
 
-## Visão geral
+> Produção: https://bruno-artacho.vercel.app
+> Última atualização: 2026-05-18 — veja [STATUS.md](STATUS.md) para o resumo de entregas.
 
-O projeto foi refinado para priorizar:
+---
 
-- hierarquia visual mais clara na home
-- melhor ritmo entre títulos, textos, chips, cards e áreas de respiro
-- consistência de UI entre a página principal e os estudos de caso
-- leitura confortável em desktop, tablet e mobile
-- conteúdo estático com manutenção simples e previsível
-
-## Publicação
-
-- URL principal: `https://bruno-artacho.vercel.app`
-- projeto complementar `Padaria do Bairro`: `https://padaria-do-bairro-premium.vercel.app`
-- imagem do card `Padaria do Bairro`: `imagens/capa_padaria_bairro_premium.jpg`
-- domínio exibido no projeto: `ARTACHO.dev`
-- imagem social configurada para compartilhamento: `imagens/capa-portfolio-ok.jpg`
-
-## Páginas
-
-- `index.html`
-  Página principal com hero, resumo profissional, atuação, stack, projetos e contato.
-
-- `estudo-caso-pagamentos.html`
-  Caso focado em regra de negócio, regressão, reteste e impacto funcional.
-
-- `cenario-tecnico-qa.html`
-  Caso focado em validação técnica, APIs, logs, banco, mocks e consistência ponta a ponta.
-
-## Tecnologias
-
-- `HTML5`
-- `CSS3`
-- `JavaScript` vanilla
-- `Font Awesome`
-- `Devicon`
-
-## Principais refinamentos aplicados
-
-- correção de acentuação e normalização dos HTMLs em UTF-8
-- hero com melhor hierarquia, contraste tipográfico e CTA mais claros
-- barra de destaques reorganizada para desktop, tablet e mobile
-- cards de stack com microespaçamento e alinhamento revisados
-- seção de projetos reorganizada, incluindo o próprio portfólio como projeto autoral
-- card do portfólio apontando para a URL publicada na Vercel
-- estudo complementar `Padaria do Bairro` integrado à mesma linguagem visual da grade e apontando para `https://padaria-do-bairro-premium.vercel.app`
-- páginas de caso com melhor leitura entre métricas, grids, accordions e footer
-- footers simplificados para uma solução mais minimalista e consistente
-- metadata social atualizada com `canonical`, `Open Graph` e `Twitter Card`
-
-## Histórico resumido
-
-- `v1.2.0`
-  Estabilização visual do projeto, limpeza de regressões nas páginas de caso, consolidação do CSS responsivo e centralização de tabs e accordions em `script.js`.
-
-- `v1.1.0`
-  Refinamento inicial de UI e ganho de consistência entre desktop, tablet e mobile.
-
-- `v1.0.3`
-  Ajustes de microcopy e UX.
-
-- `v1.0.2`
-  Otimização de preview social.
-
-- `v1.0.0`
-  Lançamento inicial do portfólio.
-
-## Metadata social
-
-A home está preparada para compartilhamento em redes sociais com:
-
-- `canonical` apontando para `https://bruno-artacho.vercel.app`
-- `og:url` e `twitter:url` apontando para o domínio publicado
-- `og:image` e `twitter:image` usando `imagens/capa-portfolio-ok.jpg`
-- título, descrição e `alt` da imagem ajustados para apresentação profissional do portfólio
-
-## Estrutura
+## Estrutura do projeto
 
 ```text
 portfolio/
-├── imagens/
-├── index.html
-├── estudo-caso-pagamentos.html
-├── cenario-tecnico-qa.html
-├── style.css
-├── script.js
-├── README.md
-└── README.txt
+├── admin/                       # Painel administrativo (SPA)
+├── api/                         # Vercel Functions (Node.js)
+│   ├── _lib/                    # Auth, db, helpers
+│   ├── admin/                   # Endpoints autenticados
+│   ├── cv/                      # Tracking de visualizações
+│   ├── demo/                    # Reset do banco de demo
+│   └── track.js                 # Analytics público
+├── supabase/                    # Schema + 21 migrations SQL
+├── imagens/                     # Assets visuais
+├── tests/                       # Playwright E2E
+├── scripts/                     # Utilitários de manutenção
+├── index.html                   # Home pública
+├── cv.html                      # Currículo interativo
+├── estudo-caso-pagamentos.html  # Estudo de caso (funcional)
+├── cenario-tecnico-qa.html      # Estudo de caso (técnico)
+├── projeto-sistema-admin.html   # Apresentação do painel admin
+├── privacidade.html             # Política de privacidade
+├── style.css                    # Estilos globais do site público
+├── script.js                    # JS público (menu, tabs, accordions)
+├── analytics.js                 # Tracking do site público
+├── dev-server.mjs               # Servidor local (substitui CDNs)
+└── vercel.json                  # Configuração de deploy
 ```
 
-## Como abrir
+---
 
-1. Abra `index.html` no navegador para navegação local.
-2. Acesse também os dois estudos de caso pela home.
-3. Para prévia pública, use `https://bruno-artacho.vercel.app`.
+## Frontend público
+
+Site estático com foco em apresentação profissional, performance e SEO.
+
+- Hero com indicador "Disponível para oportunidades"
+- Skills grid 2x2 (QA · Automação · APIs · Stack) — Playwright, PyAutoGUI, Postman, Insomnia, Cursor + MCP
+- Seção de formação e 5 certificações
+- Animações on-scroll via `IntersectionObserver`
+- **Self-host completo** de fontes, ícones (Font Awesome) e libs (Devicon, SortableJS) — zero CDN externo
+- Metadata social (`canonical`, Open Graph, Twitter Card) para todas as páginas
+- Estudos de caso com tabs, accordions, métricas e regras de negócio anonimizadas
+
+---
+
+## Painel administrativo (`/admin`)
+
+SPA leve em HTML/CSS/JS vanilla autenticada com cookie httpOnly + JTI revogável.
+
+### 6 abas
+| Aba | Recursos |
+|---|---|
+| **CVs** | Upload/versionamento, preview de PDF em modal, download |
+| **Tokens** | Geração de tokens para envio de CV via link, layout responsivo com CSS grid por breakpoint |
+| **Vagas** | CRUD de candidaturas, drag-and-drop de etapas (SortableJS + undo/redo), auto-vínculo de CV e WhatsApp do recrutador, drawer full-screen com preview do CV enviado e link `wa.me` clicável |
+| **Logs** | Paginação server-side, filtros, audit trail completo |
+| **Segurança** | Tentativas de login, IPs bloqueados, alertas Telegram |
+| **Métricas** | 5 modos de gráfico para análise de vagas, export CSV, RPCs de drill-down |
+
+### Características
+- Mobile UX completa: bottom navigation, cards, drawer full-screen, touch targets de 48px
+- Lazy loading por aba + auto-refresh a cada 60s
+- Estratégia de paginação: client-side para CVs/Tokens/Vagas (volume pequeno), server-side para Logs
+
+---
+
+## Segurança
+
+Implementação em duas fases de hardening (ver [SECURITY.md](SECURITY.md)):
+
+- Autenticação por cookie **httpOnly** + JWT com **JTI revogável** + tabela de sessions
+- Rate limiting por IP em endpoints sensíveis
+- Content Security Policy aplicada via headers
+- Bcrypt para credenciais
+- Alertas Telegram em eventos críticos (tentativas de login, mudanças sensíveis)
+- Tabela `admin_login_attempts` para análise forense
+- Analytics segregada (admin não polui métricas públicas)
+
+---
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Frontend | HTML5, CSS3, JavaScript vanilla |
+| Backend | Node.js, Vercel Functions |
+| Banco de dados | Supabase (PostgreSQL + Storage) |
+| Auth | JWT (`jsonwebtoken`) + bcrypt (`bcryptjs`) |
+| Testes | Playwright |
+| Deploy | Vercel + GitHub Pages |
+| Dev local | `dev-server.mjs` (substitui CDNs) |
+
+---
+
+## Banco de dados
+
+21 migrations versionadas em `supabase/` cobrindo:
+
+- Credenciais e tokens (002, 004)
+- Snapshot de CVs (003, 019)
+- Candidaturas e ciclo de vida (005, 006, 018)
+- Vagas, modalidade, arquivamento (008, 009, 012)
+- Estatísticas e distribuição (010, 011, 013, 020-metrics)
+- Eventos do site e retenção (007, 015, 016, 017)
+- Tentativas de login (014)
+- Banco de demo descartável (020-demo, 021-demo-seed)
+
+---
+
+## Como rodar localmente
+
+```bash
+# Instalar dependências
+npm install
+
+# Servidor local (frontend público + admin) — substitui CDNs por self-host
+node dev-server.mjs
+
+# Rodar testes E2E
+npm test
+```
+
+Variáveis de ambiente em `.env.example`. As Vercel Functions só rodam em deploy (não no dev-server local).
+
+---
+
+## Demo / Showcase
+
+Banco descartável para demonstração pública do painel admin com **reset automático** via `api/demo/`. Os dados são populados a partir das migrations 020/021 (seed "Jon Snow") e podem ser zerados a qualquer momento sem afetar produção.
+
+---
+
+## URLs
+
+- Produção: https://bruno-artacho.vercel.app
+- Showcase admin: rota interna do painel, ver `projeto-sistema-admin.html`
+- Projeto complementar (Padaria do Bairro): https://padaria-do-bairro-premium.vercel.app
+
+---
 
 ## Observações
 
-- O projeto é estático e não depende de backend.
-- O JavaScript controla menu mobile, tabs e accordions.
-- O conteúdo dos estudos de caso foi estruturado para leitura profissional, com informações reorganizadas e anonimizadas.
-- Para a prévia social funcionar corretamente, `imagens/capa-portfolio-ok.jpg` precisa estar publicada nesse mesmo caminho no domínio final.
-- O histórico antigo foi consolidado neste `README.md`; o `README.txt` pode permanecer apenas como referência local.
+- O frontend público é estático e pode ser servido por qualquer CDN.
+- O painel admin e a API exigem Vercel + Supabase configurados.
+- Para a prévia social, `imagens/capa-portfolio-ok.jpg` precisa estar publicada no caminho final.
+- Histórico de mudanças anteriores ao painel admin está preservado em commits de `main`.
