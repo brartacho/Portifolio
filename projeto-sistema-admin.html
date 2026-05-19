@@ -548,7 +548,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 <!-- ─── HERO + LOGIN ─── -->
 <div class="hero-screen" id="heroScreen">
     <nav class="hero-nav">
-        <a href="/" class="hero-back"><i class="fa-solid fa-arrow-left"></i> Portfólio</a>
+        <a href="/" class="hero-back"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Portfólio</a>
         <div class="hero-breadcrumb">ARTACHO.dev <span>/</span> demo do painel admin</div>
     </nav>
 
@@ -560,7 +560,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
     <div class="split-container">
         <div class="split-card pub">
-            <div class="split-icon"><i class="fa-solid fa-globe"></i></div>
+            <div class="split-icon"><i class="fa-solid fa-globe" aria-hidden="true"></i></div>
             <h3>Frente pública</h3>
             <p>Este portfólio — HTML, CSS e JS vanilla. Sem frameworks. Analytics próprio, rastreio de engajamento, download de CV com token.</p>
             <div class="split-tags">
@@ -571,7 +571,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
             </div>
         </div>
         <div class="split-card priv">
-            <div class="split-icon"><i class="fa-solid fa-lock"></i></div>
+            <div class="split-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
             <h3>Painel admin</h3>
             <p>Gestão de candidaturas, versionamento de CVs, analytics em tempo real, envio por e-mail e WhatsApp, tokens de acesso.</p>
             <div class="split-tags">
@@ -585,33 +585,33 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
     <div id="loginSection">
         <div class="login-box" id="loginBox">
-            <div class="login-icon"><i class="fa-solid fa-terminal"></i></div>
+            <div class="login-icon"><i class="fa-solid fa-terminal" aria-hidden="true"></i></div>
             <h2>Acesso demo</h2>
             <p>Explore o painel admin com dados fictícios isolados — banco descartável que reseta a cada 24h.</p>
             <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="loginEmail" placeholder="Digite o email" autocomplete="off">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="Digite o email" autocomplete="off" required>
             </div>
             <div class="form-group">
-                <label>Senha</label>
+                <label for="loginPass">Senha</label>
                 <div class="input-wrap">
-                    <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off">
-                    <button type="button" class="input-eye" onclick="togglePass()" aria-label="Mostrar/ocultar senha"><i class="fa-solid fa-eye" id="eyeIcon"></i></button>
+                    <input type="password" id="loginPass" placeholder="Digite a senha" autocomplete="off" required>
+                    <button type="button" class="input-eye" onclick="togglePass()" aria-label="Mostrar/ocultar senha"><i class="fa-solid fa-eye" id="eyeIcon" aria-hidden="true"></i></button>
                 </div>
             </div>
 
             <!-- Honeypot anti-bot -->
-            <input type="text" name="website" class="honeypot" id="hpWebsite" tabindex="-1" autocomplete="off">
+            <input type="text" name="website" class="honeypot" id="hpWebsite" tabindex="-1" autocomplete="off" aria-hidden="true">
 
             <div id="turnstileWrap"></div>
 
             <button class="btn-login" id="btnLogin" onclick="doLogin()">
-                <i class="fa-solid fa-right-to-bracket"></i> Entrar no demo
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Entrar no demo
             </button>
             <div class="login-error" id="loginError"></div>
 
             <div class="lgpd-note">
-                <i class="fa-solid fa-shield-halved"></i>
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                 <span><b>LGPD:</b> nenhum IP real é armazenado. IPs exibidos são hashes anônimos com salt diário rotativo.</span>
             </div>
         </div>
@@ -629,14 +629,14 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
         <span class="app-brand">ARTACHO<span>.</span>dev</span>
         <span class="app-badge">demo</span>
         <span class="app-refresh-ts" id="refreshTs"></span>
-        <button class="app-btn-icon" onclick="refreshActive()" title="Atualizar"><i class="fa-solid fa-rotate"></i> <span class="hide-on-mobile">Atualizar</span></button>
-        <button class="app-btn-icon danger" onclick="logout()" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hide-on-mobile">Sair</span></button>
+        <button class="app-btn-icon" onclick="refreshActive()" title="Atualizar"><i class="fa-solid fa-rotate" aria-hidden="true"></i> <span class="hide-on-mobile">Atualizar</span></button>
+        <button class="app-btn-icon danger" onclick="logout()" title="Sair"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> <span class="hide-on-mobile">Sair</span></button>
     </header>
 
     <nav class="app-tabs">
-        <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf"></i> Currículos</button>
-        <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key"></i> Tokens</button>
-        <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase"></i> Vagas</button>
+        <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Currículos</button>
+        <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key" aria-hidden="true"></i> Tokens</button>
+        <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Vagas</button>
     </nav>
 
     <div class="app-content">
@@ -646,15 +646,15 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
             <div class="cvs-upload-section">
                 <button class="cvs-upload-toggle" onclick="toggleCvsUpload()" id="cvsUploadToggleBtn" aria-expanded="false">
-                    <span><i class="fa-solid fa-upload"></i> Fazer upload de currículo</span>
-                    <i class="fa-solid fa-chevron-down cvs-upload-chevron"></i>
+                    <span><i class="fa-solid fa-upload" aria-hidden="true"></i> Fazer upload de currículo</span>
+                    <i class="fa-solid fa-chevron-down cvs-upload-chevron" aria-hidden="true"></i>
                 </button>
                 <div class="cvs-upload-collapsible" id="cvsUploadCollapsible">
 
                     <div class="storage-card" id="storageCard" hidden>
                         <div class="storage-head">
                             <div>
-                                <div class="storage-title"><i class="fa-solid fa-database"></i> Storage Supabase</div>
+                                <div class="storage-title"><i class="fa-solid fa-database" aria-hidden="true"></i> Storage Supabase</div>
                                 <div class="storage-sub" id="storageSub">—</div>
                             </div>
                         </div>
@@ -664,35 +664,35 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                             <span id="storageFiles">0 arquivos</span>
                         </div>
                         <div class="storage-alert" id="storageAlert" hidden>
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
                             <span>Storage acima de 80%. Faça limpeza ou faça upgrade do plano antes que pare de aceitar uploads.</span>
                         </div>
                     </div>
 
                     <div class="panel">
-                        <div class="panel-title"><i class="fa-solid fa-upload"></i> Fazer upload de currículo</div>
+                        <div class="panel-title"><i class="fa-solid fa-upload" aria-hidden="true"></i> Fazer upload de currículo</div>
 
                         <div class="form-group-inline">
-                            <label>Nome da versão</label>
-                            <input type="text" id="cvName" placeholder="Ex: QA Sênior — Padrão" autocomplete="off">
+                            <label for="cvName">Nome da versão</label>
+                            <input type="text" id="cvName" placeholder="Ex: QA Sênior — Padrão" autocomplete="off" required>
                         </div>
                         <div class="form-group-inline">
-                            <label>Descrição (opcional)</label>
+                            <label for="cvDesc">Descrição (opcional)</label>
                             <input type="text" id="cvDesc" placeholder="Adaptado para vagas sênior" autocomplete="off">
                         </div>
                         <div class="form-group-inline">
-                            <label>Nome do arquivo para download</label>
-                            <input type="text" id="cvFileName" placeholder="Curriculo-Jon-Snow-QA-2026.pdf" autocomplete="off">
+                            <label for="cvFileName">Nome do arquivo para download</label>
+                            <input type="text" id="cvFileName" placeholder="Curriculo-Jon-Snow-QA-2026.pdf" autocomplete="off" required>
                             <small id="cvFileNamePreview" class="cv-filename-preview"></small>
                         </div>
 
-                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                            <div><i class="fa-solid fa-file-arrow-up"></i></div>
+                        <button type="button" class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" aria-label="Selecionar PDF para upload">
+                            <div><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></div>
                             <p><strong>Clique ou arraste</strong> o PDF aqui</p>
                             <p id="uploadFileName" style="color:var(--cyan);margin-top:8px;font-size:0.82rem"></p>
                             <div class="upload-progress" id="uploadProgress">
                                 <div class="upload-phase" id="uploadPhase">
-                                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                                    <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
                                     <span id="uploadPhaseText">Preparando…</span>
                                 </div>
                                 <div class="upload-bar-track">
@@ -701,10 +701,11 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                                 <div class="upload-percent" id="uploadPercent"></div>
                             </div>
                         </div>
+                        </button>
                         <input type="file" id="fileInput" accept="application/pdf" style="display:none" onchange="onFileSelect(this)">
 
                         <button class="btn btn-cyan" style="margin-top:16px" onclick="uploadCV()">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Enviar currículo
+                            <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i> Enviar currículo
                         </button>
                     </div>
                 </div>
@@ -712,12 +713,12 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
             <div class="cvs-list-section">
                 <div class="panel">
-                    <div class="panel-title"><i class="fa-solid fa-list"></i> Versões cadastradas</div>
+                    <div class="panel-title"><i class="fa-solid fa-list" aria-hidden="true"></i> Versões cadastradas</div>
                     <div class="filter-bar">
                         <div class="filter-search">
                             <input class="th-filter-input" type="search" id="cvSearch" placeholder="Buscar nome, arquivo…" oninput="renderCVs()">
                             <span class="th-filter-count" id="cvCount"></span>
-                            <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                         </div>
                         <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
                             <option value="">Todos os status</option>
@@ -748,23 +749,23 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
             <!-- KPIs -->
             <div class="tab-kpis" id="tokenKpis">
-                <div class="tab-kpi-card kpi-green" onclick="filterTokenKpi('ativo')" role="button" tabindex="0">
+                <div class="tab-kpi-card kpi-green" onclick="filterTokenKpi('ativo')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" role="button" tabindex="0">
                     <span class="tab-kpi-num" id="kpiTokenAtivo">—</span>
                     <span class="tab-kpi-label">Ativos</span>
                 </div>
-                <div class="tab-kpi-card kpi-yellow" onclick="filterTokenKpi('expirando')" role="button" tabindex="0">
+                <div class="tab-kpi-card kpi-yellow" onclick="filterTokenKpi('expirando')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" role="button" tabindex="0">
                     <span class="tab-kpi-num" id="kpiTokenExpirando">—</span>
                     <span class="tab-kpi-label">Expirando 24h</span>
                 </div>
-                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('expirado')" role="button" tabindex="0">
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('expirado')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" role="button" tabindex="0">
                     <span class="tab-kpi-num" id="kpiTokenExpirado">—</span>
                     <span class="tab-kpi-label">Expirados</span>
                 </div>
-                <div class="tab-kpi-card kpi-red" onclick="filterTokenKpi('revogado')" role="button" tabindex="0">
+                <div class="tab-kpi-card kpi-red" onclick="filterTokenKpi('revogado')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" role="button" tabindex="0">
                     <span class="tab-kpi-num" id="kpiTokenRevogado">—</span>
                     <span class="tab-kpi-label">Revogados</span>
                 </div>
-                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('esgotado')" role="button" tabindex="0">
+                <div class="tab-kpi-card kpi-dim" onclick="filterTokenKpi('esgotado')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" role="button" tabindex="0">
                     <span class="tab-kpi-num" id="kpiTokenEsgotado">—</span>
                     <span class="tab-kpi-label">Esgotados</span>
                 </div>
@@ -773,31 +774,31 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
             <!-- Bulk bar -->
             <div id="token-bulk-bar" role="toolbar" aria-label="Ações em lote">
                 <span class="bulk-count" id="tokenBulkCount">0 selecionados</span>
-                <button class="btn btn-sm" onclick="extendTokensBulk()"><i class="fa-solid fa-clock-rotate-left"></i> Estender +24h</button>
-                <button class="btn btn-sm" onclick="revokeTokensBulk()"><i class="fa-solid fa-ban"></i> Revogar</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteTokensBulk()"><i class="fa-solid fa-trash"></i> Excluir</button>
+                <button class="btn btn-sm" onclick="extendTokensBulk()"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Estender +24h</button>
+                <button class="btn btn-sm" onclick="revokeTokensBulk()"><i class="fa-solid fa-ban" aria-hidden="true"></i> Revogar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTokensBulk()"><i class="fa-solid fa-trash" aria-hidden="true"></i> Excluir</button>
                 <button class="btn btn-sm" style="margin-left:auto" onclick="clearTokenSelection()">Cancelar</button>
             </div>
 
             <div class="token-form-section">
                 <button class="token-form-toggle" onclick="toggleTokenForm()" id="tokenFormToggleBtn" aria-expanded="false">
-                    <span><i class="fa-solid fa-key"></i> Gerar novo token</span>
-                    <i class="fa-solid fa-chevron-down token-form-chevron"></i>
+                    <span><i class="fa-solid fa-key" aria-hidden="true"></i> Gerar novo token</span>
+                    <i class="fa-solid fa-chevron-down token-form-chevron" aria-hidden="true"></i>
                 </button>
                 <div class="token-form-collapsible" id="tokenFormCollapsible">
                     <div class="panel">
-                        <div class="panel-title"><i class="fa-solid fa-key"></i> Criar token de acesso</div>
+                        <div class="panel-title"><i class="fa-solid fa-key" aria-hidden="true"></i> Criar token de acesso</div>
                         <div class="token-form-grid">
                             <div class="form-group-inline tfg-cv">
-                                <label>Currículo</label>
-                                <select id="tokenCV"><option value="">Selecione…</option></select>
+                                <label for="tokenCV">Currículo</label>
+                                <select id="tokenCV" required><option value="">Selecione…</option></select>
                             </div>
                             <div class="form-group-inline tfg-label">
-                                <label>Label (identificação)</label>
-                                <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA" autocomplete="off">
+                                <label for="tokenLabel">Label (identificação)</label>
+                                <input type="text" id="tokenLabel" placeholder="Nubank · Ana · Sr QA" autocomplete="off" required>
                             </div>
                             <div class="form-group-inline tfg-uses">
-                                <label>Máximo de usos</label>
+                                <label for="tokenMaxUses">Máximo de usos</label>
                                 <select id="tokenMaxUses">
                                     <option value="1">1 uso (one-time)</option>
                                     <option value="3">3 usos</option>
@@ -807,7 +808,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                                 </select>
                             </div>
                             <div class="form-group-inline tfg-valid">
-                                <label>Validade</label>
+                                <label for="expiryDate">Validade</label>
                                 <div class="expiry-opts" id="expiryOpts">
                                     <button class="expiry-opt active" data-hours="24" onclick="setExpiry(this)">24h</button>
                                     <button class="expiry-opt" data-hours="48" onclick="setExpiry(this)">48h</button>
@@ -819,7 +820,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                                 <input type="datetime-local" id="expiryDate" style="display:none;margin-top:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-family:var(--font-display);font-size:0.82rem;outline:none">
                             </div>
                             <div class="tfg-submit">
-                                <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus"></i> Gerar token</button>
+                                <button class="btn btn-cyan" onclick="createToken()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Gerar token</button>
                             </div>
                         </div>
                     </div>
@@ -829,9 +830,9 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
             <div class="token-list-section">
                 <div class="panel">
                     <div class="panel-title">
-                        <i class="fa-solid fa-list-check"></i> Tokens ativos e histórico
+                        <i class="fa-solid fa-list-check" aria-hidden="true"></i> Tokens ativos e histórico
                         <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir tokens expirados">
-                            <i class="fa-solid fa-broom"></i> Limpar expirados
+                            <i class="fa-solid fa-broom" aria-hidden="true"></i> Limpar expirados
                         </button>
                     </div>
                     <div class="preset-chips" id="tokenPresetChips">
@@ -845,7 +846,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                         <div class="filter-search">
                             <input class="th-filter-input" type="search" id="tokenSearch" placeholder="Buscar label, currículo…" oninput="renderTokens()">
                             <span class="th-filter-count" id="tokenCount"></span>
-                            <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                         </div>
                         <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
                             <option value="">Todos os status</option>
@@ -891,7 +892,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                                 <button class="vagas-filter-chip" data-filter="em_processo" onclick="setVagasFilter('em_processo',this)">Em processo</button>
                                 <button class="vagas-filter-chip" data-filter="aprovado" onclick="setVagasFilter('aprovado',this)">Aprovado</button>
                                 <button class="vagas-filter-chip" data-filter="recusado" onclick="setVagasFilter('recusado',this)">Recusado</button>
-                                <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Arquivadas</button>
+                                <button class="vagas-filter-chip" data-filter="arquivadas" onclick="setVagasFilter('arquivadas',this)" style="opacity:0.7"><i class="fa-solid fa-box-archive" style="font-size:0.7em" aria-hidden="true"></i> Arquivadas</button>
                             </div>
                             <div class="vagas-filters" id="vagasFiltersModalidade">
                                 <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasModalidadeFilter('all',this)">Modalidade</button>
@@ -909,26 +910,26 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap">
                         <button class="btn btn-sm" id="vagasFiltersToggleBtn" onclick="toggleVagasFilters()" title="Mostrar/ocultar filtros">
-                            <i class="fa-solid fa-sliders"></i> Filtros
+                            <i class="fa-solid fa-sliders" aria-hidden="true"></i> Filtros
                             <span id="vagasFiltersBadge" class="vagas-filters-badge" style="display:none"></span>
-                            <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;margin-left:4px;transition:transform 0.2s"></i>
+                            <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;margin-left:4px;transition:transform 0.2s" aria-hidden="true"></i>
                         </button>
-                        <button class="btn btn-sm" id="vagasSelectBtn" onclick="toggleVagasSelectMode()" title="Selecionar para ações em lote"><i class="fa-solid fa-check-square"></i> Selecionar</button>
-                        <button class="btn btn-sm" onclick="exportVagasCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button>
-                        <button class="btn btn-sm btn-cyan" onclick="openNewVaga()"><i class="fa-solid fa-plus"></i> Nova vaga</button>
+                        <button class="btn btn-sm" id="vagasSelectBtn" onclick="toggleVagasSelectMode()" title="Selecionar para ações em lote"><i class="fa-solid fa-check-square" aria-hidden="true"></i> Selecionar</button>
+                        <button class="btn btn-sm" onclick="exportVagasCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar CSV</button>
+                        <button class="btn btn-sm btn-cyan" onclick="openNewVaga()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Nova vaga</button>
                     </div>
                 </div>
 
                 <!-- Sort chip bar -->
                 <div class="vagas-sort-bar" style="display:flex;gap:6px;margin-bottom:8px">
-                    <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)" title="Ordenar por última modificação"><i class="fa-solid fa-clock" style="font-size:0.65rem"></i> Última mod.</button>
+                    <button class="vagas-sort-chip" id="sort-chip-updated_at" onclick="sortVagasChip('updated_at',this)" title="Ordenar por última modificação"><i class="fa-solid fa-clock" style="font-size:0.65rem" aria-hidden="true"></i> Última mod.</button>
                 </div>
 
                 <!-- Bulk bar (compartilha estilo de #token-bulk-bar) -->
                 <div id="vagas-bulk-bar" role="toolbar" aria-label="Ações em lote vagas">
                     <span class="bulk-count" id="vagasBulkCount">0 selecionadas</span>
-                    <button class="btn btn-sm" onclick="archiveVagasBulk()"><i class="fa-solid fa-box-archive"></i> Arquivar</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteVagasBulk()"><i class="fa-solid fa-trash"></i> Excluir</button>
+                    <button class="btn btn-sm" onclick="archiveVagasBulk()"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Arquivar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteVagasBulk()"><i class="fa-solid fa-trash" aria-hidden="true"></i> Excluir</button>
                     <button class="btn btn-sm" style="margin-left:auto" onclick="clearVagasSelection()">Cancelar</button>
                 </div>
 
@@ -936,14 +937,14 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                     <div class="filter-search">
                         <input class="th-filter-input" type="search" id="vagasSearch" placeholder="Buscar empresa, vaga, gestor…" oninput="renderApplicationsTable()">
                         <span class="th-filter-count" id="vagasCount"></span>
-                        <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark"></i></button>
+                        <button class="th-filter-clear" onclick="clearVagasSearch()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
                     <div class="filter-date-group">
                         <span class="th-filter-label">De</span>
                         <input class="th-filter-input" type="date" id="vagasDateFrom" title="Data de envio inicial" onchange="renderApplicationsTable()" style="width:135px">
                         <span class="th-filter-label">Até</span>
                         <input class="th-filter-input" type="date" id="vagasDateTo" title="Data de envio final" onchange="renderApplicationsTable()" style="width:135px">
-                        <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark"></i></button>
+                        <button class="th-filter-clear" id="vagasDateClear" onclick="clearVagasDate()" title="Limpar datas" style="display:none"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
                 </div>
 
@@ -984,7 +985,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                                 <input type="checkbox" id="vagasIncludeArchived" onchange="renderVagasAnalysis()">
                                 <span class="period-toggle-track"></span>
                             </span>
-                            <i class="fa-solid fa-box-archive" style="font-size:0.7em"></i> Incluir arquivadas
+                            <i class="fa-solid fa-box-archive" style="font-size:0.7em" aria-hidden="true"></i> Incluir arquivadas
                         </label>
                     </div>
                 </div>
@@ -1038,45 +1039,45 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
 <!-- ─── DRAWER ─── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<aside class="drawer" id="drawer">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
     <div class="drawer-header">
         <span class="drawer-title" id="drawerTitle">—</span>
-        <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="drawer-close" onclick="closeDrawer()" aria-label="Fechar painel"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </div>
     <div class="drawer-body" id="drawerBody"></div>
 </aside>
 
 
 <!-- ─── SHARE MODAL (criação de token) ─── -->
-<div class="modal-overlay" id="shareModal">
+<div class="modal-overlay" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
     <div class="modal">
-        <button class="modal-close" onclick="closeShareModal()" style="position:absolute;top:14px;right:14px"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-header" style="margin-bottom:8px"><span class="modal-title">Token criado com sucesso!</span></div>
+        <button class="modal-close" onclick="closeShareModal()" style="position:absolute;top:14px;right:14px" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        <div class="modal-header" style="margin-bottom:8px"><span class="modal-title" id="shareModalTitle">Token criado com sucesso!</span></div>
         <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:14px" id="shareModalMeta">—</p>
         <div class="share-url-box" id="shareUrl">—</div>
         <div class="share-actions">
-            <button class="share-btn share-btn-copy" onclick="copyShareUrl()"><i class="fa-solid fa-copy"></i> Copiar link</button>
-            <button class="share-btn" onclick="closeShareModal()"><i class="fa-solid fa-check"></i> Pronto</button>
+            <button class="share-btn share-btn-copy" onclick="copyShareUrl()"><i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar link</button>
+            <button class="share-btn" onclick="closeShareModal()"><i class="fa-solid fa-check" aria-hidden="true"></i> Pronto</button>
         </div>
     </div>
 </div>
 
 <!-- ─── MODAL ─── -->
-<div class="modal-overlay" id="modalOverlay">
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal">
         <div class="modal-header">
             <span class="modal-title" id="modalTitle">—</span>
-            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close" onclick="closeModal()" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
         <div id="modalBody"></div>
     </div>
 </div>
 
 <!-- ─── TOAST ─── -->
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <!-- ─── TOUR ─── -->
-<div class="tour-overlay" id="tourOverlay">
+<div class="tour-overlay" id="tourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
     <div class="tour-backdrop"></div>
     <div class="tour-spotlight" id="tourSpotlight"></div>
     <div class="tour-card" id="tourCard">
@@ -1092,7 +1093,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
         </div>
     </div>
 </div>
-<button class="tour-replay-btn" id="tourReplay" onclick="startTour()" title="Refazer tour"><i class="fa-solid fa-circle-play"></i></button>
+<button class="tour-replay-btn" id="tourReplay" onclick="startTour()" title="Refazer tour"><i class="fa-solid fa-circle-play" aria-hidden="true"></i></button>
 
 <script>
 // ════════════════════════════════════════════════════════
@@ -1185,7 +1186,7 @@ async function doLogin() {
     }
     errEl.textContent = '';
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando…';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Autenticando…';
 
     // Track demo_access (1 evento real)
     fetch('/api/track', {
@@ -1202,7 +1203,7 @@ async function doLogin() {
     } catch (e) {
         errEl.textContent = e.message;
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar no demo';
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Entrar no demo';
         if (turnstileWidgetId !== null && window.turnstile) window.turnstile.reset(turnstileWidgetId);
         turnstileToken = null;
     }
@@ -1346,7 +1347,7 @@ function showToast(msg, type = 'success') {
     const el = document.createElement('div');
     el.className = `toast ${type}`;
     const icon = type === 'error' ? 'circle-exclamation' : type === 'success' ? 'circle-check' : 'circle-info';
-    el.innerHTML = `<i class="fa-solid fa-${icon}"></i> ${esc(msg)}`;
+    el.innerHTML = `<i class="fa-solid fa-${icon}" aria-hidden="true"></i> ${esc(msg)}`;
     c.appendChild(el);
     setTimeout(() => el.remove(), 3500);
 }
@@ -1447,10 +1448,10 @@ function renderCVs() {
             <td style="color:var(--text-dim);font-size:0.78rem">${fmtDate(c.created_at)}</td>
             <td>
                 <div class="row-actions">
-                    <button class="btn btn-sm cv-action-btn" title="Pré-visualizar" onclick="previewCV('${c.id}','${esc(c.file_name)}')"><i class="fa-solid fa-eye"></i></button>
-                    <button class="btn btn-sm cv-action-btn" title="Editar" onclick='openEditCV(${JSON.stringify({ id: c.id, name: c.name, description: c.description || '', active: c.active })})'><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
-                    <button class="btn btn-sm cv-action-btn" title="${c.active ? 'Desativar' : 'Ativar'}" onclick="toggleCVActive('${c.id}',${!c.active})"><i class="fa-solid fa-${c.active ? 'eye-slash' : 'check'}"></i></button>
-                    <button class="btn btn-danger btn-sm" title="Excluir" onclick="deleteCV('${c.id}','${esc(c.name)}')"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-sm cv-action-btn" title="Pré-visualizar" onclick="previewCV('${c.id}','${esc(c.file_name)}')"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+                    <button class="btn btn-sm cv-action-btn" title="Editar" onclick='openEditCV(${JSON.stringify({ id: c.id, name: c.name, description: c.description || '', active: c.active })})'><i class="fa-solid fa-pen" aria-hidden="true"></i><span class="cv-btn-lbl">Editar</span></button>
+                    <button class="btn btn-sm cv-action-btn" title="${c.active ? 'Desativar' : 'Ativar'}" onclick="toggleCVActive('${c.id}',${!c.active})"><i class="fa-solid fa-${c.active ? 'eye-slash' : 'check'}" aria-hidden="true"></i></button>
+                    <button class="btn btn-danger btn-sm" title="Excluir" onclick="deleteCV('${c.id}','${esc(c.name)}')"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                 </div>
             </td>
         </tr>
@@ -1638,7 +1639,7 @@ function openEditCV(cv) {
         <div class="form-group-inline"><label><input type="checkbox" id="editCvActive" ${cv.active ? 'checked' : ''}> Ativo</label></div>
         <div class="modal-actions">
             <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-cyan btn-sm" onclick="saveEditCV('${cv.id}')"><i class="fa-solid fa-check"></i> Salvar</button>
+            <button class="btn btn-cyan btn-sm" onclick="saveEditCV('${cv.id}')"><i class="fa-solid fa-check" aria-hidden="true"></i> Salvar</button>
         </div>
     `);
 }
@@ -1771,9 +1772,9 @@ function renderTokens() {
             <td style="font-size:0.78rem;color:var(--text-dim)">${t.expires_at ? fmtDate(t.expires_at, true) : '—'}</td>
             <td>
                 <div class="row-actions">
-                    <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar link"><i class="fa-solid fa-copy"></i></button>
-                    ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban"></i></button>` : ''}
-                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}','${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar link"><i class="fa-solid fa-copy" aria-hidden="true"></i></button>
+                    ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban" aria-hidden="true"></i></button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}','${esc(t.label || '(sem label)')}')" title="Excluir"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -2222,24 +2223,24 @@ function renderDrawerBody(app) {
         <div class="dinfo-section">
             <div class="dinfo-label">Currículo enviado</div>
             <div class="dinfo-row" style="gap:8px">
-                <i class="fa-solid fa-file-pdf dinfo-icon" style="color:#f87171"></i>
+                <i class="fa-solid fa-file-pdf dinfo-icon" style="color:#f87171" aria-hidden="true"></i>
                 <span>${esc(app.cv_versions.name)}</span>
-                <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;margin-left:auto" onclick="previewCV('${app.cv_versions.id}','${esc(app.cv_versions.file_name)}')"><i class="fa-solid fa-eye"></i></button>
+                <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;margin-left:auto" onclick="previewCV('${app.cv_versions.id}','${esc(app.cv_versions.file_name)}')"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
             </div>
         </div>` : '';
 
     const rRows = [];
-    if (app.gestor_nome)  rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-user dinfo-icon"></i>${esc(app.gestor_nome)}</div>`);
-    if (app.gestor_email) rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
+    if (app.gestor_nome)  rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-user dinfo-icon" aria-hidden="true"></i>${esc(app.gestor_nome)}</div>`);
+    if (app.gestor_email) rRows.push(`<div class="dinfo-row"><i class="fa-solid fa-envelope dinfo-icon" aria-hidden="true"></i><a href="mailto:${esc(app.gestor_email)}" class="dinfo-link">${esc(app.gestor_email)}</a></div>`);
     if (app.gestor_phone) {
         const p = app.gestor_phone.replace(/\D/g, '');
-        rRows.push(`<div class="dinfo-row"><i class="fa-brands fa-whatsapp dinfo-icon" style="color:#25d366"></i><a href="https://wa.me/${esc(p)}" target="_blank" rel="noopener" class="dinfo-link">${esc(app.gestor_phone)}</a></div>`);
+        rRows.push(`<div class="dinfo-row"><i class="fa-brands fa-whatsapp dinfo-icon" style="color:#25d366" aria-hidden="true"></i><a href="https://wa.me/${esc(p)}" target="_blank" rel="noopener" class="dinfo-link">${esc(app.gestor_phone)}</a></div>`);
     }
     const chips = [];
-    if (app.linkedin_empresa) chips.push(`<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>`);
-    if (app.link_vaga)        chips.push(`<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link"></i> Vaga</a>`);
-    if (app.modalidade)       chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-map-pin"></i> ${esc(app.modalidade)}</span>`);
-    if (app.tipo_contratacao) chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-file-contract"></i> ${esc(app.tipo_contratacao)}</span>`);
+    if (app.linkedin_empresa) chips.push(`<a href="${esc(app.linkedin_empresa)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-brands fa-linkedin" aria-hidden="true"></i> LinkedIn</a>`);
+    if (app.link_vaga)        chips.push(`<a href="${esc(app.link_vaga)}" target="_blank" rel="noopener" class="dinfo-chip"><i class="fa-solid fa-link" aria-hidden="true"></i> Vaga</a>`);
+    if (app.modalidade)       chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-map-pin" aria-hidden="true"></i> ${esc(app.modalidade)}</span>`);
+    if (app.tipo_contratacao) chips.push(`<span class="dinfo-chip"><i class="fa-solid fa-file-contract" aria-hidden="true"></i> ${esc(app.tipo_contratacao)}</span>`);
     const rSec = (rRows.length || chips.length) ? `
         <div class="dinfo-section">
             <div class="dinfo-label">Recrutador</div>
@@ -2252,8 +2253,8 @@ function renderDrawerBody(app) {
     const stagesHtml = (app.stages || []).map((s, i, arr) => {
         const last = i === arr.length - 1;
         const cls = s.status || 'pending';
-        const icon = s.status === 'done' ? '<i class="fa-solid fa-check" style="font-size:0.55rem"></i>'
-                   : s.status === 'rejected' ? '<i class="fa-solid fa-xmark" style="font-size:0.55rem"></i>' : '';
+        const icon = s.status === 'done' ? '<i class="fa-solid fa-check" style="font-size:0.55rem" aria-hidden="true"></i>'
+                   : s.status === 'rejected' ? '<i class="fa-solid fa-xmark" style="font-size:0.55rem" aria-hidden="true"></i>' : '';
         return `<div class="stage-row" onclick="advanceStage('${app.id}',${i})">
             <div class="stage-icon-col">
                 <div class="stage-circle ${cls}">${icon}</div>
@@ -2284,9 +2285,9 @@ function renderDrawerBody(app) {
             <div class="stage-timeline">${stagesHtml || '<div style="color:var(--text-dim);font-size:0.8rem">Sem etapas registradas.</div>'}</div>
         </div>
         <div class="drawer-actions">
-            <button class="btn btn-sm" onclick="editVaga('${app.id}')"><i class="fa-solid fa-pen"></i> Editar</button>
-            <button class="btn btn-sm" onclick="toggleArchive('${app.id}',${app.archived})"><i class="fa-solid fa-${app.archived ? 'box-open' : 'box-archive'}"></i> ${app.archived ? 'Desarquivar' : 'Arquivar'}</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteVaga('${app.id}')"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn btn-sm" onclick="editVaga('${app.id}')"><i class="fa-solid fa-pen" aria-hidden="true"></i> Editar</button>
+            <button class="btn btn-sm" onclick="toggleArchive('${app.id}',${app.archived})"><i class="fa-solid fa-${app.archived ? 'box-open' : 'box-archive'}" aria-hidden="true"></i> ${app.archived ? 'Desarquivar' : 'Arquivar'}</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteVaga('${app.id}')"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
         </div>
     `;
 }
@@ -2368,7 +2369,7 @@ function vagaFormHTML(app) {
         </div>
         <div class="row-2">
             <div class="form-group-inline"><label>Gestor</label><input id="vfGestor" value="${esc(app?.gestor_nome || '')}" placeholder="Ex: Ana Costa"></div>
-            <div class="form-group-inline"><label>Email</label><input id="vfEmail" value="${esc(app?.gestor_email || '')}" placeholder="a.costa@nubank.com.br"></div>
+            <div class="form-group-inline"><label for="loginEmail">Email</label><input id="vfEmail" value="${esc(app?.gestor_email || '')}" placeholder="a.costa@nubank.com.br"></div>
         </div>
         <div class="row-2">
             <div class="form-group-inline"><label>WhatsApp</label><input id="vfPhone" value="${esc(app?.gestor_phone || '')}" placeholder="11 99999-9999"></div>
@@ -2395,7 +2396,7 @@ function vagaFormHTML(app) {
         <div class="form-group-inline"><label>Observações</label><textarea id="vfObs" rows="3">${esc(app?.observacoes || '')}</textarea></div>
         <div class="modal-actions">
             <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-cyan btn-sm" onclick="saveVaga('${app?.id || ''}')"><i class="fa-solid fa-check"></i> ${app ? 'Salvar' : 'Criar'}</button>
+            <button class="btn btn-cyan btn-sm" onclick="saveVaga('${app?.id || ''}')"><i class="fa-solid fa-check" aria-hidden="true"></i> ${app ? 'Salvar' : 'Criar'}</button>
         </div>
     `;
 }
