@@ -317,7 +317,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 500; /* acima de modal-overlay (400) e vagas-drawer (200) */
+            z-index: 500; /* acima de vagas-drawer (200); modal-overlay sobe para 800 */
             background: var(--bg-elevated);
             border-top: 1px solid var(--border-soft);
             padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -1093,7 +1093,7 @@
             align-items: center;
             justify-content: center;
             padding: 24px;
-            z-index: 400;
+            z-index: 800;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
