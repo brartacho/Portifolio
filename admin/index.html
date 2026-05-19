@@ -3824,12 +3824,12 @@ async function api(method, path, body, auth = true) {
     const r = await fetch(path, {
         method,
         headers,
-        credentials: auth ? 'include' : 'omit',
+        credentials: 'include',
         body: body ? JSON.stringify(body) : undefined,
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) {
-        if (r.status === 401) {
+        if (r.status === 401 && auth) {
             clearInterval(_sessionRefreshTimer);
             clearTimeout(_refreshTimer);
             _lastRefreshAt = null;
