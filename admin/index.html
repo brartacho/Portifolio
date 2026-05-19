@@ -1020,6 +1020,46 @@
         .preset-chip:hover  { border-color: var(--cyan); color: var(--text); }
         .preset-chip.active { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
 
+        /* ─── SESSÕES ────────────────────────────────── */
+        .sessions-panel { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .session-item {
+            display: grid; grid-template-columns: 20px 1fr auto; align-items: start;
+            gap: 0 12px; padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .session-item:last-child { border-bottom: none; }
+        .session-item.is-current { background: rgba(34,211,238,0.025); }
+        .session-item.is-revoked { opacity: 0.5; }
+        .session-dot-wrap { padding-top: 3px; display: flex; justify-content: center; }
+        .session-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .dot-current { background: var(--success); box-shadow: 0 0 8px rgba(74,222,128,.7); animation: session-pulse 2s infinite; }
+        .dot-active  { background: var(--success); box-shadow: 0 0 5px rgba(74,222,128,.35); }
+        .dot-revoked { background: var(--danger); }
+        @keyframes session-pulse {
+            0%,100% { box-shadow: 0 0 6px rgba(74,222,128,.5); }
+            50%     { box-shadow: 0 0 14px rgba(74,222,128,.9); }
+        }
+        .session-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .session-line1 { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .session-ip { font-size: 0.88rem; font-weight: 700; color: var(--text); font-family: var(--font-mono); }
+        .session-badge {
+            font-size: 0.6rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+            border-radius: 20px; padding: 2px 8px; white-space: nowrap;
+        }
+        .badge-current { background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(34,211,238,.3); }
+        .badge-revoked { background: rgba(239,68,68,.08); color: var(--danger); border: 1px solid rgba(239,68,68,.25); }
+        .session-line2 { font-size: 0.76rem; color: var(--text-soft); }
+        .session-line3 { display: flex; gap: 14px; font-size: 0.72rem; color: var(--text-dim); flex-wrap: wrap; }
+        .session-revoke-reason { color: var(--danger) !important; }
+        .session-action { padding-top: 2px; }
+        .btn-session-revoke {
+            display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+            border-radius: 8px; font-size: 0.74rem; font-weight: 600; cursor: pointer;
+            border: 1px solid rgba(239,68,68,.3); color: var(--danger);
+            background: rgba(239,68,68,.06); font-family: var(--font); white-space: nowrap;
+        }
+        .btn-session-revoke:hover { background: rgba(239,68,68,.14); }
+        .session-action-none { font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; display: block; }
+
         /* ─── TOKEN BULK BAR ─────────────────────────── */
         #token-bulk-bar {
             display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 600;
@@ -2721,7 +2761,10 @@
                 <div class="panel">
                     <div class="panel-title">
                         <i class="fa-solid fa-list-check"></i> Tokens ativos e histórico
-                        <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir todos os tokens expirados">
+                        <button class="btn btn-sm" id="tokenSelectBtn" onclick="toggleTokenSelectMode()" title="Ativar modo de seleção em lote" aria-label="Selecionar tokens" style="margin-left:auto;font-size:0.75rem">
+                            <i class="fa-solid fa-check-square"></i> Selecionar
+                        </button>
+                        <button class="btn btn-sm" style="font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir todos os tokens expirados">
                             <i class="fa-solid fa-broom"></i> Limpar expirados
                         </button>
                     </div>
@@ -2751,7 +2794,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width:36px;padding-right:4px"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" aria-label="Selecionar todos" style="accent-color:var(--cyan);cursor:pointer"></th>
+                                    <th id="tokenSelectAllTh" style="width:36px;padding-right:4px;display:none"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" aria-label="Selecionar todos" style="accent-color:var(--cyan);cursor:pointer"></th>
                                     <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
                                     <th>Currículo</th>
                                     <th>Status</th>
@@ -2912,7 +2955,7 @@
                 <table class="vagas-table">
                     <thead>
                         <tr>
-                            <th onclick="sortVagas('empresa')">Empresa / Vaga <span id="sort-empresa" class="sort-icon"></span></th>
+                            <th onclick="sortVagas('empresa')"><span id="vagasSelectAllWrap" style="display:none;vertical-align:middle;margin-right:5px"><input type="checkbox" id="vagasSelectAll" onclick="event.stopPropagation()" onchange="toggleSelectAllVagas(this)" aria-label="Selecionar todas" style="accent-color:var(--cyan);cursor:pointer;vertical-align:middle"></span>Empresa / Vaga <span id="sort-empresa" class="sort-icon"></span></th>
                             <th onclick="sortVagas('gestor')">Gestor <span id="sort-gestor" class="sort-icon"></span></th>
                             <th onclick="sortVagas('data_envio')">Enviado em <span id="sort-data_envio" class="sort-icon">↓</span></th>
                             <th class="col-cadastrado" onclick="sortVagas('created_at')">Cadastrado <span id="sort-created_at" class="sort-icon"></span></th>
@@ -4141,6 +4184,7 @@ function renderApplicationsTable() {
 
     if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:32px">Nenhuma candidatura encontrada.</td></tr>';
+        _updateVagasSelectAll();
         return;
     }
 
@@ -4183,6 +4227,7 @@ function renderApplicationsTable() {
             <td><span class="stage-badge status-${status}">${stage}</span></td>
         </tr>`;
     }).join('');
+    _updateVagasSelectAll();
 }
 
 function setVagasFilter(filter, btn) {
@@ -4243,8 +4288,29 @@ function toggleVagasSelectMode() {
     _vagasSelected.clear();
     const btn = document.getElementById('vagasSelectBtn');
     if (btn) btn.classList.toggle('active', _vagasSelecting);
+    const wrap = document.getElementById('vagasSelectAllWrap');
+    if (wrap) wrap.style.display = _vagasSelecting ? 'inline' : 'none';
+    const all = document.getElementById('vagasSelectAll');
+    if (all) { all.checked = false; all.indeterminate = false; }
     renderApplicationsTable();
     _renderBulkBar();
+}
+
+function toggleSelectAllVagas(checkbox) {
+    const visibleIds = _filteredApplications.map(a => a.id);
+    if (checkbox.checked) visibleIds.forEach(id => _vagasSelected.add(id));
+    else visibleIds.forEach(id => _vagasSelected.delete(id));
+    renderApplicationsTable();
+    _renderBulkBar();
+}
+
+function _updateVagasSelectAll() {
+    const all = document.getElementById('vagasSelectAll');
+    if (!all || !_vagasSelecting) return;
+    const visibleIds = _filteredApplications.map(a => a.id);
+    const selectedVisible = visibleIds.filter(id => _vagasSelected.has(id));
+    all.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visibleIds.length;
+    all.checked = visibleIds.length > 0 && selectedVisible.length === visibleIds.length;
 }
 
 function toggleVagasSelect(id) {
@@ -5170,6 +5236,10 @@ function switchTab(name) {
     if (name !== 'vagas' && typeof _vagasSelecting !== 'undefined' && _vagasSelecting) {
         toggleVagasSelectMode();
     }
+    // Sair de Tokens com modo de seleção ativo
+    if (name !== 'tokens' && typeof _tokenSelecting !== 'undefined' && _tokenSelecting) {
+        toggleTokenSelectMode();
+    }
 
     _activeTab = name;
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -5544,6 +5614,7 @@ async function loadTokens() {
 }
 
 // Estado de seleção em lote de tokens
+let _tokenSelecting = false;
 let _tokenSelected = new Set();
 let _tokenFilteredData = []; // última lista filtrada renderizada
 
@@ -5587,7 +5658,7 @@ function renderTokens() {
     if (!data.length) {
         const emptyMsg = _tokenData.length ? 'Nenhum token encontrado' : 'Nenhum token criado ainda';
         const emptyIcon = _tokenData.length ? 'fa-filter' : 'fa-key';
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:40px">
+        tbody.innerHTML = `<tr><td colspan="${_tokenSelecting ? 7 : 6}" style="text-align:center;color:var(--text-dim);padding:40px">
             <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
                 <i class="fa-solid ${emptyIcon}" style="font-size:1.4rem;opacity:0.3"></i>
                 <span>${emptyMsg}</span>
@@ -5615,9 +5686,9 @@ function renderTokens() {
 
         return `
             <tr class="${_tokenSelected.has(t.id) ? 'token-row-selected' : ''}" style="cursor:pointer" onclick="openTokenDrawer(${JSON.stringify(t).replace(/"/g,'&quot;')})">
-                <td onclick="event.stopPropagation()" style="width:36px;padding-right:4px">
+                ${_tokenSelecting ? `<td onclick="event.stopPropagation()" style="width:36px;padding-right:4px">
                     <input type="checkbox" ${checked} onchange="toggleTokenSelect('${t.id}',this)" aria-label="Selecionar token ${esc(t.label||'(sem label)')}" style="accent-color:var(--cyan);cursor:pointer">
-                </td>
+                </td>` : ''}
                 <td data-label="Label"><span><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></span></td>
                 <td data-label="Currículo" style="color:var(--text-soft)">${esc(t.cv_versions?.name || '—')}</td>
                 <td data-label="Status"><span class="badge ${badgeCls}">${badgeLabel}</span></td>
@@ -5716,6 +5787,19 @@ function applyTokenPreset(preset, btn) {
 }
 
 // ─── TOKEN SELEÇÃO EM LOTE ────────────────────────────────
+
+function toggleTokenSelectMode() {
+    _tokenSelecting = !_tokenSelecting;
+    _tokenSelected.clear();
+    const btn = document.getElementById('tokenSelectBtn');
+    if (btn) btn.classList.toggle('active', _tokenSelecting);
+    const th = document.getElementById('tokenSelectAllTh');
+    if (th) th.style.display = _tokenSelecting ? '' : 'none';
+    const all = document.getElementById('tokenSelectAll');
+    if (all) { all.checked = false; all.indeterminate = false; }
+    renderTokens();
+    _updateTokenBulkBar();
+}
 
 function toggleTokenSelect(id, checkbox) {
     if (checkbox.checked) _tokenSelected.add(id);
@@ -7848,6 +7932,22 @@ function renderLoginAttempts({ attempts = [], alert_ips = [] }) {
 }
 
 // ─── SESSÕES ──────────────────────────────────────────────
+
+function _parseUA(ua) {
+    if (!ua) return 'Desconhecido';
+    const os = /Windows/.test(ua) ? 'Windows'
+        : /Mac OS X/.test(ua) ? 'macOS'
+        : /Linux/.test(ua) ? 'Linux'
+        : /Android/.test(ua) ? 'Android'
+        : /iPhone|iPad/.test(ua) ? 'iOS' : 'Desconhecido';
+    const browser = /Edg\//.test(ua) ? 'Edge'
+        : /Chrome\/(\d+)/.test(ua) ? `Chrome ${ua.match(/Chrome\/(\d+)/)[1]}`
+        : /Firefox\/(\d+)/.test(ua) ? `Firefox ${ua.match(/Firefox\/(\d+)/)[1]}`
+        : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+    const arch = /x64|Win64|WOW64/.test(ua) ? 'x64' : /arm/i.test(ua) ? 'ARM' : '';
+    return [os, browser, arch].filter(Boolean).join(' · ');
+}
+
 async function loadSessions() {
     const el = document.getElementById('sessionsList');
     if (!el) return;
@@ -7857,42 +7957,56 @@ async function loadSessions() {
             el.innerHTML = '<p style="color:var(--text-dim);text-align:center;padding:24px">Nenhuma sessão ativa.</p>';
             return;
         }
-        el.innerHTML = data.map(s => {
-            const ua = (s.user_agent || '?').slice(0, 70);
-            const seen = new Date(s.last_seen_at).toLocaleString('pt-BR');
-            const created = new Date(s.created_at).toLocaleString('pt-BR');
-            const isRevoked = !!s.revoked_at;
-            return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 12px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:8px;gap:8px;flex-wrap:wrap">
-                <div style="font-size:0.78rem;color:var(--text-dim);min-width:0;flex:1">
-                    <div><strong style="color:var(--text)">${s.ip_address || '?'}</strong>${s.country_code ? ` <span style="opacity:.6">(${s.country_code})</span>` : ''}</div>
-                    <div style="margin-top:2px;word-break:break-all">${ua}</div>
-                    <div style="margin-top:4px">Login: ${created}</div>
-                    <div>Última atividade: ${seen}</div>
-                    ${isRevoked ? `<div style="margin-top:4px;color:var(--danger)">Revogada: ${s.revoke_reason || ''}</div>` : ''}
+        el.innerHTML = `<div class="sessions-panel">${data.map(s => {
+            const isRevoked  = !!s.revoked_at;
+            const isCurrent  = !!s.is_current;
+            const dotCls     = isCurrent ? 'dot-current' : isRevoked ? 'dot-revoked' : 'dot-active';
+            const itemCls    = isCurrent ? 'is-current' : isRevoked ? 'is-revoked' : '';
+            const ua         = _parseUA(s.user_agent);
+            const seen       = new Date(s.last_seen_at).toLocaleString('pt-BR');
+            const created    = new Date(s.created_at).toLocaleString('pt-BR');
+            const badgeHtml  = isCurrent
+                ? '<span class="session-badge badge-current">Esta sessão</span>'
+                : isRevoked ? '<span class="session-badge badge-revoked">Revogada</span>' : '';
+            const reasonHtml = isRevoked
+                ? `<span class="session-revoke-reason">⊘ ${esc(s.revoke_reason || 'revogada')}</span>` : '';
+            const actionHtml = isCurrent
+                ? '<span class="session-action-none">sessão atual</span>'
+                : isRevoked ? ''
+                : `<button class="btn-session-revoke" onclick="revokeSession('${s.jti}')">⊘ Revogar</button>`;
+            const ipDisplay = s.ip_address || '?';
+            const country = s.country_code ? ` <span style="opacity:.5;font-size:0.75em">(${s.country_code})</span>` : '';
+            return `<div class="session-item ${itemCls}">
+                <div class="session-dot-wrap"><div class="session-dot ${dotCls}"></div></div>
+                <div class="session-info">
+                    <div class="session-line1"><span class="session-ip">${ipDisplay}</span>${country}${badgeHtml}</div>
+                    <div class="session-line2">${esc(ua)}</div>
+                    <div class="session-line3">
+                        <span>Login: ${created}</span>
+                        <span>Última: ${seen}</span>
+                        ${reasonHtml}
+                    </div>
                 </div>
-                ${isRevoked
-                    ? ''
-                    : `<button class="btn btn-sm" style="flex-shrink:0" onclick="revokeSession('${s.jti}')"><i class="fa-solid fa-ban"></i> Revogar</button>`
-                }
+                <div class="session-action">${actionHtml}</div>
             </div>`;
-        }).join('');
+        }).join('')}</div>`;
     } catch (e) {
         if (el) el.innerHTML = `<p style="color:var(--danger);padding:16px">${e.message}</p>`;
     }
 }
 
 async function revokeSession(jti) {
-    if (!confirm('Revogar esta sessão? O dispositivo perderá acesso imediatamente.')) return;
+    if (!await showConfirm('Revogar sessão?', 'O dispositivo perderá acesso imediatamente.', { okText: 'Revogar' })) return;
     try {
         await api('DELETE', `/api/admin/sessions?jti=${jti}`);
         loadSessions();
     } catch (e) {
-        alert(e.message);
+        showToast(e.message, 'error');
     }
 }
 
 async function revokeAllSessions() {
-    if (!confirm('Forçar logout em TODOS os devices? Você precisará fazer login novamente.')) return;
+    if (!await showConfirm('Forçar logout em todos os devices?', 'Você precisará fazer login novamente.', { okText: 'Forçar logout' })) return;
     try {
         const sessions = await api('GET', '/api/admin/sessions');
         const active = sessions.filter(s => !s.revoked_at);

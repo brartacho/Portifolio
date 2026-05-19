@@ -101,6 +101,11 @@ async function handleRefresh(req, res) {
 }
 
 async function listSessions(req, res) {
+    const cookies = parseCookies(req);
+    const token = cookies['admin_session'];
+    const decoded = token ? jwt.decode(token) : null;
+    const currentJti = decoded?.jti ?? null;
+
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('admin_sessions')
@@ -108,7 +113,12 @@ async function listSessions(req, res) {
         .order('last_seen_at', { ascending: false })
         .limit(50);
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data ?? []);
+
+    const sessions = (data ?? []).map(s => ({
+        ...s,
+        is_current: s.jti === currentJti,
+    }));
+    return res.status(200).json(sessions);
 }
 
 async function revokeSession(req, res, jti) {
