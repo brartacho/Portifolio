@@ -3955,21 +3955,33 @@ async function previewCV(id, name) {
     const title   = document.getElementById('pdfPreviewTitle');
     title.textContent = name;
     frame.style.display = 'none';
+    _revokePdfBlob();
     frame.src = '';
     loading.style.display = 'flex';
+    loading.textContent = 'Carregando PDF…';
     overlay.style.display = 'flex';
     try {
         const dl = await api('GET', `/api/admin/cv-storage-url?id=${id}&preview=1`);
-        frame.src = dl.signedUrl;
+        // Fetch como blob para ignorar Content-Disposition do Storage e forçar renderização inline
+        const resp = await fetch(dl.signedUrl);
+        if (!resp.ok) throw new Error(`Erro ao baixar PDF (${resp.status})`);
+        const blob = await resp.blob();
+        frame.src = URL.createObjectURL(blob);
     } catch (e) {
         loading.textContent = 'Erro ao carregar PDF: ' + e.message;
     }
+}
+
+function _revokePdfBlob() {
+    const frame = document.getElementById('pdfPreviewFrame');
+    if (frame?.src?.startsWith('blob:')) URL.revokeObjectURL(frame.src);
 }
 
 function closePdfPreview() {
     const overlay = document.getElementById('pdfPreviewOverlay');
     const frame   = document.getElementById('pdfPreviewFrame');
     overlay.style.display = 'none';
+    _revokePdfBlob();
     frame.src = '';
 }
 
