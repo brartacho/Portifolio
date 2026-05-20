@@ -4015,7 +4015,8 @@ async function previewCV(id, name) {
         // Fetch como blob para ignorar Content-Disposition do Storage e forçar renderização inline
         const resp = await fetch(dl.signedUrl);
         if (!resp.ok) throw new Error(`Erro ao baixar PDF (${resp.status})`);
-        const blob = await resp.blob();
+        const raw  = await resp.blob();
+        const blob = raw.type === 'application/pdf' ? raw : new Blob([raw], { type: 'application/pdf' });
         frame.src = URL.createObjectURL(blob);
     } catch (e) {
         loading.textContent = 'Erro ao carregar PDF: ' + e.message;
