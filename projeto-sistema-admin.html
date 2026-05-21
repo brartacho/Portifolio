@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Gestão de Vagas — Demo do painel</title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="imagens/favicon-artacho.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -144,6 +145,19 @@ input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px var(--bg-elevated) 
 .th-filter-count{font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);white-space:nowrap}
 .filter-date-group{display:flex;align-items:center;gap:6px}
 .th-filter-label{font-size:0.7rem;color:var(--text-dim)}
+
+/* Custom select */
+.custom-select{position:relative;flex-shrink:0}
+.custom-select-btn{display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border:1px solid rgba(255,255,255,0.07);border-radius:6px;background:var(--bg-surface);color:var(--text-soft);font-family:var(--font-display);font-size:0.78rem;cursor:pointer;white-space:nowrap;transition:border-color 0.15s,background 0.15s}
+.custom-select-btn:hover{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04)}
+.custom-select.open .custom-select-btn{border-color:rgba(34,211,238,0.45);background:rgba(34,211,238,0.04);box-shadow:0 0 0 3px rgba(34,211,238,0.08)}
+.custom-select-chevron{font-size:0.6rem;color:var(--text-dim);margin-left:2px;transition:transform 0.15s}
+.custom-select.open .custom-select-chevron{transform:rotate(180deg)}
+.custom-select-menu{display:none;position:absolute;top:calc(100% + 5px);left:0;min-width:100%;background:var(--bg-elevated);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:4px;z-index:300;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+.custom-select.open .custom-select-menu{display:block}
+.custom-select-option{padding:7px 12px;border-radius:6px;font-size:0.78rem;color:var(--text-soft);cursor:pointer;transition:background 0.1s,color 0.1s;white-space:nowrap}
+.custom-select-option:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+.custom-select-option.active{color:var(--cyan);background:var(--cyan-soft)}
 
 /* Tabela */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px}
@@ -721,11 +735,17 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                             <span class="th-filter-count" id="cvCount"></span>
                             <button class="th-filter-clear" onclick="clearCvFilters()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                         </div>
-                        <select class="th-filter-select" id="cvStatusFilter" onchange="renderCVs()" style="width:148px;flex-shrink:0">
-                            <option value="">Todos os status</option>
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
-                        </select>
+                        <div class="custom-select" id="cvStatusFilter" data-value="" data-onchange="renderCVs" style="width:148px">
+                            <button class="custom-select-btn" onclick="toggleCustomSelect(this)" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="custom-select-label">Todos os status</span>
+                                <i class="fa-solid fa-chevron-down custom-select-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div class="custom-select-menu" role="listbox">
+                                <div class="custom-select-option active" data-value="" role="option" onclick="selectCustomOption(this)">Todos os status</div>
+                                <div class="custom-select-option" data-value="ativo" role="option" onclick="selectCustomOption(this)">Ativo</div>
+                                <div class="custom-select-option" data-value="inativo" role="option" onclick="selectCustomOption(this)">Inativo</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="tbl-wrap">
                         <table>
@@ -832,7 +852,10 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                 <div class="panel">
                     <div class="panel-title">
                         <i class="fa-solid fa-list-check" aria-hidden="true"></i> Tokens ativos e histórico
-                        <button class="btn btn-sm" style="margin-left:auto;font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir tokens expirados">
+                        <button class="btn btn-sm" id="tokenSelectBtn" onclick="toggleTokenSelectMode()" style="margin-left:auto;font-size:0.75rem" aria-label="Selecionar tokens">
+                            <i class="fa-solid fa-check-square" aria-hidden="true"></i> Selecionar
+                        </button>
+                        <button class="btn btn-sm" style="font-size:0.75rem" onclick="clearExpiredTokens()" aria-label="Excluir tokens expirados">
                             <i class="fa-solid fa-broom" aria-hidden="true"></i> Limpar expirados
                         </button>
                     </div>
@@ -849,19 +872,26 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                             <span class="th-filter-count" id="tokenCount"></span>
                             <button class="th-filter-clear" onclick="clearTokenFilters()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                         </div>
-                        <select class="th-filter-select" id="tokenStatusFilter" onchange="renderTokens()" style="width:152px;flex-shrink:0">
-                            <option value="">Todos os status</option>
-                            <option value="ativo">Ativo</option>
-                            <option value="expirado">Expirado</option>
-                            <option value="revogado">Revogado</option>
-                            <option value="esgotado">Esgotado</option>
-                        </select>
+                        <div class="custom-select" id="tokenStatusFilter" data-value="" data-onchange="renderTokens" style="width:152px">
+                            <button class="custom-select-btn" onclick="toggleCustomSelect(this)" type="button" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="custom-select-label">Todos os status</span>
+                                <i class="fa-solid fa-chevron-down custom-select-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div class="custom-select-menu" role="listbox">
+                                <div class="custom-select-option active" data-value="" role="option" onclick="selectCustomOption(this)">Todos os status</div>
+                                <div class="custom-select-option" data-value="ativo" role="option" onclick="selectCustomOption(this)">Ativo</div>
+                                <div class="custom-select-option" data-value="expirando" role="option" onclick="selectCustomOption(this)">Expirando</div>
+                                <div class="custom-select-option" data-value="expirado" role="option" onclick="selectCustomOption(this)">Expirado</div>
+                                <div class="custom-select-option" data-value="revogado" role="option" onclick="selectCustomOption(this)">Revogado</div>
+                                <div class="custom-select-option" data-value="esgotado" role="option" onclick="selectCustomOption(this)">Esgotado</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="tbl-wrap">
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width:36px;padding-right:4px"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" style="accent-color:var(--cyan);cursor:pointer"></th>
+                                    <th id="tokenSelectAllTh" style="width:36px;padding-right:4px;display:none"><input type="checkbox" id="tokenSelectAll" onchange="toggleSelectAllTokens(this)" style="accent-color:var(--cyan);cursor:pointer"></th>
                                     <th class="sortable" data-sort="label" onclick="toggleSort('tokens','label')">Label<span class="sort-arrow">↕</span></th>
                                     <th>Currículo</th>
                                     <th>Status</th>
@@ -1478,7 +1508,7 @@ async function loadStorageStats() {
 function renderCVs() {
     updateSortHeaders('cvs');
     const search = (document.getElementById('cvSearch')?.value || '').toLowerCase();
-    const status = document.getElementById('cvStatusFilter')?.value || '';
+    const status = document.getElementById('cvStatusFilter')?.dataset.value || '';
     let data = _cvs;
     if (search) data = data.filter(c =>
         (c.name || '').toLowerCase().includes(search) ||
@@ -1518,10 +1548,53 @@ function renderCVs() {
 }
 
 function clearCvFilters() {
-    ['cvSearch', 'cvStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const s = document.getElementById('cvSearch'); if (s) s.value = '';
+    _resetCustomSelect('cvStatusFilter');
     _cvSort = { col: 'created_at', dir: 'desc' };
     renderCVs();
 }
+
+// ─── Custom select widget ───
+function toggleCustomSelect(btn) {
+    const wrap = btn.closest('.custom-select');
+    const isOpen = !wrap.classList.contains('open');
+    document.querySelectorAll('.custom-select.open').forEach(s => {
+        s.classList.remove('open');
+        s.querySelector('.custom-select-btn')?.setAttribute('aria-expanded', 'false');
+    });
+    if (isOpen) {
+        wrap.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+}
+function selectCustomOption(opt) {
+    const wrap = opt.closest('.custom-select');
+    wrap.dataset.value = opt.dataset.value;
+    wrap.querySelector('.custom-select-label').textContent = opt.textContent;
+    wrap.querySelectorAll('.custom-select-option').forEach(o => o.classList.toggle('active', o === opt));
+    wrap.classList.remove('open');
+    wrap.querySelector('.custom-select-btn')?.setAttribute('aria-expanded', 'false');
+    const cb = wrap.dataset.onchange;
+    if (cb && window[cb]) window[cb]();
+}
+function _resetCustomSelect(id) {
+    const wrap = document.getElementById(id);
+    if (!wrap?.classList.contains('custom-select')) return;
+    wrap.dataset.value = '';
+    const opts = wrap.querySelectorAll('.custom-select-option');
+    if (opts.length) {
+        wrap.querySelector('.custom-select-label').textContent = opts[0].textContent;
+        opts.forEach((o, i) => o.classList.toggle('active', i === 0));
+    }
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-select')) {
+        document.querySelectorAll('.custom-select.open').forEach(s => {
+            s.classList.remove('open');
+            s.querySelector('.custom-select-btn')?.setAttribute('aria-expanded', 'false');
+        });
+    }
+});
 
 // Mapeia nome de arquivo customizado para um dos PDFs de exemplo (heurística)
 function _previewPdfPath(fileName) {
@@ -1741,6 +1814,7 @@ function setExpiry(btn) {
 
 let _tokenKpiFilter = null;     // 'ativo' | 'expirando' | 'expirado' | 'revogado' | 'esgotado' | null
 let _tokenPreset = '';          // '' | 'ativo' | 'expirando' | 'expirado' | 'revogado'
+let _tokenSelecting = false;
 let _selectedTokenIds = new Set();
 
 async function loadTokens() {
@@ -1798,7 +1872,7 @@ function applyTokenPreset(preset, btn) {
 function renderTokens() {
     updateSortHeaders('tokens');
     const search  = (document.getElementById('tokenSearch')?.value || '').toLowerCase();
-    const statusF = document.getElementById('tokenStatusFilter')?.value || '';
+    const statusF = document.getElementById('tokenStatusFilter')?.dataset.value || '';
     let data = _tokens;
     if (search) data = data.filter(t =>
         (t.label || '').toLowerCase().includes(search) ||
@@ -1817,8 +1891,9 @@ function renderTokens() {
         : '';
 
     const tb = document.getElementById('tokenTable');
+    const cols = _tokenSelecting ? 7 : 6;
     if (!data.length) {
-        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>';
+        tb.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum token encontrado</td></tr>`;
         _updateBulkBar();
         return;
     }
@@ -1828,7 +1903,7 @@ function renderTokens() {
         const checked = _selectedTokenIds.has(t.id) ? 'checked' : '';
         const rowCls = _selectedTokenIds.has(t.id) ? 'token-row-selected' : '';
         return `<tr class="${rowCls}">
-            <td style="padding-right:4px"><input type="checkbox" ${checked} onchange="toggleTokenRow('${t.id}',this)" style="accent-color:var(--cyan);cursor:pointer"></td>
+            ${_tokenSelecting ? `<td onclick="event.stopPropagation()" style="width:36px;padding-right:4px"><input type="checkbox" ${checked} onchange="toggleTokenRow('${t.id}',this)" style="accent-color:var(--cyan);cursor:pointer"></td>` : ''}
             <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
             <td style="font-size:0.82rem">${esc(t.cv_versions?.name || '—')}</td>
             <td><span class="badge ${badgeCls}">● ${t.status}</span></td>
@@ -1847,13 +1922,27 @@ function renderTokens() {
 }
 
 function clearTokenFilters() {
-    ['tokenSearch', 'tokenStatusFilter'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const s = document.getElementById('tokenSearch'); if (s) s.value = '';
+    _resetCustomSelect('tokenStatusFilter');
     _tokenKpiFilter = null;
     _tokenPreset = '';
     document.querySelectorAll('#tokenKpis .tab-kpi-card').forEach(c => c.classList.remove('kpi-selected'));
     document.querySelectorAll('#tokenPresetChips .preset-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
     _tokenSort = { col: 'expires_at', dir: 'asc' };
     renderTokens();
+}
+
+function toggleTokenSelectMode() {
+    _tokenSelecting = !_tokenSelecting;
+    _selectedTokenIds.clear();
+    const btn = document.getElementById('tokenSelectBtn');
+    if (btn) btn.classList.toggle('active', _tokenSelecting);
+    const th = document.getElementById('tokenSelectAllTh');
+    if (th) th.style.display = _tokenSelecting ? '' : 'none';
+    const all = document.getElementById('tokenSelectAll');
+    if (all) { all.checked = false; all.indeterminate = false; }
+    renderTokens();
+    _updateBulkBar();
 }
 
 // ─── Bulk select ───
