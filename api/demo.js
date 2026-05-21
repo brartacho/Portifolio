@@ -299,9 +299,34 @@ async function handleTokens(req, res, session_id) {
 
     if (req.method === 'GET') {
         const { data } = await supabase.from('demo_download_tokens')
-            .select('*, cv_versions:demo_cv_versions(id, name)')
+            .select('*, cv_versions:demo_cv_versions(id, name, file_name, is_sample)')
             .eq('session_id', session_id).order('created_at', { ascending: false }).limit(100);
         return res.json(data ?? []);
+    }
+    if (req.method === 'POST' && (req.body || {}).action === 'consume') {
+        if (!req.query.id) return res.status(400).json({ error: 'id obrigatório' });
+        const { data: tk } = await supabase.from('demo_download_tokens')
+            .select('*, cv_versions:demo_cv_versions(id, name, file_name, is_sample)')
+            .eq('id', req.query.id).eq('session_id', session_id).single();
+        if (!tk) return res.status(404).json({ error: 'Token não encontrado' });
+        if (tk.revoked) return res.status(409).json({ error: 'Token revogado' });
+        if (tk.expires_at && new Date(tk.expires_at) < new Date()) return res.status(409).json({ error: 'Token expirado' });
+        if (tk.max_uses != null && tk.use_count >= tk.max_uses) return res.status(409).json({ error: 'Token esgotado' });
+        const cv = tk.cv_versions;
+        if (!cv || cv.is_sample !== true) return res.status(403).json({ error: 'Consumo disponível apenas para currículos de exemplo' });
+        const { data: qErrLog } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_download_logs' });
+        if (qErrLog) return res.status(429).json({ error: qErrLog });
+        const parts = String(tk.label || '').split('·').map(s => s.trim());
+        const { data: updated } = await supabase.from('demo_download_tokens')
+            .update({ use_count: tk.use_count + 1 }).eq('id', tk.id).eq('session_id', session_id)
+            .select('*, cv_versions:demo_cv_versions(id, name)').single();
+        await supabase.from('demo_download_logs').insert({
+            session_id, cv_version_id: cv.id, cv_name_snapshot: cv.name,
+            ip_address: 'demo-recruiter-access', user_agent: 'Demo · acesso simulado do recrutador',
+            empresa: parts[0] || 'Recrutador', vaga: parts[parts.length - 1] || '—',
+            downloaded_at: new Date().toISOString(),
+        });
+        return res.json({ token: updated, pdf: cv.file_name });
     }
     if (req.method === 'POST') {
         const { data: qErr } = await supabase.rpc('demo_check_quota', { p_session_id: session_id, p_table: 'demo_download_tokens' });

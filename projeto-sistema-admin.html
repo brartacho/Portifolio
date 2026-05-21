@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="/admin/assets/js/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -574,7 +575,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
     <div class="hero-body">
 
         <section class="hero">
-            <div class="hero-eyebrow">// SISTEMA FULL-STACK</div>
+            <div class="hero-eyebrow">// API SERVERLESS</div>
             <h1>Painel admin.<br><span>Explore o sistema real.</span></h1>
             <p class="hero-sub">Controle de candidaturas, CVs versionados, tokens de acesso e analytics em tempo real. Dados fictícios — explore sem riscos.</p>
             <div class="hero-features">
@@ -652,6 +653,8 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
         <button class="tab-btn active" data-tab="cvs" onclick="switchTab('cvs')"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Currículos</button>
         <button class="tab-btn" data-tab="tokens" onclick="switchTab('tokens')"><i class="fa-solid fa-key" aria-hidden="true"></i> Tokens</button>
         <button class="tab-btn" data-tab="vagas" onclick="switchTab('vagas')"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> Vagas</button>
+        <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')"><i class="fa-solid fa-chart-bar" aria-hidden="true"></i> Logs</button>
+        <button class="tab-btn" data-tab="metricas" onclick="switchTab('metricas')"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Métricas</button>
     </nav>
 
     <div class="app-content">
@@ -916,7 +919,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
 
             <div id="vagasListView">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-                    <div id="vagasFiltersPanel">
+                    <div id="vagasFiltersPanel" class="collapsed">
                         <div style="display:flex;flex-direction:column;gap:6px">
                             <div class="vagas-filters" id="vagasFilters">
                                 <button class="vagas-filter-chip active" data-filter="all" onclick="setVagasFilter('all',this)">Todas</button>
@@ -943,7 +946,7 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                         <button class="btn btn-sm" id="vagasFiltersToggleBtn" onclick="toggleVagasFilters()" title="Mostrar/ocultar filtros">
                             <i class="fa-solid fa-sliders" aria-hidden="true"></i> Filtros
                             <span id="vagasFiltersBadge" class="vagas-filters-badge" style="display:none"></span>
-                            <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;margin-left:4px;transition:transform 0.2s" aria-hidden="true"></i>
+                            <i class="fa-solid fa-chevron-up" id="vagasFiltersChevron" style="font-size:0.7em;margin-left:4px;transition:transform 0.2s;transform:rotate(180deg)" aria-hidden="true"></i>
                         </button>
                         <button class="btn btn-sm" id="vagasSelectBtn" onclick="toggleVagasSelectMode()" title="Selecionar para ações em lote"><i class="fa-solid fa-check-square" aria-hidden="true"></i> Selecionar</button>
                         <button class="btn btn-sm" onclick="exportVagasCSV()" title="Exportar lista atual como CSV"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar CSV</button>
@@ -1060,6 +1063,119 @@ tr.token-row-selected{outline:1px solid rgba(34,211,238,0.2)}
                     <div class="metrics-panel"><h4>Tipo de contratação</h4><div id="vagasDistTipo"></div></div>
                     <div class="metrics-panel"><h4>Etapa atual</h4><div id="vagasDistStage"></div></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ─── LOGS ─── -->
+        <div class="tab-panel" id="tab-logs">
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-chart-bar" aria-hidden="true"></i> Acessos e envios registrados</div>
+
+                <div class="tab-kpis" id="logKpis">
+                    <div class="tab-kpi-card" onclick="applyLogPreset('today')" role="button" tabindex="0">
+                        <span class="tab-kpi-num" id="kpiLogHoje">—</span><span class="tab-kpi-label">Hoje</span>
+                    </div>
+                    <div class="tab-kpi-card" onclick="applyLogPreset('7d')" role="button" tabindex="0">
+                        <span class="tab-kpi-num" id="kpiLog7d">—</span><span class="tab-kpi-label">7 dias</span>
+                    </div>
+                    <div class="tab-kpi-card" onclick="applyLogPreset('30d')" role="button" tabindex="0">
+                        <span class="tab-kpi-num" id="kpiLog30d">—</span><span class="tab-kpi-label">30 dias</span>
+                    </div>
+                    <div class="tab-kpi-card kpi-cyan" onclick="applyLogPreset('all')" role="button" tabindex="0">
+                        <span class="tab-kpi-num" id="kpiLogTotal">—</span><span class="tab-kpi-label">Total geral</span>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-search">
+                        <input class="th-filter-input" type="search" id="logSearch" placeholder="Buscar currículo, empresa, vaga…" oninput="renderLogs()">
+                        <span class="th-filter-count" id="logCount"></span>
+                        <button class="th-filter-clear" onclick="clearLogFilters()" title="Limpar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                    </div>
+                    <div class="custom-select" id="logTipoFilter" data-value="" data-onchange="renderLogs" style="width:210px">
+                        <button class="custom-select-btn" onclick="toggleCustomSelect(this)" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="custom-select-label">Todos os eventos</span>
+                            <i class="fa-solid fa-chevron-down custom-select-chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="custom-select-menu" role="listbox">
+                            <div class="custom-select-option active" data-value="" role="option" onclick="selectCustomOption(this)">Todos os eventos</div>
+                            <div class="custom-select-option" data-value="download" role="option" onclick="selectCustomOption(this)">Acesso do recrutador</div>
+                            <div class="custom-select-option" data-value="email" role="option" onclick="selectCustomOption(this)">Envio por e-mail</div>
+                            <div class="custom-select-option" data-value="whatsapp" role="option" onclick="selectCustomOption(this)">Envio WhatsApp</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Evento</th>
+                                <th>Currículo</th>
+                                <th>Origem</th>
+                                <th class="sortable sort-active" data-sort="downloaded_at" onclick="toggleSort('logs','downloaded_at')">Data/hora<span class="sort-arrow">▼</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTable"><tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Carregando…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── MÉTRICAS ─── -->
+        <div class="tab-panel" id="tab-metricas">
+            <div class="metrics-period-bar" id="metricsPeriodBar">
+                <button class="metrics-period-btn" data-period="1" onclick="setAnalyticsPeriod(1,this)">Hoje</button>
+                <button class="metrics-period-btn active" data-period="7" onclick="setAnalyticsPeriod(7,this)">7 dias</button>
+                <button class="metrics-period-btn" data-period="30" onclick="setAnalyticsPeriod(30,this)">30 dias</button>
+                <button class="metrics-period-btn" data-period="90" onclick="setAnalyticsPeriod(90,this)">90 dias</button>
+                <button class="metrics-period-btn" data-period="365" onclick="setAnalyticsPeriod(365,this)">Ano</button>
+            </div>
+
+            <div class="metrics-kpis" id="metricsKpis">
+                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Visitas</div><div class="metrics-kpi-value" id="mkpi-pageviews">—</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Visitantes únicos</div><div class="metrics-kpi-value" id="mkpi-unique">—</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Engajados</div><div class="metrics-kpi-value" id="mkpi-engaged">—%</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Cliques em CV</div><div class="metrics-kpi-value" id="mkpi-cv-clicks">—</div></div>
+                <div class="metrics-kpi-card highlight"><div class="metrics-kpi-label">Downloads</div><div class="metrics-kpi-value" id="mkpi-cv-downloads">—</div><div class="metrics-kpi-sub" id="mkpi-conversion">—% conversão</div></div>
+                <div class="metrics-kpi-card"><div class="metrics-kpi-label">Recorrentes</div><div class="metrics-kpi-value" id="mkpi-recurring">—</div></div>
+            </div>
+
+            <div class="metrics-chart-card">
+                <h4 id="metricsChartTitle">Visitas dos últimos 7 dias</h4>
+                <div style="position:relative;height:180px"><canvas id="metricsChart"></canvas></div>
+            </div>
+
+            <div class="metrics-funnel-card">
+                <h4>Funil de conversão</h4>
+                <div class="metrics-funnel-steps">
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Visitas</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="mfunnel-bar-pageview" style="width:100%"></div></div>
+                        <span class="metrics-funnel-step-count" id="mfunnel-val-pageview">—</span><span class="metrics-funnel-step-pct" id="mfunnel-pct-pageview">100%</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Engajados</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="mfunnel-bar-engaged" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="mfunnel-val-engaged">—</span><span class="metrics-funnel-step-pct" id="mfunnel-pct-engaged">—</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Clicou no CV</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="mfunnel-bar-cv-click" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="mfunnel-val-cv-click">—</span><span class="metrics-funnel-step-pct" id="mfunnel-pct-cv-click">—</span>
+                    </div>
+                    <div class="metrics-funnel-step">
+                        <span class="metrics-funnel-step-label">Baixou o CV</span>
+                        <div class="metrics-funnel-step-bar"><div class="metrics-funnel-step-fill" id="mfunnel-bar-cv-download" style="width:0%"></div></div>
+                        <span class="metrics-funnel-step-count" id="mfunnel-val-cv-download">—</span><span class="metrics-funnel-step-pct" id="mfunnel-pct-cv-download">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metrics-panels-grid">
+                <div class="metrics-panel"><h4>Top páginas</h4><div id="metricsTopPages"></div></div>
+                <div class="metrics-panel"><h4>Top origens</h4><div id="metricsReferrers"></div></div>
+                <div class="metrics-panel"><h4>Dispositivos</h4><div id="metricsDevices"></div></div>
+                <div class="metrics-panel"><h4>Países</h4><div id="metricsCountries"></div></div>
             </div>
         </div>
 
@@ -1357,15 +1473,16 @@ function _sortData(arr, col, dir) {
     });
 }
 function toggleSort(table, col) {
-    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : null;
+    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : table === 'logs' ? _logSort : null;
     if (!state) return;
     if (state.col === col) state.dir = state.dir === 'asc' ? 'desc' : 'asc';
     else { state.col = col; state.dir = 'asc'; }
     if (table === 'cvs')    renderCVs();
     if (table === 'tokens') renderTokens();
+    if (table === 'logs')   renderLogs();
 }
 function updateSortHeaders(table) {
-    const state = table === 'cvs' ? _cvSort : _tokenSort;
+    const state = table === 'cvs' ? _cvSort : table === 'tokens' ? _tokenSort : table === 'logs' ? _logSort : _cvSort;
     const tab = document.getElementById(`tab-${table}`);
     if (!tab) return;
     tab.querySelectorAll('th.sortable').forEach(th => {
@@ -1451,12 +1568,163 @@ function switchTab(name) {
     if (name === 'cvs') loadCVs();
     else if (name === 'tokens') loadTokens();
     else if (name === 'vagas') loadVagas();
+    else if (name === 'logs') loadLogs();
+    else if (name === 'metricas') loadMetrics();
     setRefreshTs();
 }
 
 function refreshActive() {
     switchTab(_activeTab);
     showToast('Dados atualizados');
+}
+
+// ════════════════════════════════════════════════════════
+// LOGS
+// ════════════════════════════════════════════════════════
+let _logs = [];
+let _logSort = { col: 'downloaded_at', dir: 'desc' };
+let _logPreset = 'all';
+
+function _logKind(l) {
+    const ip = String(l.ip_address || '');
+    if (ip.startsWith('admin-send-email')) return 'email';
+    if (ip.startsWith('admin-send-whatsapp')) return 'whatsapp';
+    return 'download';
+}
+function _logKindLabel(kind) {
+    return kind === 'email' ? { txt: 'Envio por e-mail', icon: 'envelope', color: 'var(--violet)' }
+         : kind === 'whatsapp' ? { txt: 'Envio WhatsApp', icon: 'whatsapp', color: '#25d366', brand: true }
+         : { txt: 'Acesso do recrutador', icon: 'download', color: 'var(--cyan)' };
+}
+
+async function loadLogs() {
+    try {
+        _logs = await dapi('GET', '/api/demo/logs');
+        renderLogs();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+function _logInPreset(l, preset) {
+    if (preset === 'all') return true;
+    const dt = l.downloaded_at ? new Date(l.downloaded_at) : null;
+    if (!dt) return false;
+    const now = Date.now();
+    if (preset === 'today') { const d = new Date(); d.setHours(0,0,0,0); return dt >= d; }
+    if (preset === '7d')  return dt >= new Date(now - 7  * 86400000);
+    if (preset === '30d') return dt >= new Date(now - 30 * 86400000);
+    return true;
+}
+
+function renderLogs() {
+    updateSortHeaders('logs');
+    // KPIs
+    const cnt = (p) => _logs.filter(l => _logInPreset(l, p)).length;
+    const setK = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setK('kpiLogHoje', cnt('today')); setK('kpiLog7d', cnt('7d')); setK('kpiLog30d', cnt('30d')); setK('kpiLogTotal', _logs.length);
+    document.querySelectorAll('#logKpis .tab-kpi-card').forEach((c, i) => c.classList.toggle('kpi-selected', ['today','7d','30d','all'][i] === _logPreset));
+
+    const search = (document.getElementById('logSearch')?.value || '').toLowerCase();
+    const tipo   = document.getElementById('logTipoFilter')?.dataset.value || '';
+    let data = _logs.filter(l => _logInPreset(l, _logPreset));
+    if (tipo)   data = data.filter(l => _logKind(l) === tipo);
+    if (search) data = data.filter(l =>
+        (l.cv_name_snapshot || '').toLowerCase().includes(search) ||
+        (l.empresa || '').toLowerCase().includes(search) ||
+        (l.vaga || '').toLowerCase().includes(search)
+    );
+    data = _sortData(data, _logSort.col, _logSort.dir);
+
+    const countEl = document.getElementById('logCount');
+    if (countEl) countEl.textContent = _logs.length ? (data.length !== _logs.length ? `${data.length} de ${_logs.length}` : `${_logs.length} registros`) : '';
+
+    const tb = document.getElementById('logTable');
+    if (!data.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:32px">Nenhum registro encontrado</td></tr>'; return; }
+    tb.innerHTML = data.map(l => {
+        const k = _logKindLabel(_logKind(l));
+        const origem = [l.empresa, l.vaga].filter(Boolean).join(' · ') || '—';
+        return `<tr>
+            <td><span style="display:inline-flex;align-items:center;gap:7px"><i class="fa-${k.brand ? 'brands' : 'solid'} fa-${k.icon}" style="color:${k.color}" aria-hidden="true"></i> ${esc(k.txt)}</span></td>
+            <td style="font-size:0.82rem">${esc(l.cv_name_snapshot || '—')}</td>
+            <td style="font-size:0.8rem;color:var(--text-soft)">${esc(origem)}</td>
+            <td style="font-size:0.78rem;color:var(--text-dim)">${fmtDate(l.downloaded_at, true)}</td>
+        </tr>`;
+    }).join('');
+}
+function applyLogPreset(p) { _logPreset = p; renderLogs(); }
+function clearLogFilters() {
+    const s = document.getElementById('logSearch'); if (s) s.value = '';
+    _resetCustomSelect('logTipoFilter');
+    _logPreset = 'all';
+    renderLogs();
+}
+
+// ════════════════════════════════════════════════════════
+// MÉTRICAS
+// ════════════════════════════════════════════════════════
+let _metricsChart = null;
+let _metricsPeriod = 7;
+
+async function loadMetrics() { renderMetrics(_metricsPeriod); }
+
+function setAnalyticsPeriod(days, btn) {
+    _metricsPeriod = days;
+    document.querySelectorAll('#metricsPeriodBar .metrics-period-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderMetrics(days);
+}
+
+function _metricsBars(items, key, label) {
+    if (!items || !items.length) return '<div style="color:var(--text-dim);font-size:0.78rem">Sem dados</div>';
+    const max = Math.max(...items.map(i => i.count), 1);
+    return items.map(i => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+            <span style="font-size:0.74rem;color:var(--text-soft);width:96px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i[key] ?? i[label] ?? '—')}</span>
+            <div style="flex:1;height:14px;background:var(--border);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(i.count/max*100)}%;background:linear-gradient(90deg,var(--violet),var(--cyan));border-radius:4px"></div></div>
+            <span style="font-size:0.74rem;font-variant-numeric:tabular-nums;width:40px;text-align:right;flex-shrink:0">${i.count}</span>
+        </div>`).join('');
+}
+
+async function renderMetrics(period) {
+    let d;
+    try { d = await dapi('GET', `/api/demo/analytics?period=${period}`); }
+    catch (e) { showToast(e.message, 'error'); return; }
+    const k = d.kpis || {};
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('mkpi-pageviews', k.pageviews ?? '—');
+    set('mkpi-unique', k.unique_visitors ?? '—');
+    set('mkpi-engaged', (k.engaged_rate ?? 0) + '%');
+    set('mkpi-cv-clicks', k.cv_download_clicks ?? '—');
+    set('mkpi-cv-downloads', k.cv_downloads ?? '—');
+    set('mkpi-conversion', (k.conversion_rate ?? 0) + '% conversão');
+    set('mkpi-recurring', k.recurring_visitors ?? '—');
+
+    document.getElementById('metricsChartTitle').textContent =
+        period === 1 ? 'Visitas de hoje' : `Visitas dos últimos ${period} dias`;
+    const ctx = document.getElementById('metricsChart');
+    if (_metricsChart) { _metricsChart.destroy(); _metricsChart = null; }
+    if (ctx && window.Chart) {
+        const series = d.series || [];
+        _metricsChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: series.map(s => s.bucket.slice(5)), datasets: [{ label: 'Visitas', data: series.map(s => s.pageviews), borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', fill: { target: 'origin' }, tension: 0.3, pointRadius: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#5c5c80', precision: 0 }, grid: { color: '#1e1e2e' } }, x: { ticks: { color: '#5c5c80' }, grid: { display: false } } } }
+        });
+    }
+
+    // Funil
+    const f = d.funnel || {};
+    const base = f.pageview || 1;
+    const steps = [['pageview', f.pageview], ['engaged', f.engaged], ['cv-click', f.cv_click], ['cv-download', f.cv_download]];
+    steps.forEach(([id, val]) => {
+        const v = val || 0; const pct = Math.round(v / base * 100);
+        const bar = document.getElementById(`mfunnel-bar-${id}`); if (bar) bar.style.width = pct + '%';
+        const vc = document.getElementById(`mfunnel-val-${id}`); if (vc) vc.textContent = v;
+        const pc = document.getElementById(`mfunnel-pct-${id}`); if (pc) pc.textContent = pct + '%';
+    });
+
+    document.getElementById('metricsTopPages').innerHTML = _metricsBars(d.top_pages, 'path');
+    document.getElementById('metricsReferrers').innerHTML = _metricsBars(d.top_referrers, 'host');
+    document.getElementById('metricsDevices').innerHTML = _metricsBars(d.devices, 'name');
+    document.getElementById('metricsCountries').innerHTML = _metricsBars(d.countries, 'name');
 }
 
 // ════════════════════════════════════════════════════════
@@ -1596,14 +1864,14 @@ document.addEventListener('click', e => {
     }
 });
 
-// Mapeia nome de arquivo customizado para um dos PDFs de exemplo (heurística)
+// Mapeia o nome do arquivo a UM dos 5 PDFs de exemplo realmente existentes em
+// /projeto-sistema-admin-assets/ (heurística — nunca devolve nome inexistente).
 function _previewPdfPath(fileName) {
     const n = (fileName || '').toLowerCase();
-    if (/(automation|automa[cç][aã]o|auto)/.test(n)) return 'cv-jon-snow-qa-auto.pdf';
-    if (/sdet/.test(n))                              return 'cv-jon-snow-sdet.pdf';
-    if (/(analyst|analista)/.test(n))                return 'cv-jon-snow-test-analyst.pdf';
     if (/(bilingue|biling|english|\ben\b)/.test(n))  return 'cv-jon-snow-bilingue.pdf';
-    if (/^cv-jon-snow-/.test(n))                     return n;
+    if (/(automation|automa[cç][aã]o|\bauto\b|frontend|front|react)/.test(n)) return 'cv-jon-snow-qa-auto.pdf';
+    if (/(sdet|backend|back|node)/.test(n))           return 'cv-jon-snow-sdet.pdf';
+    if (/(analyst|analista|pleno|fullstack|full-stack|dev)/.test(n)) return 'cv-jon-snow-test-analyst.pdf';
     return 'cv-jon-snow-qa-senior.pdf';
 }
 function previewCV(id) {
@@ -1902,6 +2170,8 @@ function renderTokens() {
         const uses = t.max_uses != null ? `${t.use_count}/${t.max_uses}` : `${t.use_count} / ∞`;
         const checked = _selectedTokenIds.has(t.id) ? 'checked' : '';
         const rowCls = _selectedTokenIds.has(t.id) ? 'token-row-selected' : '';
+        const isSample = t.cv_versions?.is_sample === true;
+        const consumable = t.status === 'ativo' && isSample;
         return `<tr class="${rowCls}">
             ${_tokenSelecting ? `<td onclick="event.stopPropagation()" style="width:36px;padding-right:4px"><input type="checkbox" ${checked} onchange="toggleTokenRow('${t.id}',this)" style="accent-color:var(--cyan);cursor:pointer"></td>` : ''}
             <td><strong style="color:var(--text)">${esc(t.label || '(sem label)')}</strong></td>
@@ -1911,6 +2181,8 @@ function renderTokens() {
             <td style="font-size:0.78rem;color:var(--text-dim)">${t.expires_at ? fmtDate(t.expires_at, true) : '—'}</td>
             <td>
                 <div class="row-actions">
+                    ${consumable ? `<button class="btn btn-sm btn-cyan" onclick="consumeToken('${t.id}')" title="Simular acesso do recrutador (consome 1 uso)"><i class="fa-solid fa-user-check" aria-hidden="true"></i></button>` : ''}
+                    ${consumable ? `<button class="btn btn-sm" onclick="shareTokenWhatsApp('${t.id}')" title="Compartilhar via WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true" style="color:#25d366"></i></button>` : ''}
                     <button class="btn btn-sm" onclick="copyTokenHash('${esc(t.hash)}')" title="Copiar link"><i class="fa-solid fa-copy" aria-hidden="true"></i></button>
                     ${t.status === 'ativo' ? `<button class="btn btn-sm" onclick="revokeToken('${t.id}')" title="Revogar"><i class="fa-solid fa-ban" aria-hidden="true"></i></button>` : ''}
                     <button class="btn btn-danger btn-sm" onclick="deleteToken('${t.id}')" title="Excluir"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
@@ -2024,6 +2296,25 @@ function copyTokenHash(hash) {
     const url = `${DEMO_LINK_BASE}/cv?token=${hash}`;
     navigator.clipboard.writeText(url);
     showToast('Link copiado!');
+}
+
+// Simula o recrutador acessando o CV via token: consome 1 uso e registra nos Logs.
+async function consumeToken(id) {
+    try {
+        const r = await dapi('POST', `/api/demo/tokens?id=${id}`, { action: 'consume' });
+        if (r.pdf) window.open(`/projeto-sistema-admin-assets/${_previewPdfPath(r.pdf)}`, '_blank', 'noopener');
+        showToast('Recrutador acessou o CV — registrado nos Logs');
+        loadTokens();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// Abre o WhatsApp do próprio visitante com o link demo (inerte). Não envia sozinho.
+function shareTokenWhatsApp(id) {
+    const t = _tokens.find(x => x.id === id);
+    if (!t) return;
+    const url = `${DEMO_LINK_BASE}/cv?token=${t.hash}`;
+    const text = `Demonstração — currículo de exemplo: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
 }
 
 async function createToken() {
