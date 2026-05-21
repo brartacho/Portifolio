@@ -32,7 +32,8 @@
     { "source": "/admin",       "destination": "/admin/index.html" },
     { "source": "/admin/reset", "destination": "/admin/reset.html" },
     { "source": "/privacidade", "destination": "/privacidade.html" },
-    { "source": "/projeto-sistema-admin", "destination": "/projeto-sistema-admin.html" }
+    { "source": "/projeto-sistema-admin", "destination": "/projeto-sistema-admin.html" },
+    { "source": "/projeto-portfolio", "destination": "/projeto-portfolio.html" }
   ],
   "headers": [
     {

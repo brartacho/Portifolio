@@ -9,6 +9,12 @@ function safeFileName(n) {
 }
 function genHash() { return randomBytes(6).toString('hex'); }
 
+// Só aceita URLs http(s); bloqueia javascript:/data:/etc. em campos de link.
+function safeHttpUrl(u) {
+    const s = String(u || '').trim();
+    return /^https?:\/\//i.test(s) ? s : null;
+}
+
 const VALID_MODALIDADE = new Set(['Presencial', 'Híbrida', 'Remota']);
 const VALID_TIPO       = new Set(['CLT', 'PJ', 'Freelancer']);
 const VALID_RESULTS    = new Set(['em_processo', 'aprovado', 'recusado']);
@@ -17,8 +23,8 @@ function sanitizeApp(body) {
     const out = {};
     if ('empresa'          in body) out.empresa          = clean(body.empresa, 200) || 'N/A';
     if ('vaga'             in body) out.vaga             = clean(body.vaga, 200);
-    if ('linkedin_empresa' in body) out.linkedin_empresa = clean(body.linkedin_empresa, 300);
-    if ('link_vaga'        in body) out.link_vaga        = clean(body.link_vaga, 500);
+    if ('linkedin_empresa' in body) out.linkedin_empresa = safeHttpUrl(clean(body.linkedin_empresa, 300));
+    if ('link_vaga'        in body) out.link_vaga        = safeHttpUrl(clean(body.link_vaga, 500));
     if ('observacoes'      in body) out.observacoes      = clean(body.observacoes, 500);
     if ('gestor_nome'      in body) out.gestor_nome      = clean(body.gestor_nome, 100);
     if ('gestor_email'     in body) out.gestor_email     = clean(body.gestor_email, 120);
@@ -358,7 +364,9 @@ async function handleLogs(req, res, session_id) {
         if (req.query.to)   query = query.lte('downloaded_at', `${req.query.to}T23:59:59.999`);
 
         if (search) {
-            const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+            const s = String(search).slice(0, 100)
+                .replace(/[%_\\]/g, c => `\\${c}`)  // wildcards LIKE
+                .replace(/[(),]/g, ' ');            // metacaracteres de filtro PostgREST
             query = query.or(`cv_name_snapshot.ilike.%${s}%,empresa.ilike.%${s}%,vaga.ilike.%${s}%,user_agent.ilike.%${s}%`);
         }
         query = query.range(offset, offset + limit - 1);

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfólio ARTACHO.dev — Engenharia front-end</title>
+    <meta name="description" content="Case do portfólio ARTACHO.dev: site construído como produto em HTML, CSS e JS vanilla, sem frameworks. Analytics próprio e foco em performance, SEO e acessibilidade.">
+    <link rel="icon" type="image/svg+xml" href="imagens/favicon-artacho.svg">
+    <link rel="alternate icon" type="image/png" href="imagens/logo_artacho.dev_001.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body class="case-page">
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <nav class="main-nav" aria-label="Navegação principal">
+        <div class="container nav-flex">
+            <a href="index.html#home" class="logo">ARTACHO<span>.</span>dev</a>
+            <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-expanded="false" aria-controls="navLinks">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#sobre">Sobre</a></li>
+                <li><a href="index.html#skills">Stack</a></li>
+                <li><a href="index.html#formacao">Formação</a></li>
+                <li><a href="index.html#projetos">Projetos</a></li>
+                <li><a href="index.html#contato">Contato</a></li>
+                <li>
+                    <a href="/cv" class="nav-cv-link" title="Baixar Currículo PDF">
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                        <span>Currículo</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="https://github.com/brartacho" target="_blank" class="nav-github-header" title="Acessar meu GitHub" rel="noreferrer">
+                        <i class="fa-brands fa-github" aria-hidden="true"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="content-wrapper">
+
+        <!-- HERO -->
+        <section class="cp-hero">
+            <div class="container cp-hero-grid">
+                <div>
+                    <div class="cp-hero-eyebrow">
+                        <a href="index.html#projetos" class="cp-back" aria-label="Voltar para projetos">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </a>
+                        <span class="cp-hero-badge">Projeto autoral · Front-end</span>
+                    </div>
+
+                    <h1 class="cp-hero-h1">Um portfólio construído<br>como produto</h1>
+
+                    <p class="cp-hero-lead">
+                        Este site não é um template. É HTML, CSS e JavaScript vanilla, sem frameworks,
+                        pensado como produto: analytics próprio e atenção real a
+                        performance, SEO e acessibilidade. Aqui está como ele foi construído.
+                    </p>
+
+                    <div class="cp-chips">
+                        <span class="cp-chip">Vanilla JS</span>
+                        <span class="cp-chip">Performance</span>
+                        <span class="cp-chip">SEO</span>
+                        <span class="cp-chip">Acessibilidade</span>
+                    </div>
+                </div>
+
+                <aside class="cp-sidebar" data-animate>
+                    <div class="cp-sidebar-item">
+                        <strong>Objetivo</strong>
+                        <span>Apresentar perfil e projetos com uma base front-end leve, rápida e de código autoral.</span>
+                    </div>
+                    <div class="cp-sidebar-item">
+                        <strong>Stack</strong>
+                        <span>HTML5 semântico, CSS3 moderno (grid, custom properties) e JavaScript sem dependências.</span>
+                    </div>
+                    <div class="cp-sidebar-item">
+                        <strong>Diferenciais</strong>
+                        <span>Analytics de engajamento próprio e download de CV protegido por token. O painel admin tem PWA instalável.</span>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- VISÃO RÁPIDA -->
+        <section class="cp-section">
+            <div class="container">
+                <p class="cp-section-label">Decisões de engenharia</p>
+                <h2 class="cp-section-h2">Visão rápida</h2>
+
+                <div class="cp-bento cp-bento-3">
+                    <article class="cp-card cp-card-accent" data-animate>
+                        <div class="cp-card-icon"><i class="fa-solid fa-feather"></i></div>
+                        <h3>Zero framework</h3>
+                        <p>Sem React, sem build pesado. HTML, CSS e JS direto ao ponto — carga mínima e controle total sobre cada byte entregue.</p>
+                    </article>
+
+                    <article class="cp-card" data-animate>
+                        <div class="cp-card-icon"><i class="fa-solid fa-universal-access"></i></div>
+                        <h3>A11y &amp; SEO nativos</h3>
+                        <p>HTML semântico, landmarks, Open Graph e dados estruturados — sem plugins. Resultados auditados por script próprio.</p>
+                    </article>
+
+                    <article class="cp-card" data-animate>
+                        <div class="cp-card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <h3>Analytics próprio</h3>
+                        <p>Rastreio de engajamento autoral em <code>analytics.js</code> — sem depender de scripts de terceiros pesados.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- PILARES -->
+        <section class="cp-section">
+            <div class="container">
+                <p class="cp-section-label">Qualidade</p>
+                <h2 class="cp-section-h2">Pilares do front-end</h2>
+
+                <div class="cp-rule-box" data-animate>
+                    <h3>Por que vanilla e por que isso importa</h3>
+                    <p>Escolher não usar framework foi uma decisão de engenharia, não de limitação. O resultado é um site
+                       leve, rápido e fácil de auditar — onde performance, SEO e acessibilidade são consequência da base, não remendos.</p>
+
+                    <div class="cp-rule-cols">
+                        <div class="cp-rule-col">
+                            <h3>O que foi priorizado</h3>
+                            <ul class="cp-rule-list ok">
+                                <li><i class="fa-solid fa-circle-check"></i><span>HTML semântico e landmarks para leitores de tela.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i><span>Imagens com <code>loading="lazy"</code>, dimensões e formatos otimizados.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i><span>Meta tags, Open Graph e dados estruturados para SEO.</span></li>
+                                <li><i class="fa-solid fa-circle-check"></i><span>Navegação por teclado e foco visível em toda a interface.</span></li>
+                            </ul>
+                        </div>
+                        <div class="cp-rule-col">
+                            <h3>Como foi medido</h3>
+                            <ul class="cp-rule-list ok">
+                                <li><i class="fa-solid fa-gauge-high"></i><span>Auditorias automatizadas com script próprio (<code>audit.mjs</code>).</span></li>
+                                <li><i class="fa-solid fa-vial-circle-check"></i><span>Testes end-to-end de home e demo com Playwright.</span></li>
+                                <li><i class="fa-solid fa-eye"></i><span>Verificação de contraste e respeito a <code>prefers-reduced-motion</code>.</span></li>
+                                <li><i class="fa-solid fa-bolt"></i><span>CSS e JS enxutos, sem dependências de runtime.</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DOWNLOAD DE CV -->
+        <section class="cp-section">
+            <div class="container">
+                <p class="cp-section-label">Funcionalidade</p>
+                <h2 class="cp-section-h2">Download de CV com token</h2>
+
+                <div class="cp-timeline" data-animate>
+                    <div class="cp-timeline-item">
+                        <span class="cp-timeline-step">1</span>
+                        <div><h3>Solicitação</h3><p>O visitante pede acesso ao currículo a partir do portfólio público.</p></div>
+                    </div>
+                    <div class="cp-timeline-item">
+                        <span class="cp-timeline-step">2</span>
+                        <div><h3>Token de acesso</h3><p>Um token único controla o download, permitindo rastrear e gerenciar quem recebe o material.</p></div>
+                    </div>
+                    <div class="cp-timeline-item">
+                        <span class="cp-timeline-step">3</span>
+                        <div><h3>Entrega da versão correta</h3><p>O backend serve a versão vigente do CV, com versionamento gerido no painel admin.</p></div>
+                    </div>
+                    <div class="cp-timeline-item">
+                        <span class="cp-timeline-step">4</span>
+                        <div><h3>Registro de engajamento</h3><p>O analytics próprio registra a interação, alimentando a gestão de candidaturas.</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- O QUE DEMONSTRA -->
+        <section class="cp-section">
+            <div class="container">
+                <p class="cp-section-label">Resultados</p>
+                <h2 class="cp-section-h2">O que este projeto demonstra</h2>
+
+                <div class="cp-bento cp-bento-3" data-animate>
+                    <div class="cp-card">
+                        <div class="cp-card-icon"><i class="fa-solid fa-code"></i></div>
+                        <h3>Domínio de fundamentos</h3>
+                        <p>Construir sem framework exige entender de verdade o navegador, o DOM e o ciclo de renderização.</p>
+                    </div>
+                    <div class="cp-card">
+                        <div class="cp-card-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                        <h3>Mentalidade de produto</h3>
+                        <p>Performance, acessibilidade e SEO tratados como requisitos, não como detalhes opcionais.</p>
+                    </div>
+                    <div class="cp-card">
+                        <div class="cp-card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h3>Cuidado com qualidade</h3>
+                        <p>Auditorias automatizadas e testes E2E garantindo que cada mudança preserve a base.</p>
+                    </div>
+                </div>
+
+                <div class="cp-accordion" style="margin-top:28px" data-animate>
+                    <div class="cp-accordion-item">
+                        <button class="cp-accordion-trigger" type="button">Por que não usar um framework? <i class="fa-solid fa-chevron-down"></i></button>
+                        <div class="cp-accordion-body">Para um site de portfólio, vanilla entrega carga mínima, tempo de primeira pintura baixo e código transparente. A escolha mostra que sei quando uma dependência agrega e quando ela só adiciona peso.</div>
+                    </div>
+                    <div class="cp-accordion-item">
+                        <button class="cp-accordion-trigger" type="button">Como a acessibilidade foi tratada <i class="fa-solid fa-chevron-down"></i></button>
+                        <div class="cp-accordion-body">HTML semântico, atributos ARIA onde necessário, navegação completa por teclado, foco visível e respeito a <code>prefers-reduced-motion</code>. O objetivo é que o site funcione para todos, não apenas no caminho feliz.</div>
+                    </div>
+                    <div class="cp-accordion-item">
+                        <button class="cp-accordion-trigger" type="button">Relação com o painel admin <i class="fa-solid fa-chevron-down"></i></button>
+                        <div class="cp-accordion-body">O portfólio público se conecta ao Sistema de Gestão de Vagas: o download de CV com token e o analytics alimentam a gestão de candidaturas no painel admin.</div>
+                    </div>
+                </div>
+
+                <div class="cp-cta" data-animate>
+                    <a href="projeto-sistema-admin.html" class="cp-cta-primary">
+                        <i class="fa-solid fa-arrow-right"></i> Ver o sistema de gestão de vagas
+                    </a>
+                    <a href="index.html#contato" class="cp-cta-ghost">
+                        <i class="fa-solid fa-envelope"></i> Entrar em contato
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="simple-footer">
+        <div class="container">
+            <div class="footer-shell">
+                <div class="footer-grid">
+                    <div class="footer-meta">
+                        <a href="index.html#home" class="footer-brand">ARTACHO<span>.</span>dev</a>
+                        <p>© 2026 Bruno Artacho. Maringá, PR, Brasil.</p>
+                    </div>
+                    <a href="#content-wrapper" class="footer-top-link" aria-label="Voltar ao topo">
+                        <span>Voltar ao topo</span>
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Accordion
+        document.querySelectorAll('.cp-accordion-trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const item = trigger.closest('.cp-accordion-item');
+                const isOpen = item.classList.contains('open');
+                document.querySelectorAll('.cp-accordion-item').forEach(i => i.classList.remove('open'));
+                if (!isOpen) item.classList.add('open');
+            });
+        });
+    </script>
+    <script src="analytics.js" defer></script>
+</body>
+</html>

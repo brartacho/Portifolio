@@ -133,8 +133,10 @@ export default async function handler(req, res) {
 
     // ── SEARCH ────────────────────────────────────────────
     if (search) {
-        // Escapa caracteres especiais do LIKE
-        const s = search.replace(/[%_\\]/g, c => `\\${c}`);
+        // Escapa wildcards de LIKE e neutraliza metacaracteres de filtro PostgREST
+        const s = String(search).slice(0, 100)
+            .replace(/[%_\\]/g, c => `\\${c}`)
+            .replace(/[(),]/g, ' ');
 
         // Tokens cujo label bate com a busca
         const { data: matchedTokens } = await supabase

@@ -57,9 +57,12 @@ export async function verifyTurnstile(token, ip) {
     }
 }
 
-/** Sanitização básica de strings (remove control chars, limita tamanho) */
-const CONTROL_CHARS = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
+/** Sanitização básica de strings (remove control chars + invisíveis/bidi, limita tamanho) */
+const CONTROL_CHARS   = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
+// Zero-width, overrides/embeddings/isolates bidi, word joiner e BOM — usados para
+// ocultar/ofuscar conteúdo (ex.: payloads de injeção, spoofing).
+const INVISIBLE_CHARS = new RegExp('[\\u200B-\\u200D\\u202A-\\u202E\\u2060\\u2066-\\u2069\\uFEFF]', 'g');
 export function clean(str, max = 500) {
     if (typeof str !== 'string') return null;
-    return str.replace(CONTROL_CHARS, '').trim().slice(0, max) || null;
+    return str.replace(CONTROL_CHARS, '').replace(INVISIBLE_CHARS, '').trim().slice(0, max) || null;
 }

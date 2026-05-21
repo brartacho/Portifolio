@@ -154,8 +154,8 @@ test.describe('HOME — formação', () => {
     await expect(page.locator('#formacao h2')).toContainText('Formação');
   });
 
-  test('8 entradas no timeline', async ({ page }) => {
-    await expect(page.locator('.edu-entry')).toHaveCount(8);
+  test('9 entradas no timeline', async ({ page }) => {
+    await expect(page.locator('.edu-entry')).toHaveCount(9);
   });
 
   test('ADS UniCV cursando', async ({ page }) => {
@@ -165,7 +165,7 @@ test.describe('HOME — formação', () => {
   });
 
   test('+praTI em andamento', async ({ page }) => {
-    await expect(page.locator('.edu-inprogress')).toContainText('Em andamento');
+    await expect(page.locator('.edu-inprogress').first()).toContainText('Em andamento');
     await expect(page.locator('#formacao')).toContainText('+praTI');
   });
 
@@ -185,8 +185,8 @@ test.describe('HOME — projetos', () => {
     await page.evaluate(() => document.querySelector('#projetos')?.scrollIntoView());
   });
 
-  test('5 project cards no bento', async ({ page }) => {
-    await expect(page.locator('.project-card')).toHaveCount(5);
+  test('6 project cards no bento', async ({ page }) => {
+    await expect(page.locator('.project-card')).toHaveCount(6);
   });
 
   test('card primário: Pagamentos', async ({ page }) => {
@@ -199,8 +199,13 @@ test.describe('HOME — projetos', () => {
     await expect(page.locator('.project-secondary')).toContainText('APIs');
   });
 
-  test('card portfólio aponta para showcase do admin', async ({ page }) => {
+  test('card portfólio aponta para case do front-end', async ({ page }) => {
     const link = page.locator('.project-code .project-overlay-link');
+    await expect(link).toHaveAttribute('href', /projeto-portfolio\.html/);
+  });
+
+  test('card gestão de vagas aponta para demo do admin', async ({ page }) => {
+    const link = page.locator('.project-system .project-overlay-link');
     await expect(link).toHaveAttribute('href', /projeto-sistema-admin\.html/);
   });
 

@@ -3628,12 +3628,16 @@
     <div class="forgot-card">
         <button class="forgot-close" onclick="closeEditCV()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
         <h3 class="forgot-title">Editar versão de currículo</h3>
-        <p class="forgot-desc">O arquivo PDF não muda — para trocar o PDF, suba uma versão nova e desative esta.</p>
+        <p class="forgot-desc">O arquivo PDF em si não muda — renomear o arquivo altera apenas o nome exibido no download.</p>
 
         <input type="hidden" id="editCvId">
         <div class="form-group">
             <label for="editCvName">Nome da versão</label>
             <input type="text" id="editCvName" name="cv-edit-name" autocomplete="off" data-form-type="other">
+        </div>
+        <div class="form-group">
+            <label for="editCvFileName">Nome do arquivo para download <span style="font-size:0.7rem;color:var(--text-dim)">(será normalizado automaticamente)</span></label>
+            <input type="text" id="editCvFileName" name="cv-edit-filename" autocomplete="off" data-form-type="other" placeholder="ex: curriculo_bruno_2026.pdf">
         </div>
         <div class="form-group">
             <label for="editCvDesc">Descrição</label>
@@ -5539,7 +5543,7 @@ function renderCVs() {
                     <button class="btn btn-sm cv-action-btn" onclick="previewCV('${cv.id}', '${esc(cv.name)}')" title="Pré-visualizar PDF"><i class="fa-solid fa-eye"></i></button>
                     <button class="btn btn-sm cv-action-btn" onclick="downloadCV('${cv.id}')" title="Baixar PDF"><i class="fa-solid fa-download"></i></button>
                     <button class="btn btn-cyan btn-sm cv-action-btn" onclick='openSendCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name })})' title="Enviar agora"><i class="fa-solid fa-paper-plane"></i><span class="cv-btn-lbl">Enviar</span></button>
-                    <button class="btn btn-sm cv-action-btn" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
+                    <button class="btn btn-sm cv-action-btn" onclick='openEditCV(${JSON.stringify({ id: cv.id, name: cv.name, file_name: cv.file_name || '', description: cv.description || '', active: cv.active })})' title="Editar"><i class="fa-solid fa-pen"></i><span class="cv-btn-lbl">Editar</span></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}', '${esc(cv.name)}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </td>
@@ -6432,6 +6436,7 @@ document.getElementById('sendName').addEventListener('input', refreshDefaultMess
 function openEditCV(cv) {
     document.getElementById('editCvId').value = cv.id;
     document.getElementById('editCvName').value = cv.name;
+    document.getElementById('editCvFileName').value = cv.file_name || '';
     document.getElementById('editCvDesc').value = cv.description || '';
     document.getElementById('editCvActive').checked = !!cv.active;
     document.getElementById('editCvModal').hidden = false;
@@ -6440,13 +6445,15 @@ function closeEditCV() { document.getElementById('editCvModal').hidden = true; }
 async function saveEditCV() {
     const id = document.getElementById('editCvId').value;
     const name = document.getElementById('editCvName').value.trim();
+    const file_name = document.getElementById('editCvFileName').value.trim();
     const description = document.getElementById('editCvDesc').value.trim();
     const active = document.getElementById('editCvActive').checked;
     const btn = document.getElementById('editCvSaveBtn');
     if (!name) return showToast('Nome obrigatório', 'error');
+    if (!file_name) return showToast('Nome do arquivo obrigatório', 'error');
     try {
         await withLoading(btn, async () => {
-            await api('PATCH', `/api/admin/cv-versions?id=${id}`, { name, description, active });
+            await api('PATCH', `/api/admin/cv-versions?id=${id}`, { name, file_name, description, active });
             showToast('Versão atualizada');
             closeEditCV();
             loadCVs();

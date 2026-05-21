@@ -91,13 +91,13 @@ test.describe('DEMO /projeto-sistema-admin — pública', () => {
         await expect(page).toHaveTitle(/Sistema Admin|ARTACHO|Demo/i);
     });
 
-    test('hero/login screen renderiza com form de acesso', async ({ page }) => {
+    test('hero/gate de acesso renderiza com botão Acessar demo', async ({ page }) => {
         await page.goto(DEMO_PATH);
         await expect(page.locator('#heroScreen')).toBeVisible();
-        await expect(page.locator('#loginBox')).toBeVisible();
-        await expect(page.locator('#loginEmail')).toBeVisible();
-        await expect(page.locator('#loginPass')).toBeVisible();
-        await expect(page.locator('#btnLogin')).toBeVisible();
+        await expect(page.locator('#demoGate')).toBeVisible();
+        await expect(page.locator('#gateIdle')).toBeVisible();
+        await expect(page.locator('#gateBtn')).toBeVisible();
+        await expect(page.locator('#gateBtn')).toContainText('Acessar demo');
     });
 
     test('banner LGPD/demo aparece', async ({ page }) => {

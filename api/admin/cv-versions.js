@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         const { id } = req.query;
         if (!id) return res.status(400).json({ error: 'ID obrigatório (query string)' });
 
-        const { name, description, active } = req.body || {};
+        const { name, description, active, file_name } = req.body || {};
         const patch = {};
         if (typeof name === 'string') {
             const trimmed = name.trim();
@@ -63,10 +63,15 @@ export default async function handler(req, res) {
             if (dup) return res.status(409).json({ error: `Já existe um currículo com o nome "${trimmed}". Use um nome diferente.` });
             patch.name = trimmed;
         }
+        if (typeof file_name === 'string') {
+            const normalized = normalizeFileName(file_name.trim());
+            if (!normalized || normalized === 'arquivo.pdf') return res.status(400).json({ error: 'Nome de arquivo inválido' });
+            patch.file_name = normalized;
+        }
         if (typeof description === 'string') patch.description = description.trim() || null;
         if (typeof active === 'boolean') patch.active = active;
         if (Object.keys(patch).length === 0) {
-            return res.status(400).json({ error: 'Nenhum campo válido para atualizar (name, description ou active)' });
+            return res.status(400).json({ error: 'Nenhum campo válido para atualizar (name, file_name, description ou active)' });
         }
 
         const { data, error } = await supabase
